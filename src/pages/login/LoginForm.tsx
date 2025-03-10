@@ -14,7 +14,7 @@ const LoginForm: React.FC = () => {
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
 
-    // ✅ Reset state when component loads
+
     useEffect(() => {
         setEmail('');
         setPassword('');
@@ -77,7 +77,6 @@ const LoginForm: React.FC = () => {
                     }}
                 >
                     <Typography variant="h3" gutterBottom sx={{ color: blue[800] }}>
-                        Welcome to Boost
                     </Typography>
                     <form onSubmit={handleLogin}>
                         <FormField
@@ -104,11 +103,10 @@ const LoginForm: React.FC = () => {
                             fullWidth
                             sx={{ marginTop: 2, padding: '12px 0', fontWeight: 'bold', borderRadius: 20 }}
                         >
-                            Login
+                            Sign In
                         </Button>
                     </form>
                     <Typography variant="body2" sx={{ marginTop: 2 }}>
-                        Можете зарегистрироваться нажав на кнопку Sign Up
                     </Typography>
                     <Button
                         variant="outlined"

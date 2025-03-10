@@ -2,7 +2,7 @@ import { SidebarConfigItem } from '../../../models/types';
 
 export const sidebarConfig: SidebarConfigItem[] = [
     {
-        label: 'Profile',
+        label: 'Settings',
         sections: [
             {
                 header: 'General Information',
@@ -45,82 +45,82 @@ export const sidebarConfig: SidebarConfigItem[] = [
             },
         ],
     },
-    {
-        label: 'Order Settings',
-        sections: [
-            {
-                header: 'Minimum Order Amount',
-                fields: [
-                    { name: 'minOrderAmount', label: 'Amount' },
-                ],
-            },
-        ],
-    },
-    {
-        label: 'Fulfillment Center',
-        sections: [
-            {
-                header: 'Location',
-                fields: [
-                    { name: 'address', label: 'Address' },
-                    { name: 'zipcode', label: 'Zipcode' },
-                    { name: 'city', label: 'City' },
-                    { name: 'state', label: 'State' },
-                    { name: 'invoiceLogo', label: 'Invoice Logo', path: "logoUrl.invoice", type: 'image' },
-                ],
-            },
-        ],
-    },
-    {
-        label: 'Payment',
-        sections: [
-            {
-                header: 'Payments',
-                fields: [
-                    { name: '', label: '?' },
-                    { name: '', label: '?' },
-                    { name: '', label: '?' },
-                ],
-            },
-        ],
-    },
-    {
-        label: 'Service Area',
-        sections: [
-            {
-                header: 'Location',
-                fields: [
-                    { name: '', label: 'Default Country' },
-                    { name: '', label: 'Other Countries' },
-                ],
-            },
-        ],
-    },
-    {
-        label: 'Shipping Method',
-        sections: [
-            {
-                header: 'Shipping Method',
-                fields: [
-                    { name: '', label: '?' },
-                    { name: '', label: '?' },
-                    { name: '', label: '?' },
-                ],
-            },
-        ],
-    },
-    {
-        label: 'Social Media',
-        sections: [
-            {
-                header: 'Configuration',
-                fields: [
-                    { name: 'facebook', label: 'Facebook' },
-                    { name: 'instagram', label: 'Instagram' },
-                    { name: 'twitter', label: 'Twitter' },
-                    { name: 'websiteUrl', label: 'Website Url' },
-                ],
-            },
-        ],
-    },
+    // {
+    //     label: 'Order Settings',
+    //     sections: [
+    //         {
+    //             header: 'Minimum Order Amount',
+    //             fields: [
+    //                 { name: 'minOrderAmount', label: 'Amount' },
+    //             ],
+    //         },
+    //     ],
+    // },
+    // {
+    //     label: 'Fulfillment Center',
+    //     sections: [
+    //         {
+    //             header: 'Location',
+    //             fields: [
+    //                 { name: 'address', label: 'Address' },
+    //                 { name: 'zipcode', label: 'Zipcode' },
+    //                 { name: 'city', label: 'City' },
+    //                 { name: 'state', label: 'State' },
+    //                 { name: 'invoiceLogo', label: 'Invoice Logo', path: "logoUrl.invoice", type: 'image' },
+    //             ],
+    //         },
+    //     ],
+    // },
+    // {
+    //     label: 'Payment',
+    //     sections: [
+    //         {
+    //             header: 'Payments',
+    //             fields: [
+    //                 { name: '', label: '?' },
+    //                 { name: '', label: '?' },
+    //                 { name: '', label: '?' },
+    //             ],
+    //         },
+    //     ],
+    // },
+    // {
+    //     label: 'Service Area',
+    //     sections: [
+    //         {
+    //             header: 'Location',
+    //             fields: [
+    //                 { name: '', label: 'Default Country' },
+    //                 { name: '', label: 'Other Countries' },
+    //             ],
+    //         },
+    //     ],
+    // },
+    // {
+    //     label: 'Shipping Method',
+    //     sections: [
+    //         {
+    //             header: 'Shipping Method',
+    //             fields: [
+    //                 { name: '', label: '?' },
+    //                 { name: '', label: '?' },
+    //                 { name: '', label: '?' },
+    //             ],
+    //         },
+    //     ],
+    // },
+    // {
+    //     label: 'Social Media',
+    //     sections: [
+    //         {
+    //             header: 'Configuration',
+    //             fields: [
+    //                 { name: 'facebook', label: 'Facebook' },
+    //                 { name: 'instagram', label: 'Instagram' },
+    //                 { name: 'twitter', label: 'Twitter' },
+    //                 { name: 'websiteUrl', label: 'Website Url' },
+    //             ],
+    //         },
+    //     ],
+    // },
 ];

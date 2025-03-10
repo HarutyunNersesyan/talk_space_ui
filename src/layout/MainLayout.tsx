@@ -11,11 +11,14 @@ const MainLayout: React.FC = () => {
 
     useEffect(() => {
         const initAuth = async () => {
-            checkAuth();
+            console.log('Checking authentication...'); // Debug log
+            await checkAuth();
             setIsLoading(false);
         };
         initAuth();
     }, [checkAuth]);
+
+    console.log('isAuthenticated:', isAuthenticated); // Debug log
 
     if (isLoading) {
         return <div>Loading...</div>;

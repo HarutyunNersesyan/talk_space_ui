@@ -4,34 +4,27 @@ import MenuItem from './MenuItem';
 import CollapsibleMenuSection from './CollapsibleMenuSection';
 
 const menuItems: MenuItemType[] = [
-    { type: 'item', text: 'Dashboard', to: '/dashboard' },
-    { type: 'section-title', text: 'Options' },
-    { type: 'collapsible', title: 'Sales', items: [
-            { text: 'Orders', to: '/sales/orders' },
-            { text: 'Abandoned Orders', to: '/sales/abandoned-orders' },
+    { type: 'item', text: 'Home page', to: '/dashboard' },
+    { type: 'collapsible', title: 'Chats', items: [
         ]},
-    { type: 'collapsible', title: 'Reports', items: [
-            { text: 'Shipping Report', to: '/reports/shipping' },
+    {
+        type: 'collapsible',
+        title: 'My profile',
+        items: [
+            { text: 'Update hobbies', to: '/api/public/user/updateHobbies' },
+            { text: 'Update specialities', to: '/api/public/user/updateSpecialities' },
+            { text: 'Update social networks ', to: '/api/public/user/update/socialNetworks' },
+            { text: 'Update education', to: '/api/public/user/update/education' },
+            { text: 'Update images', to: '/api/public/user/images/upload' },
+        ],
+    },
+    { type: 'collapsible', title: 'Hobbies', items: [
         ]},
-    { type: 'collapsible', title: 'Catalog', items: [
-            { text: 'Products', to: '/catalog/products' },
-            { text: 'Create Product', to: '/catalog/create-product' },
-            { text: 'Categories', to: '/catalog/categories' },
-            { text: 'Create Category', to: '/catalog/create-category' },
-            { text: 'Attributes', to: '/catalog/attributes' },
+    { type: 'collapsible', title: 'Specialities', items: [
         ]},
-    { type: 'collapsible', title: 'Promotions', items: [
-            { text: 'Promotions', to: '/promotions' },
-            { text: 'Create Promotion', to: '/promotions/create' },
-        ]},
-    { type: 'collapsible', title: 'Customers', items: [
-            { text: 'Customers', to: '/customers' },
-            { text: 'Create Customer', to: '/customers/create' },
-        ]},
-    { type: 'section-title', text: 'Content' },
-    { type: 'collapsible', title: 'Page', items: [
-            { text: 'Pages', to: '/content/pages' },
-            { text: 'Create Page', to: '/content/create-page' },
+    { type: 'collapsible', title: 'Search', items: [
+            { text: 'Search by hobbies', to: '/api/public/user/searchByHobbies' },
+            { text: 'Search by specialities', to: '/api/public/user/searchBySpecialities' },
         ]},
 ];
 

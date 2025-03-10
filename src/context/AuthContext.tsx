@@ -43,7 +43,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate('/login');
+            navigate('/signUp');
         }
     }, [isAuthenticated, navigate]);
 

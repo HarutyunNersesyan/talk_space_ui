@@ -14,13 +14,11 @@ const Navbar: React.FC = () => {
     const { storeName, email, loading } = useStoreData();
 
     if (loading) {
-        return <nav className="navbar">Loading...</nav>; // Show a loading state
+        return <nav className="navbar">Loading...</nav>;
     }
 
     const navItems: NavItem[] = [
         { to: '/settings', icon: <SettingsIcon /> },
-        { to: '/store', label: storeName || 'Store' },
-        { to: '/account', label: email ? `Hi, ${email}` : 'Account' },
     ];
 
     return (
