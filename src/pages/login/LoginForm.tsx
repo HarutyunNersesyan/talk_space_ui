@@ -1,10 +1,11 @@
-import React, { useState, useEffect, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import FormField from './FormField';
 import ErrorMessage from './ErrorMessage';
 import { Button, Container, Typography, Paper, Box } from '@mui/material';
 import { grey, blue } from '@mui/material/colors';
+import {AuthContext, AuthContextType} from '../../context/AuthContext'; // Adjust the path to AuthContext
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -13,7 +14,7 @@ const LoginForm: React.FC = () => {
     const [password, setPassword] = useState<string>('');
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
-
+    const authContext = useContext(AuthContext) as AuthContextType; // Add type assertion
 
     useEffect(() => {
         setEmail('');
@@ -77,6 +78,7 @@ const LoginForm: React.FC = () => {
                     }}
                 >
                     <Typography variant="h3" gutterBottom sx={{ color: blue[800] }}>
+                        Sign In
                     </Typography>
                     <form onSubmit={handleLogin}>
                         <FormField
@@ -106,17 +108,17 @@ const LoginForm: React.FC = () => {
                             Sign In
                         </Button>
                     </form>
-                    <Typography variant="body2" sx={{ marginTop: 2 }}>
+
+                    {/* Updated Text */}
+                    <Typography variant="body2" sx={{ marginTop: 2, color: 'gray' }}>
+                        You don't have an account yet?{' '}
+                        <span
+                            style={{ color: blue[800], fontWeight: 'bold', cursor: 'pointer' }}
+                            onClick={authContext.redirectToSignUp} // Use the redirectToSignUp function
+                        >
+                            Sign Up.
+                        </span>
                     </Typography>
-                    <Button
-                        variant="outlined"
-                        color="secondary"
-                        fullWidth
-                        sx={{ marginTop: 1, padding: '10px 0', fontWeight: 'bold', borderRadius: 20 }}
-                        onClick={() => navigate('/signup')}
-                    >
-                        Sign Up
-                    </Button>
                 </Paper>
             </Container>
         </Box>
