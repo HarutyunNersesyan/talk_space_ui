@@ -4,8 +4,8 @@ import axios from 'axios';
 import FormField from './FormField';
 import ErrorMessage from './ErrorMessage';
 import { Button, Container, Typography, Paper, Box } from '@mui/material';
-import { grey, blue } from '@mui/material/colors';
-import {AuthContext, AuthContextType} from '../../context/AuthContext'; // Adjust the path to AuthContext
+import {grey, blue, green} from '@mui/material/colors';
+import { AuthContext, AuthContextType } from '../../context/AuthContext'; // Adjust the path to AuthContext
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -78,7 +78,7 @@ const LoginForm: React.FC = () => {
                     }}
                 >
                     <Typography variant="h3" gutterBottom sx={{ color: blue[800] }}>
-                        Sign In
+                        Login to TalkSpace
                     </Typography>
                     <form onSubmit={handleLogin}>
                         <FormField
@@ -105,18 +105,27 @@ const LoginForm: React.FC = () => {
                             fullWidth
                             sx={{ marginTop: 2, padding: '12px 0', fontWeight: 'bold', borderRadius: 20 }}
                         >
-                            Sign In
+                            Login
                         </Button>
                     </form>
 
-                    {/* Updated Text */}
+                    {/* Forgot Password Link */}
+                    <Typography
+                        variant="body2"
+                        sx={{ marginTop: 2, color: blue[800], fontWeight: 'bold', cursor: 'pointer' }}
+                        onClick={authContext.redirectToForgotPassword} // Use the new function
+                    >
+                        Forgot Password?
+                    </Typography>
+
+                    {/* Sign Up Link */}
                     <Typography variant="body2" sx={{ marginTop: 2, color: 'gray' }}>
                         You don't have an account yet?{' '}
                         <span
-                            style={{ color: blue[800], fontWeight: 'bold', cursor: 'pointer' }}
+                            style={{ color: green[800], fontWeight: 'bold', cursor: 'pointer' }}
                             onClick={authContext.redirectToSignUp} // Use the redirectToSignUp function
                         >
-                            Sign Up.
+                            Create new account.
                         </span>
                     </Typography>
                 </Paper>

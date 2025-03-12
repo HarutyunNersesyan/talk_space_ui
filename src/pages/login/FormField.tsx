@@ -1,61 +1,29 @@
 import React from 'react';
-import { TextField, MenuItem, SxProps, InputAdornment } from '@mui/material';
-import { Theme } from '@mui/material/styles';
+import { TextField } from '@mui/material';
 
 interface FormFieldProps {
+    name: string;
     label: string;
     type: string;
-    name: string;
     value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    required?: boolean;
-    pattern?: string;
-    errorMessage?: string;
-    InputProps?: {
-        endAdornment?: React.ReactNode;
-    };
-    options?: { value: string; label: string }[];
-    sx?: SxProps<Theme>;
+    onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    sx?: object;
+    disabled?: boolean;
 }
 
-const FormField: React.FC<FormFieldProps> = ({
-                                                 label,
-                                                 type,
-                                                 name,
-                                                 value,
-                                                 onChange,
-                                                 required,
-                                                 pattern,
-                                                 errorMessage,
-                                                 InputProps,
-                                                 options,
-                                                 sx,
-                                             }) => {
+const FormField: React.FC<FormFieldProps> = ({ name, label, type, value, onChange, sx, disabled }) => {
     return (
         <TextField
+            fullWidth
+            variant="outlined"
+            name={name}
             label={label}
             type={type}
-            name={name}
             value={value}
             onChange={onChange}
-            required={required}
-            fullWidth
-            margin="normal"
-            variant="outlined"
             sx={sx}
-            InputProps={InputProps}
-            error={!!errorMessage}
-            helperText={errorMessage}
-            {...(type === 'select'
-                ? {
-                    select: true,
-                    children: options?.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                        </MenuItem>
-                    )),
-                }
-                : {})}
+            disabled={disabled}
+            InputProps={{ readOnly: disabled }}
         />
     );
 };

@@ -1,26 +1,22 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-// Define the AuthContextType interface
 export interface AuthContextType {
     isAuthenticated: boolean;
     checkAuth: () => void;
     redirectToSignUp: () => void;
+    redirectToForgotPassword: () => void; // New function
 }
 
-// Create the AuthContext with the correct type
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Define public routes that don't require authentication
-const publicRoutes = ['/login', '/signup'];
+const publicRoutes = ['/login', '/signup', '/verify', '/forgotPassword']; // Add /forgotPassword to public routes
 
-// Define the AuthProvider component
 const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const navigate = useNavigate();
-    const location = useLocation(); // Get the current location
+    const location = useLocation();
 
-    // Function to check authentication status
     const checkAuth = () => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -45,30 +41,30 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         }
     };
 
-    // Function to redirect to the sign-up page
     const redirectToSignUp = () => {
         navigate('/signup');
     };
 
-    // Check authentication status on component mount
+    // New function to handle navigation to the Forgot Password page
+    const redirectToForgotPassword = () => {
+        navigate('/forgotPassword');
+    };
+
     useEffect(() => {
         checkAuth();
     }, []);
 
-    // Redirect to login page if not authenticated and not on a public route
     useEffect(() => {
         if (!isAuthenticated && !publicRoutes.includes(location.pathname)) {
             navigate('/login');
         }
     }, [isAuthenticated, navigate, location.pathname]);
 
-    // Provide the context value to children
     return (
-        <AuthContext.Provider value={{ isAuthenticated, checkAuth, redirectToSignUp }}>
+        <AuthContext.Provider value={{ isAuthenticated, checkAuth, redirectToSignUp, redirectToForgotPassword }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-// Export AuthContext and AuthProvider
 export { AuthProvider, AuthContext };
