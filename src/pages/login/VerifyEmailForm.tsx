@@ -10,38 +10,34 @@ const apiUrl = process.env.REACT_APP_API_URL;
 const VerifyEmailForm: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [email] = useState<string>(location.state?.email || '');
+    const [email, setEmail] = useState<string>(location.state?.email || '');
     const [pin, setPin] = useState<string>('');
     const [error, setError] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false); // Loading state
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleVerify = async () => {
-        setError(''); // Clear previous errors
-        setIsLoading(true); // Start loading
+        setError('');
+        setIsLoading(true);
 
         try {
             const response = await axios.put(`${apiUrl}/api/public/user/verify`, { email, pin });
 
-            // If verification is successful, redirect to login
             if (response.status === 200) {
                 navigate('/login', { state: { message: 'Email verified successfully! Please log in.' } });
             }
         } catch (err: any) {
-            console.error('Verification error:', err); // Log the error for debugging
+            console.error('Verification error:', err);
 
             if (err.response) {
-                // Backend responded with an error
                 const errorMessage = err.response.data.message || 'Verification failed. Please try again.';
-                setError(errorMessage); // Display only the message field
+                setError(errorMessage);
             } else if (err.request) {
-                // No response from the server
                 setError('No response from the server. Please check your connection and try again.');
             } else {
-                // Something went wrong in setting up the request
                 setError('An unexpected error occurred. Please try again.');
             }
         } finally {
-            setIsLoading(false); // Stop loading
+            setIsLoading(false);
         }
     };
 
@@ -53,16 +49,16 @@ const VerifyEmailForm: React.FC = () => {
                         Verify Email
                     </Typography>
                     <Typography variant="body1" gutterBottom>
-                        Please enter the verification code sent to your email.
+                        Please enter your email and the verification code sent to your email.
                     </Typography>
 
-                    {/* Email Field (Disabled) */}
+                    {/* Email Field (Editable) */}
                     <FormField
                         name="email"
                         label="Email"
                         type="email"
                         value={email}
-                        disabled
+                        onChange={(e) => setEmail(e.target.value)}
                     />
 
                     {/* Verification Code Field */}
@@ -82,7 +78,7 @@ const VerifyEmailForm: React.FC = () => {
                         variant="contained"
                         color="primary"
                         onClick={handleVerify}
-                        disabled={isLoading} // Disable button while loading
+                        disabled={isLoading}
                         fullWidth
                         sx={{ marginTop: 2 }}
                     >

@@ -1,0 +1,78 @@
+.hobbies-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.selected-hobbies-section {
+    margin-bottom: 20px;
+}
+
+.selected-hobbies-list {
+    list-style: none;
+    padding: 0;
+}
+
+.selected-hobby-item {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 5px;
+}
+
+.hobbies-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.hobby-item {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.hobby-item.expanded {
+    background-color: #f9f9f9;
+}
+
+.sub-hobbies-list {
+    margin-top: 10px;
+    padding-left: 20px;
+}
+
+.sub-hobby-item {
+    padding: 5px;
+    border: 1px solid #eee;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.sub-hobby-item.selected {
+    background-color: #e0f7fa;
+}
+
+.save-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.save-button:hover {
+    background-color: #0056b3;
+}
+
+.loading-spinner {
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 20px;
+}
+
+.error-message {
+    color: red;
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 20px;
+}

@@ -8,8 +8,7 @@ export interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { to: '/settings', icon: <SettingsIcon /> },
-    { to: '/store', label: 'Store' },
+    { to: '/profile', icon: <SettingsIcon />, label: 'Profile' }, // Updated to point to /profile
     { to: '/account', label: 'Account' },
 ];
 

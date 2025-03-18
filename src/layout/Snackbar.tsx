@@ -18,7 +18,6 @@ const Snackbar: React.FC<SnackbarProps> = ({ message, onClose, type }) => {
 
         return () => clearTimeout(timer);
     }, []);
-
     useEffect(() => {
         if (!visible) {
             onClose();

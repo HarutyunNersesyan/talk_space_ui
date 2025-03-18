@@ -4,8 +4,8 @@ import axios from 'axios';
 import FormField from './FormField';
 import ErrorMessage from './ErrorMessage';
 import { Button, Container, Typography, Paper, Box } from '@mui/material';
-import {grey, blue, green} from '@mui/material/colors';
-import { AuthContext, AuthContextType } from '../../context/AuthContext'; // Adjust the path to AuthContext
+import { grey, blue, green } from '@mui/material/colors';
+import { AuthContext, AuthContextType } from '../../context/AuthContext';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -14,7 +14,7 @@ const LoginForm: React.FC = () => {
     const [password, setPassword] = useState<string>('');
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
-    const authContext = useContext(AuthContext) as AuthContextType; // Add type assertion
+    const authContext = useContext(AuthContext) as AuthContextType;
 
     useEffect(() => {
         setEmail('');
@@ -26,12 +26,26 @@ const LoginForm: React.FC = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post<{ token: string }>(`${apiUrl}/account/auth`, {
+            const response = await axios.post<{ token: string; userName: string }>(`${apiUrl}/account/auth`, {
                 email,
                 password,
             });
 
+            console.log('API Response:', response.data); // Debug: Check the response
+
+            // Store the token and userName in localStorage
             localStorage.setItem('token', response.data.token);
+            localStorage.setItem('userName', response.data.userName);
+
+            console.log('Stored in localStorage:', { // Debug: Check localStorage
+                token: localStorage.getItem('token'),
+                userName: localStorage.getItem('userName'),
+            });
+
+            // Update the AuthContext with the userName
+            authContext.setUser(response.data.userName);
+
+            // Redirect to the dashboard
             navigate('/dashboard');
         } catch (err) {
             setError('Wrong email or password');
@@ -109,21 +123,19 @@ const LoginForm: React.FC = () => {
                         </Button>
                     </form>
 
-                    {/* Forgot Password Link */}
                     <Typography
                         variant="body2"
                         sx={{ marginTop: 2, color: blue[800], fontWeight: 'bold', cursor: 'pointer' }}
-                        onClick={authContext.redirectToForgotPassword} // Use the new function
+                        onClick={authContext.redirectToForgotPassword}
                     >
                         Forgot Password?
                     </Typography>
 
-                    {/* Sign Up Link */}
                     <Typography variant="body2" sx={{ marginTop: 2, color: 'gray' }}>
                         You don't have an account yet?{' '}
                         <span
                             style={{ color: green[800], fontWeight: 'bold', cursor: 'pointer' }}
-                            onClick={authContext.redirectToSignUp} // Use the redirectToSignUp function
+                            onClick={authContext.redirectToSignUp}
                         >
                             Create new account.
                         </span>
