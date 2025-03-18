@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // Correct import for jwtDecode
 import './Education.css';
 
 interface EducationDto {
@@ -20,22 +22,69 @@ const Education: React.FC = () => {
     const [selectedEducation, setSelectedEducation] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<boolean>(false);
+    const [userName, setUserName] = useState<string | null>(null); // Track userName
+    const [loading, setLoading] = useState<boolean>(true); // Track loading state
+
+    // Retrieve the token from local storage
+    const token = localStorage.getItem('token');
+
+    // Fetch userName from the backend using sub (email) from the token
+    useEffect(() => {
+        const fetchUserName = async () => {
+            try {
+                if (!token) {
+                    alert('User not logged in.');
+                    return;
+                }
+
+                // Decode the token to get the sub (email)
+                const decodedToken = jwtDecode<{ sub: string }>(token); // Decode the token
+                const email = decodedToken.sub; // Extract the sub (email)
+
+                console.log('Fetching userName for email:', email); // Debug log
+
+                // Fetch userName from the backend
+                const response = await axios.get(`http://localhost:8080/api/public/user/get/userName/${email}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                const userName = response.data; // Extract the userName from the response
+
+                console.log('Fetched userName:', userName); // Debug log
+                setUserName(userName); // Set the userName in state
+                setLoading(false); // Set loading to false
+            } catch (err) {
+                console.error('Error fetching userName:', err); // Debug log
+                alert('Failed to fetch userName. Please try again later.');
+                setLoading(false); // Set loading to false
+            }
+        };
+
+        fetchUserName();
+    }, [token]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null); // Reset error state
         setSuccess(false); // Reset success state
 
+        if (!userName) {
+            alert('User name not found. Please try again later.');
+            return;
+        }
+
         const educationDto: EducationDto = {
-            userName: 'currentUser', // Replace with actual username or fetch from context
+            userName: userName, // Use the fetched userName
             education: selectedEducation, // Send as string
         };
 
         try {
-            const response = await fetch('/api/public/user/update/education', {
+            const response = await fetch('http://localhost:8080/api/public/user/update/education', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`, // Add token to the request headers
                 },
                 body: JSON.stringify(educationDto),
             });
@@ -58,6 +107,11 @@ const Education: React.FC = () => {
             setError('An error occurred while updating education.');
         }
     };
+
+    // Loading state
+    if (loading) {
+        return <div className="loading-spinner">Loading...</div>;
+    }
 
     return (
         <div className="education-container">

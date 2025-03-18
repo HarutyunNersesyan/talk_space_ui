@@ -18,7 +18,8 @@ const Navbar: React.FC = () => {
     }
 
     const navItems: NavItem[] = [
-        { to: '/settings', icon: <SettingsIcon /> },
+        { to: '/profile', icon: <SettingsIcon />, label: 'Profile' },
+        { to: '/hobbies', label: 'Hobbies' }, // Add Hobbies navigation item
     ];
 
     return (

@@ -29,6 +29,10 @@ const Profile: React.FC = () => {
         navigate('/update-education'); // Redirect to /update-education
     };
 
+    const handleUpdateSocialNetworksClick = () => {
+        navigate('/social-networks'); // Redirect to /social-networks
+    };
+
     return (
         <div className="profile-container">
             <h1>Profile</h1>
@@ -64,6 +68,9 @@ const Profile: React.FC = () => {
                 </button>
                 <button className="update-education-button" onClick={handleUpdateEducationClick}>
                     Update Education
+                </button>
+                <button className="update-social-networks-button" onClick={handleUpdateSocialNetworksClick}>
+                    Update Social Networks
                 </button>
             </div>
         </div>
