@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; // Correct import for jwtDecode
+import { jwtDecode } from 'jwt-decode';
 import './Specialities.css';
 
 interface Speciality {
     id: number;
     name: string;
     parentId: number | null;
-    children?: Speciality[]; // Optional array of child specialties
+    children?: Speciality[];
 }
 
 interface SpecialityRequest {
@@ -24,14 +24,13 @@ const Specialities: React.FC = () => {
     const [specialities, setSpecialities] = useState<Speciality[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [expandedSpecialityId, setExpandedSpecialityId] = useState<number | null>(null); // Track expanded specialty
-    const [selectedSpecialities, setSelectedSpecialities] = useState<SpecialityRequest[]>([]); // Track selected specialties
-    const [userName, setUserName] = useState<string | null>(null); // Track userName
+    const [expandedSpecialityId, setExpandedSpecialityId] = useState<number | null>(null);
+    const [selectedSpecialities, setSelectedSpecialities] = useState<SpecialityRequest[]>([]);
+    const [userName, setUserName] = useState<string | null>(null);
 
-    // Retrieve the token from local storage
     const token = localStorage.getItem('token');
 
-    // Fetch specialities from the backend
+    // Fetch all specialties from the backend
     useEffect(() => {
         const fetchSpecialities = async () => {
             try {
@@ -40,27 +39,29 @@ const Specialities: React.FC = () => {
                     return;
                 }
 
-                console.log('Fetching specialities...'); // Debug log
+                console.log('Fetching specialities...');
                 const response = await axios.get('http://localhost:8080/api/public/user/speciality', {
                     headers: {
-                        Authorization: `Bearer ${token}`, // Add token to the request headers
+                        Authorization: `Bearer ${token}`,
                     },
                 });
-                console.log('Response:', response.data); // Debug log
+                console.log('Specialities response:', response.data);
 
-                // Organize specialities into parent-child relationships
+                // Organize specialties into parent-child relationships
                 const specialitiesWithChildren = response.data.map((speciality: Speciality) => ({
                     ...speciality,
                     children: response.data.filter((child: Speciality) => child.parentId === speciality.id),
                 }));
 
-                // Filter out only parent specialities (specialities with no parentId)
-                const parentSpecialities = specialitiesWithChildren.filter((speciality: Speciality) => speciality.parentId === null);
+                // Filter out only parent specialties (specialties with no parentId)
+                const parentSpecialities = specialitiesWithChildren.filter(
+                    (speciality: Speciality) => speciality.parentId === null
+                );
 
                 setSpecialities(parentSpecialities);
                 setLoading(false);
             } catch (err) {
-                console.error('Error fetching specialities:', err); // Debug log
+                console.error('Error fetching specialities:', err);
                 setError('Failed to fetch specialities. Please try again later.');
                 setLoading(false);
             }
@@ -69,7 +70,7 @@ const Specialities: React.FC = () => {
         fetchSpecialities();
     }, [token]);
 
-    // Fetch userName from the backend using sub (email) from the token
+    // Fetch userName from the backend using the token
     useEffect(() => {
         const fetchUserName = async () => {
             try {
@@ -79,23 +80,21 @@ const Specialities: React.FC = () => {
                 }
 
                 // Decode the token to get the sub (email)
-                const decodedToken = jwtDecode<{ sub: string }>(token); // Decode the token
-                const email = decodedToken.sub; // Extract the sub (email)
+                const decodedToken = jwtDecode<{ sub: string }>(token);
+                const email = decodedToken.sub;
 
-                console.log('Fetching userName for email:', email); // Debug log
-
-                // Fetch userName from the backend
+                console.log('Fetching userName for email:', email);
                 const response = await axios.get(`http://localhost:8080/api/public/user/get/userName/${email}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                const userName = response.data; // Extract the userName from the response
+                const userName = response.data;
 
-                console.log('Fetched userName:', userName); // Debug log
-                setUserName(userName); // Set the userName in state
+                console.log('Fetched userName:', userName);
+                setUserName(userName);
             } catch (err) {
-                console.error('Error fetching userName:', err); // Debug log
+                console.error('Error fetching userName:', err);
                 alert('Failed to fetch userName. Please try again later.');
             }
         };
@@ -103,18 +102,52 @@ const Specialities: React.FC = () => {
         fetchUserName();
     }, [token]);
 
-    // Load selected specialities from localStorage when the component mounts
+    // Fetch selected specialties from the backend when userName is available
     useEffect(() => {
-        const savedSelectedSpecialities = localStorage.getItem('selectedSpecialities');
-        if (savedSelectedSpecialities) {
-            setSelectedSpecialities(JSON.parse(savedSelectedSpecialities));
-        }
-    }, []);
+        const fetchSelectedSpecialities = async () => {
+            try {
+                if (!userName) {
+                    console.error('User name is not available.');
+                    return;
+                }
 
-    // Save selected specialities to localStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem('selectedSpecialities', JSON.stringify(selectedSpecialities));
-    }, [selectedSpecialities]);
+                console.log('Fetching selected specialties for user:', userName);
+                const response = await axios.get(`http://localhost:8080/api/public/user/get/specialities/${userName}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                console.log('Selected specialties response:', response.data);
+
+                if (response.data && Array.isArray(response.data)) {
+                    const selectedSpecialities = response.data.map((speciality: Speciality) => ({
+                        id: speciality.id,
+                        name: speciality.name,
+                    }));
+
+                    setSelectedSpecialities(selectedSpecialities);
+                } else {
+                    console.error('Invalid response format:', response.data);
+                    alert('Invalid response format received from the server.');
+                }
+            } catch (err) {
+                console.error('Error fetching selected specialties:', err);
+                if (axios.isAxiosError(err)) {
+                    console.error('Axios error details:', err.response?.data);
+                    alert(`Failed to fetch selected specialties: ${err.response?.data?.message || err.message}`);
+                } else if (err instanceof Error) {
+                    alert(`Failed to fetch selected specialties: ${err.message}`);
+                } else {
+                    alert('Failed to fetch selected specialties. Please try again later.');
+                }
+            }
+        };
+
+        if (userName) {
+            fetchSelectedSpecialities();
+        }
+    }, [userName, token]);
 
     // Handle expanding/collapsing a specialty
     const handleSpecialityClick = (specialityId: number) => {
@@ -127,7 +160,7 @@ const Specialities: React.FC = () => {
 
     // Handle selecting/deselecting a specialty
     const handleSelectSpeciality = (speciality: Speciality) => {
-        const selectedSpeciality = { id: speciality.id, name: speciality.name }; // Simplified specialty object
+        const selectedSpeciality = { id: speciality.id, name: speciality.name };
         if (selectedSpecialities.some((selected) => selected.id === speciality.id)) {
             // If the specialty is already selected, remove it
             setSelectedSpecialities(selectedSpecialities.filter((selected) => selected.id !== speciality.id));
@@ -136,7 +169,7 @@ const Specialities: React.FC = () => {
             if (selectedSpecialities.length < 5) {
                 setSelectedSpecialities([...selectedSpecialities, selectedSpeciality]);
             } else {
-                alert('You can only select up to 5 specialties.'); // Notify the user
+                alert('You can only select up to 5 specialties.');
             }
         }
     };
@@ -151,26 +184,23 @@ const Specialities: React.FC = () => {
 
             // Prepare the data to be sent to the backend
             const specialityDto: SpecialityDto = {
-                userName: userName, // Use the fetched userName
+                userName: userName,
                 specialities: selectedSpecialities,
             };
 
-            console.log('Saving selected specialties:', specialityDto); // Debug log
-            console.log('Endpoint:', 'http://localhost:8080/api/public/user/update/speciality'); // Debug log
-
+            console.log('Saving selected specialties:', specialityDto);
             const response = await axios.put('http://localhost:8080/api/public/user/update/speciality', specialityDto, {
                 headers: {
-                    Authorization: `Bearer ${token}`, // Add token to the request headers
+                    Authorization: `Bearer ${token}`,
                 },
             });
-            console.log('Save response:', response.data); // Debug log
+            console.log('Save response:', response.data);
             alert('Specialities saved successfully!');
         } catch (err) {
-            console.error('Error saving specialties:', err); // Debug log
-            if (axios.isAxiosError(err)) { // Check if the error is an Axios error
-                // Backend returned an error response
+            console.error('Error saving specialties:', err);
+            if (axios.isAxiosError(err)) {
                 alert(`Failed to save specialties: ${err.response?.data?.message || err.message}`);
-            } else if (err instanceof Error) { // Check if it's a generic Error
+            } else if (err instanceof Error) {
                 alert(`Failed to save specialties: ${err.message}`);
             } else {
                 alert('Failed to save specialties. Please try again later.');
@@ -188,9 +218,9 @@ const Specialities: React.FC = () => {
         return <div className="error-message">{error}</div>;
     }
 
-    // No specialities found
+    // No specialties found
     if (specialities.length === 0) {
-        return <div>No specialities found.</div>; // Fallback for empty data
+        return <div>No specialties found.</div>;
     }
 
     return (
@@ -214,11 +244,11 @@ const Specialities: React.FC = () => {
                 {specialities.map((speciality) => (
                     <li
                         key={speciality.id}
-                        className={`speciality-item ${expandedSpecialityId === speciality.id ? 'expanded' : ''}`} // Add 'expanded' class
+                        className={`speciality-item ${expandedSpecialityId === speciality.id ? 'expanded' : ''}`}
                     >
                         <div
                             className="speciality-name"
-                            onClick={() => handleSpecialityClick(speciality.id)} // Handle click
+                            onClick={() => handleSpecialityClick(speciality.id)}
                         >
                             {speciality.name}
                         </div>
@@ -228,7 +258,7 @@ const Specialities: React.FC = () => {
                                     <li
                                         key={child.id}
                                         className={`sub-speciality-item ${selectedSpecialities.some(selected => selected.id === child.id) ? 'selected' : ''}`}
-                                        onClick={() => handleSelectSpeciality(child)} // Handle selection
+                                        onClick={() => handleSelectSpeciality(child)}
                                     >
                                         {child.name}
                                     </li>

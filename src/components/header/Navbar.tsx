@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import SettingsIcon from '@mui/icons-material/Settings';
 import useStoreData from '../../hooks/useStoreData';
+import LogoutForm from '../Logout'; // Import the LogoutForm component
 import './Navbar.css';
 
 interface NavItem {
@@ -19,7 +20,7 @@ const Navbar: React.FC = () => {
 
     const navItems: NavItem[] = [
         { to: '/profile', icon: <SettingsIcon />, label: 'Profile' },
-        { to: '/hobbies', label: 'Hobbies' }, // Add Hobbies navigation item
+        // Removed the "Hobbies" navigation item
     ];
 
     return (
@@ -33,6 +34,10 @@ const Navbar: React.FC = () => {
                     )}
                 </Link>
             ))}
+            {/* Add the LogoutForm component */}
+            <div className="navbar-item">
+                <LogoutForm />
+            </div>
         </nav>
     );
 };

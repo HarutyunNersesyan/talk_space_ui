@@ -10,65 +10,80 @@
 }
 
 .profile-picture {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
+    width: 200px; /* Fixed width for the profile picture */
+    height: 150px; /* Fixed height for the profile picture */
+    object-fit: cover; /* Ensures the image fits within the dimensions */
+    border: 1px solid #ccc; /* Optional: Add a border */
+    border-radius: 8px; /* Slightly rounded corners for a modern look */
 }
 
 .profile-picture-placeholder {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background-color: #f0f0f0;
+    width: 300px; /* Larger width for the placeholder */
+    height: 400px; /* Larger height for the placeholder */
+    background-color: #f0f0f0; /* Light gray background */
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888;
-    font-size: 16px;
-    margin: 0 auto;
+    color: #888; /* Gray text color */
+    font-size: 16px; /* Font size for the placeholder text */
+    margin: 0 auto; /* Center the placeholder */
+    border: 1px dashed #ccc; /* Dashed border for the placeholder */
+    border-radius: 8px; /* Slightly rounded corners for consistency */
 }
 
 .upload-section {
-    margin: 20px 0;
+    margin: 20px 0; /* Spacing around the upload section */
 }
 
 .upload-button {
-    background-color: #007bff;
-    color: white;
+    background-color: #007bff; /* Blue background for the upload button */
+    color: white; /* White text color */
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
+    padding: 10px 20px; /* Padding for the button */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 16px; /* Font size for the button text */
+    margin: 5px; /* Margin around the button */
 }
 
-.upload-button:hover {
-    background-color: #0056b3;
+.upload-button:disabled {
+    background-color: #ccc; /* Gray background for disabled state */
+    cursor: not-allowed; /* Not-allowed cursor for disabled state */
+}
+
+.upload-button:hover:not(:disabled) {
+    background-color: #0056b3; /* Darker blue background on hover */
 }
 
 .buttons-section {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: column; /* Arrange buttons vertically */
+    gap: 10px; /* Space between buttons */
 }
 
 .update-hobbies-button,
 .update-specialties-button,
 .update-education-button,
 .update-social-networks-button {
-    background-color: #28a745;
-    color: white;
+    background-color: #28a745; /* Green background for buttons */
+    color: white; /* White text color */
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
+    padding: 10px 20px; /* Padding for buttons */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 16px; /* Font size for button text */
 }
 
 .update-hobbies-button:hover,
 .update-specialties-button:hover,
 .update-education-button:hover,
 .update-social-networks-button:hover {
-    background-color: #218838;
+    background-color: #218838; /* Darker green background on hover */
+}
+
+.error-message {
+    color: red; /* Red text color for error messages */
+    text-align: center; /* Center-align error messages */
+    font-size: 18px; /* Larger font size for error messages */
+    margin-top: 20px; /* Spacing above error messages */
 }
