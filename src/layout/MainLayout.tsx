@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Box, CssBaseline } from '@mui/material';
-import Sidebar from '../components/sidebar/Sidebar';
+import { Box, CssBaseline, CircularProgress } from '@mui/material';
 import Navbar from '../components/header/Navbar';
 import RoutesConfig from '../routes/RoutesConfig';
 import { AuthContext } from '../context/AuthContext';
@@ -12,22 +11,31 @@ const MainLayout: React.FC = () => {
     useEffect(() => {
         const initAuth = async () => {
             console.log('Checking authentication...'); // Debug log
-            await checkAuth();
-            setIsLoading(false);
+            try {
+                await checkAuth();
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+            } finally {
+                setIsLoading(false);
+            }
         };
+
         initAuth();
     }, [checkAuth]);
 
     console.log('isAuthenticated:', isAuthenticated); // Debug log
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
-            {isAuthenticated && <Sidebar />}
             {isAuthenticated && <Navbar />}
             <Box
                 component="main"

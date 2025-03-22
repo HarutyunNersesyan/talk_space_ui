@@ -1,89 +1,119 @@
+/* Profile Container */
 .profile-container {
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 20px;
     text-align: center;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.profile-picture-container {
-    margin: 20px 0;
-}
-
-.profile-picture {
-    width: 200px; /* Fixed width for the profile picture */
-    height: 150px; /* Fixed height for the profile picture */
-    object-fit: cover; /* Ensures the image fits within the dimensions */
-    border: 1px solid #ccc; /* Optional: Add a border */
-    border-radius: 8px; /* Slightly rounded corners for a modern look */
-}
-
-.profile-picture-placeholder {
-    width: 300px; /* Larger width for the placeholder */
-    height: 400px; /* Larger height for the placeholder */
-    background-color: #f0f0f0; /* Light gray background */
+/* Picture Container */
+.picture-container {
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    position: relative;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888; /* Gray text color */
-    font-size: 16px; /* Font size for the placeholder text */
-    margin: 0 auto; /* Center the placeholder */
-    border: 1px dashed #ccc; /* Dashed border for the placeholder */
-    border-radius: 8px; /* Slightly rounded corners for consistency */
+    background-color: #f0f0f0;
 }
 
+.profile-picture {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.picture-placeholder {
+    font-size: 48px;
+    color: #888;
+    cursor: pointer;
+}
+
+/* Delete Button */
+.delete-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+/* Upload Section */
 .upload-section {
-    margin: 20px 0; /* Spacing around the upload section */
+    margin: 20px 0;
 }
 
 .upload-button {
-    background-color: #007bff; /* Blue background for the upload button */
-    color: white; /* White text color */
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
     border: none;
-    padding: 10px 20px; /* Padding for the button */
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
-    font-size: 16px; /* Font size for the button text */
-    margin: 5px; /* Margin around the button */
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
 }
 
 .upload-button:disabled {
-    background-color: #ccc; /* Gray background for disabled state */
-    cursor: not-allowed; /* Not-allowed cursor for disabled state */
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 .upload-button:hover:not(:disabled) {
-    background-color: #0056b3; /* Darker blue background on hover */
+    background-color: #218838;
 }
 
+/* Buttons Section */
 .buttons-section {
     display: flex;
-    flex-direction: column; /* Arrange buttons vertically */
-    gap: 10px; /* Space between buttons */
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .update-hobbies-button,
 .update-specialties-button,
-.update-education-button,
-.update-social-networks-button {
-    background-color: #28a745; /* Green background for buttons */
-    color: white; /* White text color */
+.update-social-networks-button,
+.edit-profile-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
     border: none;
-    padding: 10px 20px; /* Padding for buttons */
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
-    font-size: 16px; /* Font size for button text */
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
 }
 
 .update-hobbies-button:hover,
 .update-specialties-button:hover,
-.update-education-button:hover,
-.update-social-networks-button:hover {
-    background-color: #218838; /* Darker green background on hover */
+.update-social-networks-button:hover,
+.edit-profile-button:hover {
+    background-color: #0056b3;
 }
 
+/* Error Message */
 .error-message {
-    color: red; /* Red text color for error messages */
-    text-align: center; /* Center-align error messages */
-    font-size: 18px; /* Larger font size for error messages */
-    margin-top: 20px; /* Spacing above error messages */
+    color: red;
+    text-align: center;
+    font-size: 18px;
+    margin-top: 20px;
 }

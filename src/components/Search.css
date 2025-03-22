@@ -1,0 +1,150 @@
+/* Parent container to center the search container */
+.parent-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+    width: 100vw; /* Full viewport width */
+    background-color: #f0f0f0; /* Light gray background */
+}
+
+/* Search container styling */
+.search-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px; /* Adjusted padding */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-width: 500px; /* Increased size */
+    background-color: #ffffff; /* White background */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    width: 100%; /* Ensure it takes full width */
+}
+
+/* Image container styling */
+.image-container {
+    position: relative;
+    width: 100%; /* Full width of the container */
+    height: 300px; /* Increased height */
+    margin-bottom: 20px; /* Added margin */
+}
+
+/* Image placeholder styling */
+.image-placeholder {
+    width: 100%;
+    height: 100%; /* Full height of the image container */
+    background-color: #e0e0e0; /* Light gray background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    overflow: hidden; /* Ensure the image fits within the container */
+}
+
+/* Profile image styling */
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensure the image covers the container */
+    border-radius: 8px; /* Match the container's border radius */
+}
+
+/* Search info section styling */
+.search-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Increased gap */
+    margin-top: 10px; /* Added margin */
+}
+
+/* User name styling */
+.user-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333; /* Dark gray text */
+    text-align: center; /* Center-align the name */
+}
+
+/* User details styling */
+.user-details {
+    display: flex;
+    gap: 10px;
+    font-size: 16px;
+    color: #666; /* Medium gray text */
+    justify-content: center; /* Center-align the details */
+}
+
+/* Detail item styling */
+.detail-item {
+    background-color: #e0e0e0; /* Light gray background */
+    padding: 6px 12px; /* Adjusted padding */
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* About section styling */
+.user-about {
+    font-size: 16px;
+    color: #333; /* Dark gray text */
+    text-align: center; /* Center-align the text */
+}
+
+/* Hobbies, specialities, and social networks styling */
+.user-hobbies,
+.user-specialities,
+.user-social-networks {
+    font-size: 16px;
+    color: #333; /* Dark gray text */
+    text-align: center; /* Center-align the text */
+}
+
+/* Strong text styling */
+.user-about strong,
+.user-hobbies strong,
+.user-specialities strong,
+.user-social-networks strong {
+    color: #214875; /* Dark blue text */
+}
+
+/* Error message styling */
+.error-message {
+    color: #dc3545; /* Red text */
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* No profile data message styling */
+.no-profile {
+    font-size: 16px;
+    color: #666; /* Medium gray text */
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Search buttons container styling */
+.search-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: center; /* Center-align the buttons */
+}
+
+/* Search button styling */
+.search-button {
+    padding: 10px 20px;
+    background-color: #214875; /* Dark blue background */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+/* Search button hover effect */
+.search-button:hover {
+    background-color: #1a365d; /* Darker blue on hover */
+}

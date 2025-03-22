@@ -32,8 +32,18 @@
     box-shadow: 0 4px 8px rgba(111, 129, 199, 0.2);
 }
 
+/* Navbar Icon */
 .navbar-icon {
     margin-right: 8px;
+    font-size: 1.2em;
+    transition: color 0.3s ease;
+}
+
+/* Active Navbar Item */
+.navbar-item.active {
+    color: #214875;
+    background-color: rgba(111, 129, 199, 0.1);
+    box-shadow: 0 4px 8px rgba(111, 129, 199, 0.2);
 }
 
 /* Logout Button */
@@ -50,4 +60,39 @@
 
 .logout-button:hover {
     background-color: #c82333;
+}
+
+/* Search Button Specific Styles */
+.navbar-item.search {
+    background-color: #214875;
+    color: white;
+}
+
+.navbar-item.search:hover {
+    background-color: #1a365d;
+    box-shadow: 0 4px 8px rgba(33, 72, 117, 0.3);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        justify-content: center;
+        padding: 10px;
+    }
+
+    .navbar-item {
+        margin-left: 5px;
+        padding: 6px 10px;
+        font-size: 0.9em;
+    }
+
+    .navbar-icon {
+        margin-right: 5px;
+        font-size: 1em;
+    }
+
+    .logout-button {
+        padding: 6px 12px;
+        font-size: 0.9em;
+    }
 }

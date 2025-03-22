@@ -3,23 +3,12 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import './Image.css';
 
-interface ImageData {
-    fileName: string;
-    fileType: string;
-    data: string; // Base64-encoded image data
-}
-
-interface ImageDto {
-    userName: string;
-    images: ImageData[];
-}
-
 const Image: React.FC = () => {
-    const [images, setImages] = useState<string[]>([]);
+    const [image, setImage] = useState<string | null>(null); // Store a single image URL
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [userName, setUserName] = useState<string | null>(null);
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null); // Store a single file
 
     // Retrieve the token from local storage
     const token = localStorage.getItem('token');
@@ -58,101 +47,100 @@ const Image: React.FC = () => {
         fetchUserName();
     }, [token]);
 
-    // Fetch user images from the backend
+    // Fetch user image from the backend
     useEffect(() => {
-        const fetchImages = async () => {
+        const fetchImage = async () => {
             try {
                 if (!userName) {
                     return;
                 }
 
-                console.log('Fetching images for user:', userName); // Debug log
-                const response = await axios.get(`http://localhost:8080/api/public/user/images/${userName}`, {
+                console.log('Fetching image for user:', userName); // Debug log
+                const response = await axios.get(`http://localhost:8080/api/public/user/image/${userName}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                console.log('Images:', response.data); // Debug log
+                console.log('Image:', response.data); // Debug log
 
-                // Assuming the backend returns relative paths, prepend the base URL
+                // Assuming the backend returns the image path, prepend the base URL
                 const baseUrl = 'http://localhost:8080'; // Replace with your backend base URL
-                const fullImageUrls = response.data.map((imagePath: string) => `${baseUrl}${imagePath}`);
+                const imageUrl = `${baseUrl}${response.data}`;
 
-                setImages(fullImageUrls); // Set the full image URLs in state
+                setImage(imageUrl); // Set the image URL in state
                 setLoading(false);
             } catch (err) {
-                console.error('Error fetching images:', err); // Debug log
-                setError('Failed to fetch images. Please try again later.');
+                console.error('Error fetching image:', err); // Debug log
+                setError('Failed to fetch image. Please try again later.');
                 setLoading(false);
             }
         };
 
         if (userName) {
-            fetchImages();
+            fetchImage();
         }
     }, [userName, token]);
 
     // Handle file selection
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files) {
-            const files = Array.from(event.target.files);
-            setSelectedFiles(files);
+        if (event.target.files && event.target.files[0]) {
+            setSelectedFile(event.target.files[0]); // Store the selected file
         }
     };
 
     // Handle image upload
     const handleUpload = async () => {
         try {
-            if (!userName || selectedFiles.length === 0) {
-                alert('Please select at least one image to upload.');
+            if (!userName || !selectedFile) {
+                alert('Please select an image to upload.');
                 return;
             }
 
-            // Convert selected files to Base64 and prepare the ImageDto
-            const imageDataList: ImageData[] = await Promise.all(
-                selectedFiles.map(async (file) => {
-                    const base64Data = await convertFileToBase64(file);
-                    return {
-                        fileName: file.name,
-                        fileType: file.type,
-                        data: base64Data,
-                    };
-                })
-            );
-
-            const imageDto: ImageDto = {
-                userName: userName,
-                images: imageDataList,
-            };
+            const formData = new FormData();
+            formData.append('file', selectedFile); // Append the single file
+            formData.append('userName', userName);
 
             // Send the image data to the backend
-            const response = await axios.post('http://localhost:8080/api/public/user/images/upload', imageDto, {
+            const response = await axios.post('http://localhost:8080/api/public/user/image/upload', formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'multipart/form-data',
                 },
             });
 
             console.log('Upload response:', response.data); // Debug log
-            alert('Images uploaded successfully!');
+            alert('Image uploaded successfully!');
 
-            // Refresh the images after upload
-            setSelectedFiles([]);
-            window.location.reload(); // Reload the page to fetch the updated images
+            // Refresh the image after upload
+            setSelectedFile(null);
+            window.location.reload(); // Reload the page to fetch the updated image
         } catch (err) {
-            console.error('Error uploading images:', err); // Debug log
-            alert('Failed to upload images. Please try again later.');
+            console.error('Error uploading image:', err); // Debug log
+            alert('Failed to upload image. Please try again later.');
         }
     };
 
-    // Convert file to Base64
-    const convertFileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = (error) => reject(error);
-        });
+    // Handle image deletion
+    const handleDeleteImage = async () => {
+        try {
+            if (!userName) {
+                alert('User not found.');
+                return;
+            }
+
+            // Send a request to delete the user's image
+            await axios.delete(`http://localhost:8080/api/public/user/image/delete/${userName}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            alert('Image deleted successfully!');
+            setImage(null); // Clear the image from the state
+        } catch (err) {
+            console.error('Error deleting image:', err); // Debug log
+            alert('Failed to delete image. Please try again later.');
+        }
     };
 
     // Loading state
@@ -167,28 +155,32 @@ const Image: React.FC = () => {
 
     return (
         <div className="image-container">
-            <h1>User Images</h1>
+            <h1>User Image</h1>
 
             {/* Image Upload Section */}
             <div className="upload-section">
                 <input
                     type="file"
                     accept="image/*"
-                    multiple
                     onChange={handleFileChange}
                 />
                 <button onClick={handleUpload} className="upload-button">
-                    Upload Images
+                    Upload Image
                 </button>
             </div>
 
-            {/* Display Images */}
-            <div className="image-list">
-                {images.map((image, index) => (
-                    <div key={index} className="image-item">
-                        <img src={image} alt={`User image ${index + 1}`} className="image" />
+            {/* Display Image */}
+            <div className="image-display">
+                {image ? (
+                    <div className="image-item">
+                        <img src={image} alt="User image" className="image" />
+                        <button onClick={handleDeleteImage} className="delete-button">
+                            Delete Image
+                        </button>
                     </div>
-                ))}
+                ) : (
+                    <p>No image uploaded.</p>
+                )}
             </div>
         </div>
     );
