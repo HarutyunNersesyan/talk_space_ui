@@ -1,5 +1,5 @@
 import React from 'react';
-import {Route, Routes, Navigate} from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import Login from '../pages/login/LoginPage';
 import SignUp from '../pages/login/SignUpPage';
 import Verify from '../pages/login/VerifyEmailPage';
@@ -10,33 +10,43 @@ import PublicRoute from './PublicRoute';
 import Profile from '../components/Profile';
 import Hobbies from '../components/Hobbies';
 import Specialities from '../components/Specialities';
-import SocialNetworks from '../components/SocialNetworks'; // Import the SocialNetworks component
+import SocialNetworks from '../components/SocialNetworks';
 import Image from '../components/Image';
-import Edit from "../components/Edit"; // Import the Image component
+import Edit from "../components/Edit";
 import ChangePassword from "../components/ChangePassword";
 import Search from "../components/Search";
+import Chat from "../components/Chat"; // Import the new Chat component
 
 const RoutesConfig: React.FC = () => (
     <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<PublicRoute element={<Login/>}/>}/>
-        <Route path="/signUp" element={<PublicRoute element={<SignUp/>}/>}/>
-        <Route path="/verify" element={<PublicRoute element={<Verify/>}/>}/>
-        <Route path="/forgotPassword" element={<PublicRoute element={<Forgot/>}/>}/>
+            {/* Authentication Routes */}
+            <Route path="/login" element={<PublicRoute element={<Login />} />} />
+            <Route path="/signUp" element={<PublicRoute element={<SignUp />} />} />
+            <Route path="/verify" element={<PublicRoute element={<Verify />} />} />
+            <Route path="/forgotPassword" element={<PublicRoute element={<Forgot />} />} />
 
-        {/* Protected Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard/>}/>}/>
-        <Route path="/profile" element={<ProtectedRoute element={<Profile/>}/>}/>
-        <Route path="/hobbies" element={<ProtectedRoute element={<Hobbies/>}/>}/>
-        <Route path="/specialities" element={<ProtectedRoute element={<Specialities/>}/>}/>
-        <Route path="/social-networks" element={<ProtectedRoute element={<SocialNetworks/>}/>}/>
-        <Route path="/image" element={<ProtectedRoute element={<Image/>}/>}/>
-        <Route path="/edit" element={<ProtectedRoute element={<Edit/>}/>}/>
-        <Route path="/changePassword" element={<ProtectedRoute element={<ChangePassword/>}/>}/>
-        <Route path="/search" element={<ProtectedRoute element={<Search/>}/>}/>
+            {/* Main App Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
 
-        {/* Fallback Route */}
-        <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
+            {/* Profile Management Routes */}
+            <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
+            <Route path="/edit" element={<ProtectedRoute element={<Edit />} />} />
+            <Route path="/image" element={<ProtectedRoute element={<Image />} />} />
+            <Route path="/changePassword" element={<ProtectedRoute element={<ChangePassword />} />} />
+
+            {/* Interest Routes */}
+            <Route path="/hobbies" element={<ProtectedRoute element={<Hobbies />} />} />
+            <Route path="/specialities" element={<ProtectedRoute element={<Specialities />} />} />
+            <Route path="/social-networks" element={<ProtectedRoute element={<SocialNetworks />} />} />
+
+            {/* Discovery Routes */}
+            <Route path="/search" element={<ProtectedRoute element={<Search />} />} />
+
+            {/* Chat Route */}
+            <Route path="/chat/:userName" element={<ProtectedRoute element={<Chat />} />} />
+
+            {/* Fallback Route */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
 );
 
