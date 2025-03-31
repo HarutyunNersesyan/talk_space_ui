@@ -22,12 +22,31 @@
 .conversation-header {
     padding: 20px;
     border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .conversation-header h2 {
     margin: 0;
     font-size: 1.5rem;
     color: #333;
+}
+
+.connection-status {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.connection-status.connected {
+    background-color: #4caf50;
+    color: white;
+}
+
+.connection-status.disconnected {
+    background-color: #f44336;
+    color: white;
 }
 
 .conversation-items {
@@ -296,7 +315,7 @@
     margin-bottom: 10px;
 }
 
-.loading, .error, .empty {
+.loading, .error, .empty, .no-chats {
     padding: 20px;
     text-align: center;
     color: #666;
@@ -304,4 +323,33 @@
 
 .error {
     color: #dc3545;
+}
+
+.chat-loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.chat-error {
+    text-align: center;
+    padding: 40px;
+    color: #dc3545;
+}
+.typing-indicator {
+    margin-left: 10px;
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Add this to your existing .chat-header styles */
+.chat-header {
+    position: relative;
+}
+
+/* Add this to your existing .partner-info styles */
+.partner-info {
+    position: relative;
+    padding-right: 100px; /* Leave space for typing indicator */
 }

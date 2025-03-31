@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import './Chat.css';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiSend, FiPaperclip, FiSmile } from 'react-icons/fi';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 interface UserChatDto {
     partnerUsername: string;
@@ -28,7 +30,6 @@ interface ChatMessageDto {
 }
 
 const Chat: React.FC = () => {
-    // State management
     const [chats, setChats] = useState<UserChatDto[]>([]);
     const [activeChat, setActiveChat] = useState<ChatMessageDto[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -37,11 +38,102 @@ const Chat: React.FC = () => {
     const [newMessage, setNewMessage] = useState<string>('');
     const [selectedPartner, setSelectedPartner] = useState<string | null>(null);
     const [isTyping, setIsTyping] = useState<boolean>(false);
+    const [partnerTyping, setPartnerTyping] = useState<boolean>(false);
+    const [stompClient, setStompClient] = useState<Client | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const navigate = useNavigate();
     const { partnerUsername } = useParams();
     const token = localStorage.getItem('token');
+
+    // WebSocket connection and subscriptions
+    useEffect(() => {
+        if (!token || !userName) return;
+
+        const socketFactory = () => new SockJS('http://localhost:8080/ws');
+
+        const client = new Client({
+            webSocketFactory: socketFactory,
+            connectHeaders: {
+                Authorization: `Bearer ${token}`
+            },
+            debug: (str) => {
+                console.log('STOMP: ', str);
+            },
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+        });
+
+        client.onWebSocketError = (event) => {
+            console.error('WebSocket error:', event);
+            setError('WebSocket connection error');
+        };
+
+        client.onConnect = () => {
+            console.log('WebSocket Connected');
+            setStompClient(client);
+
+            // Subscribe to messages
+            client.subscribe(`/user/queue/messages`, (message) => {
+                const receivedMessage: ChatMessageDto = JSON.parse(message.body);
+                handleIncomingMessage(receivedMessage);
+            });
+
+            // Subscribe to typing indicators
+            client.subscribe(`/user/queue/typing`, (message) => {
+                const typingUpdate = JSON.parse(message.body);
+                if (typingUpdate.sender === selectedPartner) {
+                    setPartnerTyping(typingUpdate.isTyping);
+                }
+            });
+        };
+
+        client.onStompError = (frame) => {
+            console.error('Broker reported error: ' + frame.headers['message']);
+            console.error('Additional details: ' + frame.body);
+            setError('Connection error. Please refresh the page.');
+        };
+
+        client.onDisconnect = () => {
+            console.log('WebSocket Disconnected');
+        };
+
+        client.activate();
+
+        return () => {
+            if (client && client.connected) {
+                client.deactivate();
+            }
+        };
+    }, [token, userName, selectedPartner]);
+
+    const handleIncomingMessage = useCallback((message: ChatMessageDto) => {
+        // Check if message belongs to active chat
+        const isForActiveChat = selectedPartner &&
+            (message.sender === selectedPartner || message.receiver === selectedPartner);
+
+        if (isForActiveChat) {
+            setActiveChat(prev => [...prev, message]);
+        }
+
+        // Update conversation list
+        setChats(prev => prev.map(chat =>
+            chat.partnerUsername === message.sender ||
+            chat.partnerUsername === message.receiver
+                ? {
+                    ...chat,
+                    lastMessage: message.content,
+                    lastMessageTime: message.timestamp,
+                    unreadCount: message.sender === userName || chat.partnerUsername !== selectedPartner
+                        ? chat.unreadCount + 1
+                        : 0
+                }
+                : chat
+        ));
+
+        scrollToBottom();
+    }, [selectedPartner, userName]);
 
     // Fetch user data
     useEffect(() => {
@@ -94,10 +186,11 @@ const Chat: React.FC = () => {
         fetchConversations();
     }, [userName, token, partnerUsername]);
 
-    // Load chat history
     const loadChatHistory = async (partner: string) => {
         try {
             setLoading(true);
+            setError(null);
+
             const response = await axios.get(
                 `http://localhost:8080/api/public/chat/history/${userName}/${partner}`,
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -114,7 +207,6 @@ const Chat: React.FC = () => {
         }
     };
 
-    // Mark messages as read
     const markMessagesAsRead = async (partner: string) => {
         try {
             await axios.post(
@@ -133,54 +225,48 @@ const Chat: React.FC = () => {
         }
     };
 
-    // Send message
     const sendMessage = async () => {
-        if (!newMessage.trim() || !selectedPartner || !userName) return;
+        if (!newMessage.trim() || !selectedPartner || !userName || !stompClient) return;
+
+        const tempId = Date.now();
+        const tempMessage: ChatMessageDto = {
+            id: tempId,
+            sender: userName,
+            senderName: userName,
+            receiver: selectedPartner,
+            receiverName: selectedPartner,
+            content: newMessage,
+            timestamp: new Date().toISOString(),
+            isRead: false
+        };
+
+        // Optimistic update
+        setActiveChat(prev => [...prev, tempMessage]);
+        updateLastMessage(newMessage);
+        setNewMessage('');
+        scrollToBottom();
+        inputRef.current?.focus();
 
         try {
-            const tempId = Date.now();
-            const tempMessage: ChatMessageDto = {
-                id: tempId,
-                sender: userName,
-                senderName: userName,
-                receiver: selectedPartner,
-                receiverName: selectedPartner,
-                content: newMessage,
-                timestamp: new Date().toISOString(),
-                isRead: false
-            };
-
-            // Optimistic update
-            setActiveChat(prev => [...prev, tempMessage]);
-            updateLastMessage(newMessage);
-            setNewMessage('');
-            scrollToBottom();
-            inputRef.current?.focus();
-
-            // Send to server
-            const response = await axios.post(
-                'http://localhost:8080/api/public/chat/message',
-                {
+            await stompClient.publish({
+                destination: '/app/chat.send',
+                body: JSON.stringify({
                     sender: userName,
                     receiver: selectedPartner,
-                    content: newMessage,
-                    isRead: false
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            // Replace temporary message with server response
-            setActiveChat(prev =>
-                prev.map(msg => msg.id === tempId ? response.data : msg)
-            );
+                    content: newMessage
+                }),
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
         } catch (err) {
             console.error('Error sending message:', err);
             setError('Failed to send message');
-            setActiveChat(prev => prev.filter(msg => msg.id !== Date.now()));
+            // Remove optimistic update if failed
+            setActiveChat(prev => prev.filter(msg => msg.id !== tempId));
         }
     };
 
-    // Update last message in sidebar
     const updateLastMessage = (message: string) => {
         setChats(prev => prev.map(chat =>
             chat.partnerUsername === selectedPartner
@@ -194,7 +280,6 @@ const Chat: React.FC = () => {
         ));
     };
 
-    // Handle input key events
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -202,46 +287,79 @@ const Chat: React.FC = () => {
         }
     };
 
-    // Auto-resize textarea
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setNewMessage(e.target.value);
-        setIsTyping(!!e.target.value);
+        const value = e.target.value;
+        setNewMessage(value);
+        setIsTyping(!!value);
+
+        // Send typing indicator
+        if (stompClient && selectedPartner) {
+            stompClient.publish({
+                destination: '/app/typing',
+                body: JSON.stringify({
+                    sender: userName,
+                    receiver: selectedPartner,
+                    isTyping: !!value
+                }),
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+        }
     };
 
-    // Scroll to bottom of chat
     const scrollToBottom = () => {
         setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }, 100);
     };
 
-    // Format message time
     const formatTime = (dateTimeString: string) => {
         const date = new Date(dateTimeString);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
-    // Select chat
     const selectChat = (partner: string) => {
         setSelectedPartner(partner);
         loadChatHistory(partner);
         navigate(`/chat/${partner}`);
     };
 
+    // Mark messages as read when chat is active
+    useEffect(() => {
+        if (selectedPartner && activeChat.length > 0) {
+            const unreadMessages = activeChat.filter(
+                msg => msg.receiver === userName && !msg.isRead
+            );
+
+            if (unreadMessages.length > 0) {
+                markMessagesAsRead(selectedPartner);
+            }
+        }
+    }, [activeChat, selectedPartner, userName]);
+
+    if (loading && !activeChat.length) {
+        return <div className="chat-loading">Loading chats...</div>;
+    }
+
+    if (error) {
+        return <div className="chat-error">{error}</div>;
+    }
+
     return (
         <div className="chat-app">
-            {/* Sidebar with conversations */}
             <div className="conversation-list">
                 <div className="conversation-header">
                     <h2>Messages</h2>
+                    {stompClient?.connected ? (
+                        <span className="connection-status connected">Online</span>
+                    ) : (
+                        <span className="connection-status disconnected">Offline</span>
+                    )}
                 </div>
                 <div className="conversation-items">
-                    {loading && chats.length === 0 ? (
-                        <div className="loading">Loading conversations...</div>
-                    ) : error ? (
-                        <div className="error">{error}</div>
-                    ) : chats.length === 0 ? (
-                        <div className="empty">No conversations yet</div>
+                    {chats.length === 0 ? (
+                        <div className="no-chats">No conversations yet</div>
                     ) : (
                         chats.map(chat => (
                             <div
@@ -283,7 +401,6 @@ const Chat: React.FC = () => {
                 </div>
             </div>
 
-            {/* Main chat area */}
             <div className="chat-area">
                 {selectedPartner ? (
                     <>
@@ -302,40 +419,40 @@ const Chat: React.FC = () => {
                                     )}
                                 </div>
                                 <h3>{chats.find(c => c.partnerUsername === selectedPartner)?.partnerName}</h3>
+                                {partnerTyping && (
+                                    <span className="typing-indicator">typing...</span>
+                                )}
                             </div>
                         </div>
 
                         <div className="messages">
-                            {loading && activeChat.length === 0 ? (
-                                <div className="loading">Loading messages...</div>
-                            ) : error ? (
-                                <div className="error">{error}</div>
-                            ) : activeChat.length === 0 ? (
+                            {activeChat.length === 0 ? (
                                 <div className="empty">No messages yet</div>
                             ) : (
-                                activeChat.map(message => (
-                                    <div
-                                        key={message.id}
-                                        className={`message ${message.sender === userName ? 'sent' : 'received'}`}
-                                    >
-                                        <div className="message-content">
-                                            <p>{message.content}</p>
-                                            <span className="message-time">
-                                                {formatTime(message.timestamp)}
-                                                {message.sender === userName && (
-                                                    <span className="status">
-                                                        {message.isRead ? '✓✓' : '✓'}
-                                                    </span>
-                                                )}
-                                            </span>
+                                activeChat
+                                    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                                    .map(message => (
+                                        <div
+                                            key={message.id}
+                                            className={`message ${message.sender === userName ? 'sent' : 'received'}`}
+                                        >
+                                            <div className="message-content">
+                                                <p>{message.content}</p>
+                                                <span className="message-time">
+                                                    {formatTime(message.timestamp)}
+                                                    {message.sender === userName && (
+                                                        <span className="status">
+                                                            {message.isRead ? '✓✓' : '✓'}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    ))
                             )}
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* SMS-style message editor */}
                         <div className="message-editor">
                             <div className="editor-tools">
                                 <button className="tool-button">
@@ -356,7 +473,7 @@ const Chat: React.FC = () => {
                             />
                             <button
                                 onClick={sendMessage}
-                                disabled={!isTyping}
+                                disabled={!isTyping || !stompClient?.connected}
                                 className={`send-button ${isTyping ? 'active' : ''}`}
                             >
                                 <FiSend />
