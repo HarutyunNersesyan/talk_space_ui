@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
 import SettingsIcon from '@mui/icons-material/Settings';
-import HomeIcon from '@mui/icons-material/Home'; // Import Home icon
-import InfoIcon from '@mui/icons-material/Info'; // Import About Us icon
-import SearchIcon from '@mui/icons-material/Search'; // Import Search icon
+import HomeIcon from '@mui/icons-material/Home';
+import InfoIcon from '@mui/icons-material/Info';
+import SearchIcon from '@mui/icons-material/Search';
+import ChatIcon from '@mui/icons-material/Chat';
 
 export interface NavItem {
     to: string;
@@ -11,10 +12,11 @@ export interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { to: '/', icon: <HomeIcon />, label: 'Home' }, // Home button
-    { to: '/about', icon: <InfoIcon />, label: 'About Us' }, // About Us button
-    { to: '/profile', icon: <SettingsIcon />, label: 'Profile' }, // Profile button
-    { to: '/search', icon: <SearchIcon />, label: 'Search' }, // Search button
+    { to: '/', icon: <HomeIcon />, label: 'Home' },
+    { to: '/about', icon: <InfoIcon />, label: 'About Us' },
+    { to: '/profile', icon: <SettingsIcon />, label: 'Profile' },
+    { to: '/search', icon: <SearchIcon />, label: 'Search' },
+    { to: '/chat', icon: <ChatIcon />, label: 'Chat' },
 ];
 
 export default navItems;
