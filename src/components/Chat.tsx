@@ -29,6 +29,12 @@ interface ChatMessageDto {
     isRead: boolean;
 }
 
+interface TypingNotificationDto {
+    sender: string;
+    receiver: string;
+    typing: boolean;
+}
+
 const Chat: React.FC = () => {
     const [chats, setChats] = useState<UserChatDto[]>([]);
     const [activeChat, setActiveChat] = useState<ChatMessageDto[]>([]);
@@ -46,106 +52,90 @@ const Chat: React.FC = () => {
     const { partnerUsername } = useParams();
     const token = localStorage.getItem('token');
 
-    // WebSocket connection and subscriptions
-    useEffect(() => {
+    // WebSocket connection
+    const setupWebSocket = useCallback(() => {
         if (!token || !userName) return;
 
         const socketFactory = () => new SockJS('http://localhost:8080/ws');
-
         const client = new Client({
             webSocketFactory: socketFactory,
-            connectHeaders: {
-                Authorization: `Bearer ${token}`
-            },
-            debug: (str) => {
-                console.log('STOMP: ', str);
-            },
+            connectHeaders: { Authorization: `Bearer ${token}` },
+            debug: (str) => console.log('STOMP: ', str),
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
         });
 
-        client.onWebSocketError = (event) => {
-            console.error('WebSocket error:', event);
-            setError('WebSocket connection error');
-        };
-
         client.onConnect = () => {
             console.log('WebSocket Connected');
             setStompClient(client);
 
-            // Subscribe to messages
             client.subscribe(`/user/queue/messages`, (message) => {
                 const receivedMessage: ChatMessageDto = JSON.parse(message.body);
-                handleIncomingMessage(receivedMessage);
+                console.log('Received message:', receivedMessage);
+
+                // Update active chat if relevant
+                if (selectedPartner &&
+                    (receivedMessage.sender === selectedPartner ||
+                        receivedMessage.receiver === selectedPartner)) {
+                    setActiveChat(prev => [...prev, receivedMessage]);
+                }
+
+                // Update conversation list
+                setChats(prev => prev.map(chat =>
+                    chat.partnerUsername === receivedMessage.sender ||
+                    chat.partnerUsername === receivedMessage.receiver
+                        ? {
+                            ...chat,
+                            lastMessage: receivedMessage.content,
+                            lastMessageTime: receivedMessage.timestamp,
+                            unreadCount: receivedMessage.sender === userName ||
+                            chat.partnerUsername !== selectedPartner
+                                ? chat.unreadCount + 1
+                                : 0
+                        }
+                        : chat
+                ));
+
+                scrollToBottom();
             });
 
-            // Subscribe to typing indicators
             client.subscribe(`/user/queue/typing`, (message) => {
-                const typingUpdate = JSON.parse(message.body);
+                const typingUpdate: TypingNotificationDto = JSON.parse(message.body);
                 if (typingUpdate.sender === selectedPartner) {
-                    setPartnerTyping(typingUpdate.isTyping);
+                    setPartnerTyping(typingUpdate.typing);
+                    setTimeout(() => setPartnerTyping(false), 2000);
                 }
             });
         };
 
         client.onStompError = (frame) => {
             console.error('Broker reported error: ' + frame.headers['message']);
-            console.error('Additional details: ' + frame.body);
             setError('Connection error. Please refresh the page.');
-        };
-
-        client.onDisconnect = () => {
-            console.log('WebSocket Disconnected');
         };
 
         client.activate();
 
         return () => {
-            if (client && client.connected) {
+            if (client.connected) {
                 client.deactivate();
             }
         };
     }, [token, userName, selectedPartner]);
 
-    const handleIncomingMessage = useCallback((message: ChatMessageDto) => {
-        // Check if message belongs to active chat
-        const isForActiveChat = selectedPartner &&
-            (message.sender === selectedPartner || message.receiver === selectedPartner);
-
-        if (isForActiveChat) {
-            setActiveChat(prev => [...prev, message]);
-        }
-
-        // Update conversation list
-        setChats(prev => prev.map(chat =>
-            chat.partnerUsername === message.sender ||
-            chat.partnerUsername === message.receiver
-                ? {
-                    ...chat,
-                    lastMessage: message.content,
-                    lastMessageTime: message.timestamp,
-                    unreadCount: message.sender === userName || chat.partnerUsername !== selectedPartner
-                        ? chat.unreadCount + 1
-                        : 0
-                }
-                : chat
-        ));
-
-        scrollToBottom();
-    }, [selectedPartner, userName]);
+    useEffect(() => {
+        const cleanup = setupWebSocket();
+        return cleanup;
+    }, [setupWebSocket]);
 
     // Fetch user data
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 if (!token) throw new Error('No token found');
-
                 const decodedToken = jwtDecode<{ sub: string }>(token);
-                const email = decodedToken.sub;
-
                 const response = await axios.get(
-                    `http://localhost:8080/api/public/user/get/userName/${email}`,
+                    `http://localhost:8080/api/public/user/get/userName/${decodedToken.sub}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setUserName(response.data);
@@ -155,7 +145,6 @@ const Chat: React.FC = () => {
                 setLoading(false);
             }
         };
-
         fetchUserData();
     }, [token]);
 
@@ -164,13 +153,11 @@ const Chat: React.FC = () => {
         const fetchConversations = async () => {
             try {
                 if (!userName) return;
-
                 const response = await axios.get(
                     `http://localhost:8080/api/public/chat/conversations/${userName}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setChats(response.data);
-
                 if (partnerUsername) {
                     setSelectedPartner(partnerUsername);
                     loadChatHistory(partnerUsername);
@@ -182,21 +169,17 @@ const Chat: React.FC = () => {
                 setLoading(false);
             }
         };
-
         fetchConversations();
     }, [userName, token, partnerUsername]);
 
     const loadChatHistory = async (partner: string) => {
         try {
             setLoading(true);
-            setError(null);
-
             const response = await axios.get(
                 `http://localhost:8080/api/public/chat/history/${userName}/${partner}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setActiveChat(response.data);
-
             await markMessagesAsRead(partner);
             scrollToBottom();
         } catch (err) {
@@ -214,7 +197,6 @@ const Chat: React.FC = () => {
                 null,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-
             setChats(prev => prev.map(chat =>
                 chat.partnerUsername === partner
                     ? { ...chat, unreadCount: 0 }
@@ -242,10 +224,8 @@ const Chat: React.FC = () => {
 
         // Optimistic update
         setActiveChat(prev => [...prev, tempMessage]);
-        updateLastMessage(newMessage);
         setNewMessage('');
         scrollToBottom();
-        inputRef.current?.focus();
 
         try {
             await stompClient.publish({
@@ -255,29 +235,13 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     content: newMessage
                 }),
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` }
             });
         } catch (err) {
             console.error('Error sending message:', err);
             setError('Failed to send message');
-            // Remove optimistic update if failed
             setActiveChat(prev => prev.filter(msg => msg.id !== tempId));
         }
-    };
-
-    const updateLastMessage = (message: string) => {
-        setChats(prev => prev.map(chat =>
-            chat.partnerUsername === selectedPartner
-                ? {
-                    ...chat,
-                    lastMessage: message,
-                    lastMessageTime: new Date().toISOString(),
-                    unreadCount: 0
-                }
-                : chat
-        ));
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -292,7 +256,6 @@ const Chat: React.FC = () => {
         setNewMessage(value);
         setIsTyping(!!value);
 
-        // Send typing indicator
         if (stompClient && selectedPartner) {
             stompClient.publish({
                 destination: '/app/typing',
@@ -301,9 +264,7 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     isTyping: !!value
                 }),
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` }
             });
         }
     };
@@ -315,8 +276,11 @@ const Chat: React.FC = () => {
     };
 
     const formatTime = (dateTimeString: string) => {
-        const date = new Date(dateTimeString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return new Date(dateTimeString).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
     };
 
     const selectChat = (partner: string) => {
@@ -324,19 +288,6 @@ const Chat: React.FC = () => {
         loadChatHistory(partner);
         navigate(`/chat/${partner}`);
     };
-
-    // Mark messages as read when chat is active
-    useEffect(() => {
-        if (selectedPartner && activeChat.length > 0) {
-            const unreadMessages = activeChat.filter(
-                msg => msg.receiver === userName && !msg.isRead
-            );
-
-            if (unreadMessages.length > 0) {
-                markMessagesAsRead(selectedPartner);
-            }
-        }
-    }, [activeChat, selectedPartner, userName]);
 
     if (loading && !activeChat.length) {
         return <div className="chat-loading">Loading chats...</div>;
@@ -383,10 +334,7 @@ const Chat: React.FC = () => {
                                     <div className="conversation-header">
                                         <h3>{chat.partnerName}</h3>
                                         <span className="time">
-                                            {new Date(chat.lastMessageTime).toLocaleTimeString([], {
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
+                                            {formatTime(chat.lastMessageTime)}
                                         </span>
                                     </div>
                                     <p className="last-message">
@@ -473,8 +421,8 @@ const Chat: React.FC = () => {
                             />
                             <button
                                 onClick={sendMessage}
-                                disabled={!isTyping || !stompClient?.connected}
-                                className={`send-button ${isTyping ? 'active' : ''}`}
+                                disabled={!newMessage.trim() || !stompClient?.connected}
+                                className={`send-button ${newMessage.trim() ? 'active' : ''}`}
                             >
                                 <FiSend />
                             </button>
