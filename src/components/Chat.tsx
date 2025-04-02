@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
 import './Chat.css';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FiSend, FiPaperclip, FiSmile } from 'react-icons/fi';
-import { Client } from '@stomp/stompjs';
+import {jwtDecode} from 'jwt-decode';
+import {useNavigate, useParams} from 'react-router-dom';
+import {FiSend, FiPaperclip, FiSmile} from 'react-icons/fi';
+import {Client} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 interface UserChatDto {
@@ -49,7 +49,7 @@ const Chat: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const navigate = useNavigate();
-    const { partnerUsername } = useParams();
+    const {partnerUsername} = useParams();
     const token = localStorage.getItem('token');
 
     // WebSocket connection
@@ -59,7 +59,7 @@ const Chat: React.FC = () => {
         const socketFactory = () => new SockJS('http://localhost:8080/ws');
         const client = new Client({
             webSocketFactory: socketFactory,
-            connectHeaders: { Authorization: `Bearer ${token}` },
+            connectHeaders: {Authorization: `Bearer ${token}`},
             debug: (str) => console.log('STOMP: ', str),
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -74,7 +74,7 @@ const Chat: React.FC = () => {
                 const receivedMessage: ChatMessageDto = JSON.parse(message.body);
                 console.log('Received message:', receivedMessage);
 
-                // Update active chat if relevant
+
                 if (selectedPartner &&
                     (receivedMessage.sender === selectedPartner ||
                         receivedMessage.receiver === selectedPartner)) {
@@ -136,7 +136,7 @@ const Chat: React.FC = () => {
                 const decodedToken = jwtDecode<{ sub: string }>(token);
                 const response = await axios.get(
                     `http://localhost:8080/api/public/user/get/userName/${decodedToken.sub}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
+                    {headers: {Authorization: `Bearer ${token}`}}
                 );
                 setUserName(response.data);
             } catch (err) {
@@ -155,7 +155,7 @@ const Chat: React.FC = () => {
                 if (!userName) return;
                 const response = await axios.get(
                     `http://localhost:8080/api/public/chat/conversations/${userName}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
+                    {headers: {Authorization: `Bearer ${token}`}}
                 );
                 setChats(response.data);
                 if (partnerUsername) {
@@ -177,7 +177,7 @@ const Chat: React.FC = () => {
             setLoading(true);
             const response = await axios.get(
                 `http://localhost:8080/api/public/chat/history/${userName}/${partner}`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                {headers: {Authorization: `Bearer ${token}`}}
             );
             setActiveChat(response.data);
             await markMessagesAsRead(partner);
@@ -195,11 +195,11 @@ const Chat: React.FC = () => {
             await axios.post(
                 `http://localhost:8080/api/public/chat/read/${partner}/${userName}`,
                 null,
-                { headers: { Authorization: `Bearer ${token}` } }
+                {headers: {Authorization: `Bearer ${token}`}}
             );
             setChats(prev => prev.map(chat =>
                 chat.partnerUsername === partner
-                    ? { ...chat, unreadCount: 0 }
+                    ? {...chat, unreadCount: 0}
                     : chat
             ));
         } catch (err) {
@@ -235,7 +235,7 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     content: newMessage
                 }),
-                headers: { Authorization: `Bearer ${token}` }
+                headers: {Authorization: `Bearer ${token}`}
             });
         } catch (err) {
             console.error('Error sending message:', err);
@@ -264,14 +264,14 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     isTyping: !!value
                 }),
-                headers: { Authorization: `Bearer ${token}` }
+                headers: {Authorization: `Bearer ${token}`}
             });
         }
     };
 
     const scrollToBottom = () => {
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
         }, 100);
     };
 
@@ -320,7 +320,7 @@ const Chat: React.FC = () => {
                             >
                                 <div className="avatar">
                                     {chat.partnerImage ? (
-                                        <img src={`http://localhost:8080${chat.partnerImage}`} alt={chat.partnerName} />
+                                        <img src={`http://localhost:8080${chat.partnerImage}`} alt={chat.partnerName}/>
                                     ) : (
                                         <div className="default-avatar">
                                             {chat.partnerName.charAt(0).toUpperCase()}
@@ -398,16 +398,16 @@ const Chat: React.FC = () => {
                                         </div>
                                     ))
                             )}
-                            <div ref={messagesEndRef} />
+                            <div ref={messagesEndRef}/>
                         </div>
 
                         <div className="message-editor">
                             <div className="editor-tools">
                                 <button className="tool-button">
-                                    <FiPaperclip />
+                                    <FiPaperclip/>
                                 </button>
                                 <button className="tool-button">
-                                    <FiSmile />
+                                    <FiSmile/>
                                 </button>
                             </div>
                             <textarea
@@ -424,7 +424,7 @@ const Chat: React.FC = () => {
                                 disabled={!newMessage.trim() || !stompClient?.connected}
                                 className={`send-button ${newMessage.trim() ? 'active' : ''}`}
                             >
-                                <FiSend />
+                                <FiSend/>
                             </button>
                         </div>
                     </>

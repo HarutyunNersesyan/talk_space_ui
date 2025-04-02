@@ -2,16 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import './Profile.css'; // Ensure you have the corresponding CSS file
+import './Profile.css';
 
 const Profile: React.FC = () => {
-    const [picture, setPicture] = useState<string | null>(null); // Single picture state
+    const [picture, setPicture] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [userName, setUserName] = useState<string | null>(null);
-    const navigate = useNavigate(); // Initialize useNavigate
+    const navigate = useNavigate();
 
-    // Retrieve the token from local storage
     const token = localStorage.getItem('token');
 
     useEffect(() => {
@@ -37,22 +36,44 @@ const Profile: React.FC = () => {
         fetchUserName();
     }, [token]);
 
-    // Handle file selection
+    useEffect(() => {
+        const fetchProfilePicture = async () => {
+            if (!userName) return;
+
+            try {
+                const response = await axios.get(`http://localhost:8080/api/public/user/image/${userName}`, {
+                    responseType: 'blob',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                const imageUrl = URL.createObjectURL(response.data);
+                setPicture(imageUrl);
+            } catch (err) {
+                console.error('No profile picture found:', err);
+            }
+        };
+
+        if (userName) {
+            fetchProfilePicture();
+        }
+    }, [userName, token]);
+
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setPicture(reader.result as string); // Set the single picture
+                setPicture(reader.result as string);
             };
             reader.readAsDataURL(file);
         }
     };
 
-    // Handle profile picture upload
     const handleUploadPicture = async () => {
         try {
-            if (!picture) {
+            if (!picture || !userName) {
                 alert('Please select a picture to upload.');
                 return;
             }
@@ -60,27 +81,21 @@ const Profile: React.FC = () => {
             setLoading(true);
             setError(null);
 
-            if (!userName) {
-                throw new Error('User name is not available.');
-            }
-
-            // Prepare the data to be sent to the backend
             const formData = new FormData();
-            formData.append('file', dataURLtoFile(picture, `profile_picture.png`)); // Append the single file
+            formData.append('file', dataURLtoFile(picture, `profile_picture.png`));
             formData.append('userName', userName);
 
-            // Send the profile picture to the backend
-            const uploadResponse = await axios.post('http://localhost:8080/api/public/user/image/upload', formData, {
+            await axios.post('http://localhost:8080/api/public/user/image/upload', formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
                 },
             });
 
-            console.log('Upload response:', uploadResponse.data); // Debug log
             alert('Profile picture uploaded successfully!');
+            window.location.reload();
         } catch (err) {
-            console.error('Error uploading picture:', err); // Debug log
+            console.error('Error uploading picture:', err);
             setError('Failed to upload picture. Please try again later.');
             alert('Failed to upload picture. Please try again later.');
         } finally {
@@ -88,7 +103,6 @@ const Profile: React.FC = () => {
         }
     };
 
-    // Convert data URL to File object
     const dataURLtoFile = (dataUrl: string, filename: string): File => {
         const arr = dataUrl.split(',');
         const mime = arr[0].match(/:(.*?);/)![1];
@@ -101,26 +115,31 @@ const Profile: React.FC = () => {
         return new File([u8arr], filename, { type: mime });
     };
 
-    // Handle image deletion
-    const handleDeleteImage = () => {
-        setPicture(null); // Clear the picture
+    const handleDeleteImage = async () => {
+        try {
+            if (!userName) {
+                alert('User not found.');
+                return;
+            }
+
+            await axios.delete(`http://localhost:8080/api/public/user/image/delete/${userName}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            setPicture(null);
+            alert('Image deleted successfully!');
+        } catch (err) {
+            console.error('Error deleting image:', err);
+            alert('Failed to delete image. Please try again later.');
+        }
     };
 
-    const handleUpdateHobbiesClick = () => {
-        navigate('/hobbies'); // Redirect to /hobbies
-    };
-
-    const handleUpdateSpecialtiesClick = () => {
-        navigate('/specialities'); // Redirect to /specialities
-    };
-
-    const handleUpdateSocialNetworksClick = () => {
-        navigate('/social-networks'); // Redirect to /social-networks
-    };
-
-    const handleEditProfileClick = () => {
-        navigate('/edit'); // Redirect to /edit
-    };
+    const handleUpdateHobbiesClick = () => navigate('/hobbies');
+    const handleUpdateSpecialtiesClick = () => navigate('/specialities');
+    const handleUpdateSocialNetworksClick = () => navigate('/social-networks');
+    const handleEditProfileClick = () => navigate('/edit');
 
     return (
         <div className="profile-container">
