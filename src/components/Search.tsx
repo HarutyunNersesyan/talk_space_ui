@@ -35,7 +35,6 @@ interface SearchUser {
     age: number;
     gender: string;
     zodiac: string;
-    image?: string | null;
     about: string;
     hobbies: string[];
     specialities: string[];
@@ -84,6 +83,7 @@ const Search: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [currentUserName, setCurrentUserName] = useState<string | null>(null);
     const [isLiking, setIsLiking] = useState(false);
+    const [imageUrls, setImageUrls] = useState<{[key: string]: string}>({});
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -112,6 +112,40 @@ const Search: React.FC = () => {
 
         fetchUserName();
     }, []);
+
+    useEffect(() => {
+        if (userProfile) {
+            const fetchImage = async () => {
+                try {
+                    const response = await axios.get(
+                        `http://localhost:8080/api/public/user/image/${userProfile.userName}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                            },
+                            responseType: 'blob'
+                        }
+                    );
+
+                    const imageUrl = URL.createObjectURL(response.data);
+                    setImageUrls(prev => ({
+                        ...prev,
+                        [userProfile.userName]: imageUrl
+                    }));
+                } catch (error) {
+                    console.error('Error fetching image:', error);
+                }
+            };
+
+            fetchImage();
+        }
+    }, [userProfile]);
+
+    useEffect(() => {
+        return () => {
+            Object.values(imageUrls).forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [imageUrls]);
 
     const handleSearchByHobbies = async () => {
         if (!currentUserName) {
@@ -251,7 +285,7 @@ const Search: React.FC = () => {
                         <div className="image-container">
                             <div className="image-placeholder">
                                 <img
-                                    src={userProfile.image || defaultProfileImage}
+                                    src={imageUrls[userProfile.userName] || defaultProfileImage}
                                     alt="Profile"
                                     className="profile-image"
                                     onError={(e) => {
