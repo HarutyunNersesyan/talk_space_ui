@@ -2,14 +2,24 @@ import React, { useState, FormEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext, AuthContextType } from '../../context/AuthContext';
-import { TextField, Button, Typography, Box } from '@mui/material';
+import {
+    TextField,
+    Button,
+    Typography,
+    Box,
+    InputAdornment,
+    IconButton
+} from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const apiUrl = process.env.REACT_APP_API_URL;
-const blue = '#1abc9c'; // Added the same blue color from SignUpForm
+const blue = '#1abc9c'; // Same blue color from SignUpForm
 
 const LoginForm: React.FC = () => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [showPassword, setShowPassword] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
     const authContext = useContext(AuthContext) as AuthContextType;
@@ -42,7 +52,7 @@ const LoginForm: React.FC = () => {
                 backgroundColor: '#ffffff',
             }}
         >
-            {/* Left Column - Logo/Text and Background Image */}
+            {/* Left Column */}
             <Box
                 sx={{
                     width: '55%',
@@ -54,7 +64,7 @@ const LoginForm: React.FC = () => {
                     position: 'relative',
                 }}
             >
-                {/* Header: Logo and TalkSpace Text */}
+                {/* Logo and App Name */}
                 <Box sx={{ display: 'flex', alignItems: 'center', position: 'absolute', top: 1, left: 30 }}>
                     <Box
                         component="img"
@@ -107,7 +117,6 @@ const LoginForm: React.FC = () => {
                         boxShadow: 'none',
                     }}
                 >
-                    {/* Login Heading */}
                     <Typography
                         variant="h5"
                         sx={{
@@ -121,7 +130,6 @@ const LoginForm: React.FC = () => {
                         LogIn
                     </Typography>
 
-                    {/* Login Form */}
                     <Box
                         component="form"
                         onSubmit={handleLogin}
@@ -132,7 +140,7 @@ const LoginForm: React.FC = () => {
                             gap: '20px',
                         }}
                     >
-                        {/* Email Field - Updated to match SignUpForm styling */}
+                        {/* Email Field */}
                         <TextField
                             label="Email"
                             type="email"
@@ -158,10 +166,10 @@ const LoginForm: React.FC = () => {
                             }}
                         />
 
-                        {/* Password Field - Updated to match SignUpForm styling */}
+                        {/* Password Field with toggle */}
                         <TextField
                             label="Password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             variant="outlined"
                             fullWidth
                             value={password}
@@ -181,6 +189,19 @@ const LoginForm: React.FC = () => {
                                     color: blue,
                                     fontFamily: 'Poppins',
                                 },
+                            }}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            edge="end"
+                                            aria-label="toggle password visibility"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
                             }}
                         />
 
@@ -216,12 +237,12 @@ const LoginForm: React.FC = () => {
                         </Box>
                     </Box>
 
-                    {/* Forgot Password Link - Updated styling */}
+                    {/* Forgot Password Link */}
                     <Typography
                         sx={{
                             marginTop: '16px',
-                            fontSize: '16px', // Increased font size
-                            color: blue, // Changed to the same blue color
+                            fontSize: '16px',
+                            color: blue,
                             textAlign: 'left',
                             cursor: 'pointer',
                             fontFamily: 'Poppins',
@@ -235,11 +256,11 @@ const LoginForm: React.FC = () => {
                         Forgot password?
                     </Typography>
 
-                    {/* Sign Up Link - Updated styling */}
+                    {/* Sign Up Link */}
                     <Typography
                         sx={{
                             marginTop: '24px',
-                            fontSize: '16px', // Increased font size
+                            fontSize: '16px',
                             color: '#000000',
                             textAlign: 'left',
                             fontFamily: 'Poppins',
