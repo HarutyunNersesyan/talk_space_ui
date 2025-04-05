@@ -5,6 +5,7 @@ import { AuthContext, AuthContextType } from '../../context/AuthContext';
 import { TextField, Button, Typography, Box } from '@mui/material';
 
 const apiUrl = process.env.REACT_APP_API_URL;
+const blue = '#1abc9c'; // Added the same blue color from SignUpForm
 
 const LoginForm: React.FC = () => {
     const [email, setEmail] = useState<string>('');
@@ -131,7 +132,7 @@ const LoginForm: React.FC = () => {
                             gap: '20px',
                         }}
                     >
-                        {/* Email Field */}
+                        {/* Email Field - Updated to match SignUpForm styling */}
                         <TextField
                             label="Email"
                             type="email"
@@ -141,23 +142,23 @@ const LoginForm: React.FC = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             sx={{
+                                borderRadius: '20px',
+                                fontFamily: 'Poppins',
                                 '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    '& fieldset': {
-                                        borderColor: '#40e0d0',
-                                        borderWidth: '2px',
-                                    },
-                                    '&:hover fieldset': {
-                                        borderColor: '#48d1cc',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: '#48d1cc',
-                                    },
+                                    borderRadius: '20px',
+                                    fontFamily: 'Poppins',
+                                    '& fieldset': { borderColor: blue },
+                                    '&:hover fieldset': { borderColor: blue },
+                                    '&.Mui-focused fieldset': { borderColor: blue },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: blue,
+                                    fontFamily: 'Poppins',
                                 },
                             }}
                         />
 
-                        {/* Password Field */}
+                        {/* Password Field - Updated to match SignUpForm styling */}
                         <TextField
                             label="Password"
                             type="password"
@@ -167,18 +168,18 @@ const LoginForm: React.FC = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             sx={{
+                                borderRadius: '20px',
+                                fontFamily: 'Poppins',
                                 '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    '& fieldset': {
-                                        borderColor: '#40e0d0',
-                                        borderWidth: '2px',
-                                    },
-                                    '&:hover fieldset': {
-                                        borderColor: '#48d1cc',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: '#48d1cc',
-                                    },
+                                    borderRadius: '20px',
+                                    fontFamily: 'Poppins',
+                                    '& fieldset': { borderColor: blue },
+                                    '&:hover fieldset': { borderColor: blue },
+                                    '&.Mui-focused fieldset': { borderColor: blue },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: blue,
+                                    fontFamily: 'Poppins',
                                 },
                             }}
                         />
@@ -199,14 +200,14 @@ const LoginForm: React.FC = () => {
                                     height: '40px',
                                     width: '120px',
                                     fontWeight: '600',
-                                    backgroundColor: '#40e0d0',
+                                    backgroundColor: blue,
                                     color: '#ffffff',
-                                    borderRadius: '12px',
+                                    borderRadius: '20px',
                                     textTransform: 'none',
                                     fontSize: '16px',
                                     marginTop: '8px',
                                     '&:hover': {
-                                        backgroundColor: '#48d1cc',
+                                        backgroundColor: '#16a085',
                                     },
                                 }}
                             >
@@ -215,14 +216,16 @@ const LoginForm: React.FC = () => {
                         </Box>
                     </Box>
 
-                    {/* Forgot Password Link */}
+                    {/* Forgot Password Link - Updated styling */}
                     <Typography
                         sx={{
                             marginTop: '16px',
-                            fontSize: '14px',
-                            color: '#000000',
+                            fontSize: '16px', // Increased font size
+                            color: blue, // Changed to the same blue color
                             textAlign: 'left',
                             cursor: 'pointer',
+                            fontFamily: 'Poppins',
+                            fontWeight: 500,
                             '&:hover': {
                                 textDecoration: 'underline',
                             },
@@ -232,23 +235,24 @@ const LoginForm: React.FC = () => {
                         Forgot password?
                     </Typography>
 
-                    {/* Sign Up Link */}
+                    {/* Sign Up Link - Updated styling */}
                     <Typography
                         sx={{
                             marginTop: '24px',
-                            fontSize: '14px',
+                            fontSize: '16px', // Increased font size
                             color: '#000000',
                             textAlign: 'left',
+                            fontFamily: 'Poppins',
                         }}
                     >
                         Don't have an account?{' '}
                         <span
                             onClick={authContext.redirectToSignUp}
                             style={{
-                                fontWeight: 'bold',
+                                fontWeight: 500,
                                 cursor: 'pointer',
+                                color: blue,
                                 textDecoration: 'underline',
-                                color: '#40e0d0',
                             }}
                         >
                             SignUp
