@@ -1,11 +1,8 @@
-import React, { useState, useEffect, FormEvent, useContext } from 'react';
+import React, { useState, FormEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import FormField from './FormField';
-import ErrorMessage from './ErrorMessage';
-import { Button, Container, Typography, Paper, Box } from '@mui/material';
-import { grey, blue, green } from '@mui/material/colors';
 import { AuthContext, AuthContextType } from '../../context/AuthContext';
+import { TextField, Button, Typography, Box } from '@mui/material';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -16,36 +13,16 @@ const LoginForm: React.FC = () => {
     const navigate = useNavigate();
     const authContext = useContext(AuthContext) as AuthContextType;
 
-    useEffect(() => {
-        setEmail('');
-        setPassword('');
-        setError('');
-    }, []);
-
     const handleLogin = async (e: FormEvent) => {
         e.preventDefault();
-
         try {
             const response = await axios.post<{ token: string; userName: string }>(`${apiUrl}/account/auth`, {
                 email,
                 password,
             });
-
-            console.log('API Response:', response.data); // Debug: Check the response
-
-            // Store the token and userName in localStorage
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('userName', response.data.userName);
-
-            console.log('Stored in localStorage:', { // Debug: Check localStorage
-                token: localStorage.getItem('token'),
-                userName: localStorage.getItem('userName'),
-            });
-
-            // Update the AuthContext with the userName
             authContext.setUser(response.data.userName);
-
-            // Redirect to the dashboard
             navigate('/dashboard');
         } catch (err) {
             setError('Wrong email or password');
@@ -56,92 +33,190 @@ const LoginForm: React.FC = () => {
         <Box
             sx={{
                 display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
                 minHeight: '100vh',
-                width: '100%',
-                backgroundColor: '#95a0ab',
-                overflow: 'hidden',
-                position: 'absolute',
-                top: 0,
-                left: 0,
+                backgroundColor: '#ffffff',
             }}
         >
-            <Container
-                maxWidth="sm"
+            {/* Left Column - Background Image with TalkSpace text */}
+            <Box
                 sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: 2,
-                    width: '100%',
-                    height: '100%',
-                    margin: 0,
+                    width: '40%',
+                    backgroundImage: 'url("/images/login-bg.jpg")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    display: { xs: 'none', md: 'block' },
+                    position: 'relative',
                 }}
             >
-                <Paper
-                    elevation={12}
+                <Typography
+                    variant="h4"
                     sx={{
-                        padding: 4,
-                        width: '100%',
-                        maxWidth: 500,
-                        borderRadius: 3,
-                        backgroundColor: grey[100],
-                        boxShadow: `0 10px 20px ${grey[500]}`,
-                        textAlign: 'center'
+                        position: 'absolute',
+                        top: '40px',
+                        left: '40px',
+                        fontWeight: 'bold',
+                        color: 'white',
+                        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
                     }}
                 >
-                    <Typography variant="h3" gutterBottom sx={{ color: blue[800] }}>
-                        Login to TalkSpace
+                    TalkSpace
+                </Typography>
+            </Box>
+
+            {/* Right Column - Login Form */}
+            <Box
+                sx={{
+                    width: { xs: '100%', md: '60%' },
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px',
+                }}
+            >
+                <Box
+                    sx={{
+                        width: '100%',
+                        maxWidth: '400px',
+                        padding: '40px',
+                        backgroundColor: 'white',
+                        borderRadius: '0',
+                        boxShadow: 'none',
+                    }}
+                >
+                    {/* Login Heading */}
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            marginBottom: '32px',
+                            fontWeight: '600',
+                            color: '#000000',
+                            textAlign: 'left',
+                            fontSize: '24px',
+                        }}
+                    >
+                        LogIn
                     </Typography>
-                    <form onSubmit={handleLogin}>
-                        <FormField
-                            name="email"
+
+                    {/* Login Form */}
+                    <Box
+                        component="form"
+                        onSubmit={handleLogin}
+                        sx={{
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '20px',
+                        }}
+                    >
+                        {/* Email Field */}
+                        <TextField
                             label="Email"
                             type="email"
+                            variant="outlined"
+                            fullWidth
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            sx={{ marginBottom: 2 }}
+                            required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    '& fieldset': {
+                                        borderColor: '#40e0d0',
+                                        borderWidth: '2px',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#48d1cc',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#48d1cc',
+                                    },
+                                },
+                            }}
                         />
-                        <FormField
-                            name="password"
+
+                        {/* Password Field */}
+                        <TextField
                             label="Password"
                             type="password"
+                            variant="outlined"
+                            fullWidth
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            sx={{ marginBottom: 2 }}
+                            required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    '& fieldset': {
+                                        borderColor: '#40e0d0',
+                                        borderWidth: '2px',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#48d1cc',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#48d1cc',
+                                    },
+                                },
+                            }}
                         />
-                        <ErrorMessage message={error} />
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            sx={{ marginTop: 2, padding: '12px 0', fontWeight: 'bold', borderRadius: 20 }}
-                        >
-                            Login
-                        </Button>
-                    </form>
 
+                        {/* Error Message */}
+                        {error && (
+                            <Typography color="error" sx={{ fontSize: '14px', textAlign: 'center' }}>
+                                {error}
+                            </Typography>
+                        )}
+
+                        {/* Login Button - Smaller and aligned left */}
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                sx={{
+                                    height: '40px', // Smaller height
+                                    width: '120px', // Smaller width
+                                    fontWeight: '600',
+                                    backgroundColor: '#40e0d0',
+                                    color: '#ffffff',
+                                    borderRadius: '12px',
+                                    textTransform: 'none',
+                                    fontSize: '16px',
+                                    marginTop: '8px',
+                                    '&:hover': {
+                                        backgroundColor: '#48d1cc',
+                                    },
+                                }}
+                            >
+                                LogIn
+                            </Button>
+                        </Box>
+                    </Box>
+
+                    {/* Sign Up Link */}
                     <Typography
-                        variant="body2"
-                        sx={{ marginTop: 2, color: blue[800], fontWeight: 'bold', cursor: 'pointer' }}
-                        onClick={authContext.redirectToForgotPassword}
+                        sx={{
+                            marginTop: '24px',
+                            fontSize: '14px',
+                            color: '#000000',
+                            textAlign: 'left',
+                        }}
                     >
-                        Forgot Password?
-                    </Typography>
-
-                    <Typography variant="body2" sx={{ marginTop: 2, color: 'gray' }}>
-                        You don't have an account yet?{' '}
+                        Don't have an account?{' '}
                         <span
-                            style={{ color: green[800], fontWeight: 'bold', cursor: 'pointer' }}
                             onClick={authContext.redirectToSignUp}
+                            style={{
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                textDecoration: 'underline',
+                                color: '#40e0d0',
+                            }}
                         >
-                            Create new account.
+                            SignUp
                         </span>
                     </Typography>
-                </Paper>
-            </Container>
+                </Box>
+            </Box>
         </Box>
     );
 };
