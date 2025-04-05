@@ -29,6 +29,10 @@ const LoginForm: React.FC = () => {
         }
     };
 
+    const handleForgotPassword = () => {
+        navigate('/forgotPassword');
+    };
+
     return (
         <Box
             sx={{
@@ -37,41 +41,59 @@ const LoginForm: React.FC = () => {
                 backgroundColor: '#ffffff',
             }}
         >
-            {/* Left Column - Background Image with TalkSpace text */}
+            {/* Left Column - Logo/Text and Background Image */}
             <Box
                 sx={{
-                    width: '40%',
-                    backgroundImage: 'url("/images/login-bg.jpg")',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    display: { xs: 'none', md: 'block' },
+                    width: '55%',
+                    px: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    justifyContent: 'center',
                     position: 'relative',
                 }}
             >
-                <Typography
-                    variant="h4"
+                {/* Header: Logo and TalkSpace Text */}
+                <Box sx={{ display: 'flex', alignItems: 'center', position: 'absolute', top: 1, left: 30 }}>
+                    <Box
+                        component="img"
+                        src="/images/logo.jpg"
+                        alt="TalkSpace Logo"
+                        sx={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            marginRight: 1,
+                        }}
+                    />
+                    <Typography variant="h6" sx={{ color: '#000', fontWeight: 600 }}>
+                        TalkSpace
+                    </Typography>
+                </Box>
+
+                {/* Background Image */}
+                <Box
                     sx={{
-                        position: 'absolute',
-                        top: '40px',
-                        left: '40px',
-                        fontWeight: 'bold',
-                        color: 'white',
-                        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
+                        width: '100%',
+                        height: 'calc(100% - 120px)',
+                        backgroundImage: 'url(/images/login-bg.jpg)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        borderRadius: '20px',
+                        marginTop: '100px',
                     }}
-                >
-                    TalkSpace
-                </Typography>
+                />
             </Box>
 
             {/* Right Column - Login Form */}
             <Box
                 sx={{
-                    width: { xs: '100%', md: '60%' },
+                    width: '60%',
                     display: 'flex',
-                    alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '20px',
+                    alignItems: 'center',
+                    backgroundColor: '#ffffff',
                 }}
             >
                 <Box
@@ -168,14 +190,14 @@ const LoginForm: React.FC = () => {
                             </Typography>
                         )}
 
-                        {/* Login Button - Smaller and aligned left */}
+                        {/* Login Button */}
                         <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
                             <Button
                                 type="submit"
                                 variant="contained"
                                 sx={{
-                                    height: '40px', // Smaller height
-                                    width: '120px', // Smaller width
+                                    height: '40px',
+                                    width: '120px',
                                     fontWeight: '600',
                                     backgroundColor: '#40e0d0',
                                     color: '#ffffff',
@@ -192,6 +214,23 @@ const LoginForm: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
+
+                    {/* Forgot Password Link */}
+                    <Typography
+                        sx={{
+                            marginTop: '16px',
+                            fontSize: '14px',
+                            color: '#000000',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            '&:hover': {
+                                textDecoration: 'underline',
+                            },
+                        }}
+                        onClick={handleForgotPassword}
+                    >
+                        Forgot password?
+                    </Typography>
 
                     {/* Sign Up Link */}
                     <Typography

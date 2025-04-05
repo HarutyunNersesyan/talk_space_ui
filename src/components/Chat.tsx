@@ -1,10 +1,10 @@
-import React, {useEffect, useState, useRef, useCallback} from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import './Chat.css';
 import axios from 'axios';
-import {jwtDecode} from 'jwt-decode';
-import {useNavigate, useParams} from 'react-router-dom';
-import {FiSend, FiPaperclip, FiSmile} from 'react-icons/fi';
-import {Client} from '@stomp/stompjs';
+import { jwtDecode } from 'jwt-decode';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FiSend, FiPaperclip, FiSmile } from 'react-icons/fi';
+import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 interface UserChatDto {
@@ -19,10 +19,10 @@ interface UserChatDto {
 interface ChatMessageDto {
     id: number;
     sender: string;
-    senderName: string;
+    senderDisplayName: string;
     senderImage?: string;
     receiver: string;
-    receiverName: string;
+    receiverDisplayName: string;
     receiverImage?: string;
     content: string;
     timestamp: string;
@@ -33,6 +33,12 @@ interface TypingNotificationDto {
     sender: string;
     receiver: string;
     typing: boolean;
+}
+
+interface NotificationDto {
+    type: string;
+    sender: string;
+    receiver: string;
 }
 
 const Chat: React.FC = () => {
@@ -49,17 +55,43 @@ const Chat: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const navigate = useNavigate();
-    const {partnerUsername} = useParams();
+    const { partnerUsername } = useParams();
     const token = localStorage.getItem('token');
 
-    // WebSocket connection
+    const handleIncomingMessage = (receivedMessage: ChatMessageDto) => {
+        console.log('Received message:', receivedMessage);
+
+        if (selectedPartner &&
+            (receivedMessage.sender === selectedPartner ||
+                receivedMessage.receiver === selectedPartner)) {
+            setActiveChat(prev => [...prev, receivedMessage]);
+        }
+
+        setChats(prev => prev.map(chat =>
+            chat.partnerUsername === receivedMessage.sender ||
+            chat.partnerUsername === receivedMessage.receiver
+                ? {
+                    ...chat,
+                    lastMessage: receivedMessage.content,
+                    lastMessageTime: receivedMessage.timestamp,
+                    unreadCount: receivedMessage.sender === userName ||
+                    chat.partnerUsername !== selectedPartner
+                        ? chat.unreadCount + 1
+                        : 0
+                }
+                : chat
+        ));
+
+        scrollToBottom();
+    };
+
     const setupWebSocket = useCallback(() => {
         if (!token || !userName) return;
 
         const socketFactory = () => new SockJS('http://localhost:8080/ws');
         const client = new Client({
             webSocketFactory: socketFactory,
-            connectHeaders: {Authorization: `Bearer ${token}`},
+            connectHeaders: { Authorization: `Bearer ${token}` },
             debug: (str) => console.log('STOMP: ', str),
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -70,41 +102,29 @@ const Chat: React.FC = () => {
             console.log('WebSocket Connected');
             setStompClient(client);
 
+            // Message subscription
             client.subscribe(`/user/queue/messages`, (message) => {
                 const receivedMessage: ChatMessageDto = JSON.parse(message.body);
-                console.log('Received message:', receivedMessage);
-
-
-                if (selectedPartner &&
-                    (receivedMessage.sender === selectedPartner ||
-                        receivedMessage.receiver === selectedPartner)) {
-                    setActiveChat(prev => [...prev, receivedMessage]);
-                }
-
-                // Update conversation list
-                setChats(prev => prev.map(chat =>
-                    chat.partnerUsername === receivedMessage.sender ||
-                    chat.partnerUsername === receivedMessage.receiver
-                        ? {
-                            ...chat,
-                            lastMessage: receivedMessage.content,
-                            lastMessageTime: receivedMessage.timestamp,
-                            unreadCount: receivedMessage.sender === userName ||
-                            chat.partnerUsername !== selectedPartner
-                                ? chat.unreadCount + 1
-                                : 0
-                        }
-                        : chat
-                ));
-
-                scrollToBottom();
+                handleIncomingMessage(receivedMessage);
             });
 
+            // Typing notification subscription
             client.subscribe(`/user/queue/typing`, (message) => {
                 const typingUpdate: TypingNotificationDto = JSON.parse(message.body);
                 if (typingUpdate.sender === selectedPartner) {
                     setPartnerTyping(typingUpdate.typing);
                     setTimeout(() => setPartnerTyping(false), 2000);
+                }
+            });
+
+            // Reload notification subscription
+            client.subscribe(`/user/queue/notifications`, (message) => {
+                const notification: NotificationDto = JSON.parse(message.body);
+                if (notification.type === 'reload' && notification.receiver === userName) {
+                    if (!window.location.pathname.includes(`/chat/${notification.sender}`)) {
+                        navigate(`/chat/${notification.sender}`);
+                        window.location.reload();
+                    }
                 }
             });
         };
@@ -121,14 +141,13 @@ const Chat: React.FC = () => {
                 client.deactivate();
             }
         };
-    }, [token, userName, selectedPartner]);
+    }, [token, userName, navigate, selectedPartner]);
 
     useEffect(() => {
         const cleanup = setupWebSocket();
         return cleanup;
     }, [setupWebSocket]);
 
-    // Fetch user data
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -136,7 +155,7 @@ const Chat: React.FC = () => {
                 const decodedToken = jwtDecode<{ sub: string }>(token);
                 const response = await axios.get(
                     `http://localhost:8080/api/public/user/get/userName/${decodedToken.sub}`,
-                    {headers: {Authorization: `Bearer ${token}`}}
+                    { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setUserName(response.data);
             } catch (err) {
@@ -148,14 +167,13 @@ const Chat: React.FC = () => {
         fetchUserData();
     }, [token]);
 
-    // Fetch conversations
     useEffect(() => {
         const fetchConversations = async () => {
             try {
                 if (!userName) return;
                 const response = await axios.get(
                     `http://localhost:8080/api/public/chat/conversations/${userName}`,
-                    {headers: {Authorization: `Bearer ${token}`}}
+                    { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setChats(response.data);
                 if (partnerUsername) {
@@ -177,7 +195,7 @@ const Chat: React.FC = () => {
             setLoading(true);
             const response = await axios.get(
                 `http://localhost:8080/api/public/chat/history/${userName}/${partner}`,
-                {headers: {Authorization: `Bearer ${token}`}}
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             setActiveChat(response.data);
             await markMessagesAsRead(partner);
@@ -195,11 +213,11 @@ const Chat: React.FC = () => {
             await axios.post(
                 `http://localhost:8080/api/public/chat/read/${partner}/${userName}`,
                 null,
-                {headers: {Authorization: `Bearer ${token}`}}
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             setChats(prev => prev.map(chat =>
                 chat.partnerUsername === partner
-                    ? {...chat, unreadCount: 0}
+                    ? { ...chat, unreadCount: 0 }
                     : chat
             ));
         } catch (err) {
@@ -214,15 +232,14 @@ const Chat: React.FC = () => {
         const tempMessage: ChatMessageDto = {
             id: tempId,
             sender: userName,
-            senderName: userName,
+            senderDisplayName: userName,
             receiver: selectedPartner,
-            receiverName: selectedPartner,
+            receiverDisplayName: selectedPartner,
             content: newMessage,
             timestamp: new Date().toISOString(),
             isRead: false
         };
 
-        // Optimistic update
         setActiveChat(prev => [...prev, tempMessage]);
         setNewMessage('');
         scrollToBottom();
@@ -235,7 +252,7 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     content: newMessage
                 }),
-                headers: {Authorization: `Bearer ${token}`}
+                headers: { Authorization: `Bearer ${token}` }
             });
         } catch (err) {
             console.error('Error sending message:', err);
@@ -262,16 +279,16 @@ const Chat: React.FC = () => {
                 body: JSON.stringify({
                     sender: userName,
                     receiver: selectedPartner,
-                    isTyping: !!value
+                    typing: !!value
                 }),
-                headers: {Authorization: `Bearer ${token}`}
+                headers: { Authorization: `Bearer ${token}` }
             });
         }
     };
 
     const scrollToBottom = () => {
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }, 100);
     };
 
@@ -320,7 +337,7 @@ const Chat: React.FC = () => {
                             >
                                 <div className="avatar">
                                     {chat.partnerImage ? (
-                                        <img src={`http://localhost:8080${chat.partnerImage}`} alt={chat.partnerName}/>
+                                        <img src={`http://localhost:8080${chat.partnerImage}`} alt={chat.partnerName} />
                                     ) : (
                                         <div className="default-avatar">
                                             {chat.partnerName.charAt(0).toUpperCase()}
@@ -398,16 +415,16 @@ const Chat: React.FC = () => {
                                         </div>
                                     ))
                             )}
-                            <div ref={messagesEndRef}/>
+                            <div ref={messagesEndRef} />
                         </div>
 
                         <div className="message-editor">
                             <div className="editor-tools">
                                 <button className="tool-button">
-                                    <FiPaperclip/>
+                                    <FiPaperclip />
                                 </button>
                                 <button className="tool-button">
-                                    <FiSmile/>
+                                    <FiSmile />
                                 </button>
                             </div>
                             <textarea
@@ -424,7 +441,7 @@ const Chat: React.FC = () => {
                                 disabled={!newMessage.trim() || !stompClient?.connected}
                                 className={`send-button ${newMessage.trim() ? 'active' : ''}`}
                             >
-                                <FiSend/>
+                                <FiSend />
                             </button>
                         </div>
                     </>
