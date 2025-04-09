@@ -27,14 +27,14 @@ const SignUpForm: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState<string | string[]>('');
+    const [error, setError] = useState<string[]>([]);
     const navigate = useNavigate();
 
     const blue = '#1abc9c';
 
     const handleSignUp = async (e: FormEvent) => {
         e.preventDefault();
-        setError('');
+        setError([]);
 
         try {
             await axios.post(`${apiUrl}/api/public/user/signUp`, {
@@ -50,7 +50,19 @@ const SignUpForm: React.FC = () => {
             navigate('/verify', { state: { email } });
         } catch (err: any) {
             if (err.response?.data) {
-                setError(Array.isArray(err.response.data) ? err.response.data : [err.response.data]);
+                // Handle different backend response formats
+                const errorData = err.response.data;
+                if (Array.isArray(errorData)) {
+                    setError(errorData);
+                } else if (typeof errorData === 'string') {
+                    setError([errorData]);
+                } else if (errorData.message) {
+                    setError([errorData.message]);
+                } else {
+                    setError(['Sign up failed. Please try again.']);
+                }
+            } else if (err.request) {
+                setError(['No response from server. Please check your connection.']);
             } else {
                 setError(['Sign up failed. Please try again.']);
             }
@@ -158,7 +170,6 @@ const SignUpForm: React.FC = () => {
                         </Typography>
                         <form onSubmit={handleSignUp}>
                             <Grid container spacing={2}>
-                                {/* Both First Name and Last Name now have the same mt: 1 */}
                                 <Grid item xs={12} sm={6} sx={{ mt: 1 }}>
                                     {renderTextField('First Name', firstName, e => setFirstName(e.target.value), 'firstName')}
                                 </Grid>
@@ -285,16 +296,20 @@ const SignUpForm: React.FC = () => {
                                     />
                                 </Grid>
 
-                                {/* Error */}
-                                {error && (
+                                {/* Error Messages */}
+                                {error.length > 0 && (
                                     <Grid item xs={12}>
-                                        <Box mt={1} color="red">
-                                            {Array.isArray(error) ? error.map((msg, idx) => <div key={idx}>{msg}</div>) : error}
+                                        <Box mt={1} color="error.main">
+                                            {error.map((msg, idx) => (
+                                                <Typography key={idx} variant="body2" sx={{ color: 'red' }}>
+                                                    {msg}
+                                                </Typography>
+                                            ))}
                                         </Box>
                                     </Grid>
                                 )}
 
-                                {/* Register */}
+                                {/* Register Button */}
                                 <Grid item xs={12}>
                                     <Button
                                         type="submit"
@@ -310,6 +325,9 @@ const SignUpForm: React.FC = () => {
                                             textTransform: 'none',
                                             fontFamily: 'Poppins',
                                             alignSelf: 'flex-start',
+                                            '&:hover': {
+                                                backgroundColor: '#16a085',
+                                            },
                                         }}
                                     >
                                         Sign Up
