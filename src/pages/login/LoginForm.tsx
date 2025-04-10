@@ -55,8 +55,8 @@ const LoginForm: React.FC = () => {
             {/* Left Column */}
             <Box
                 sx={{
-                    width: '55%',
-                    px: 4,
+                    width: '120%',
+                    px: 0,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
@@ -64,35 +64,15 @@ const LoginForm: React.FC = () => {
                     position: 'relative',
                 }}
             >
-                {/* Logo and App Name */}
-                <Box sx={{ display: 'flex', alignItems: 'center', position: 'absolute', top: 1, left: 30 }}>
-                    <Box
-                        component="img"
-                        src="/images/logo.jpg"
-                        alt="TalkSpace Logo"
-                        sx={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: '50%',
-                            objectFit: 'cover',
-                            marginRight: 1,
-                        }}
-                    />
-                    <Typography variant="h6" sx={{ color: '#000', fontWeight: 600 }}>
-                        TalkSpace
-                    </Typography>
-                </Box>
-
                 {/* Background Image */}
                 <Box
                     sx={{
                         width: '100%',
-                        height: 'calc(100% - 120px)',
+                        height: '100%',
                         backgroundImage: 'url(/images/login-bg.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                        borderRadius: '20px',
-                        marginTop: '100px',
+                        borderRadius: '0px',
                     }}
                 />
             </Box>

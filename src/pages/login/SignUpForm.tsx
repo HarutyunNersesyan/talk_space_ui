@@ -108,10 +108,10 @@ const SignUpForm: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh', fontFamily: 'Poppins' }}>
-            {/* Left Side with Logo and Image */}
+            {/* Left Side with Image */}
             <Box
                 sx={{
-                    width: '55%',
+                    width: '120%',
                     px: 4,
                     display: 'flex',
                     flexDirection: 'column',
@@ -120,35 +120,15 @@ const SignUpForm: React.FC = () => {
                     position: 'relative',
                 }}
             >
-                {/* Header: Logo and TalkSpace Text */}
-                <Box sx={{ display: 'flex', alignItems: 'center', position: 'absolute', top: 1, left: 30 }}>
-                    <Box
-                        component="img"
-                        src="/images/logo.jpg"
-                        alt="TalkSpace Logo"
-                        sx={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: '50%',
-                            objectFit: 'cover',
-                            marginRight: 1,
-                        }}
-                    />
-                    <Typography variant="h6" sx={{ color: '#000', fontWeight: 600 }}>
-                        TalkSpace
-                    </Typography>
-                </Box>
-
                 {/* Background Image */}
                 <Box
                     sx={{
                         width: '100%',
-                        height: 'calc(100% - 120px)',
+                        height: '100%',
                         backgroundImage: 'url(/images/login-bg.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         borderRadius: '20px',
-                        marginTop: '100px',
                     }}
                 />
             </Box>
