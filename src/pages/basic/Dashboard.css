@@ -151,7 +151,7 @@ body {
 
 .animate-subtitle {
     animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    animation-delay: 1.2s;
+    animation-delay: 1.5s;
 }
 
 @keyframes fadeInUp {
@@ -223,7 +223,7 @@ body {
 
 .animate-about {
     animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    animation-delay: 1s;
+    animation-delay: 2s;
 }
 
 .dashboard-about-title {
