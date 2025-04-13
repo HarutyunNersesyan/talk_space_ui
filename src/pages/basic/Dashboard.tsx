@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
+import { useNavigate } from 'react-router-dom'; // <--- 1. Import navigate
 
 const Dashboard: React.FC = () => {
+    const navigate = useNavigate(); // <--- 2. Hook to navigate
     const backgroundStyle = {
         backgroundImage: `url(${process.env.PUBLIC_URL}/images/dashboard.jpg)`,
     };
@@ -23,10 +25,9 @@ const Dashboard: React.FC = () => {
             <div className="dashboard-background" style={backgroundStyle}></div>
             <div className="dashboard-overlay"></div>
             <div className="dashboard-content">
-                {/* Header Text - Centered with exact spacing */}
                 <h1 className="dashboard-title">
                     <span className={`title-m ${mounted ? 'animate-m' : ''}`}>
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M
                     </span>
                     <span className={`title-connect ${mounted ? 'animate-connect' : ''}`}>
                         C&nbsp;o&nbsp;n&nbsp;n&nbsp;e&nbsp;c&nbsp;t
@@ -44,7 +45,10 @@ const Dashboard: React.FC = () => {
                     Find new connections and start meaningful conversations on TalkSpace.
                 </p>
 
-                <button className={`dashboard-cta-button ${mounted ? 'animate-button' : ''}`}>
+                <button
+                    className={`dashboard-cta-button ${mounted ? 'animate-button' : ''}`}
+                    onClick={() => navigate('/choose')} // <--- 3. Navigate on click
+                >
                     Let's Start
                 </button>
 

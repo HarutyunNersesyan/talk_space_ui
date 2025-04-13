@@ -1,0 +1,162 @@
+/* NetworkPage.css */
+
+body, html {
+    margin: 0;
+    padding: 0;
+}
+
+.network-container {
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.network-header {
+    height: 40vh;
+    position: relative;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.header-content {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.network-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 1;
+}
+
+.network-header h1 {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    color: #333;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.network-header p {
+    font-size: 1.2em;
+    color: #555;
+    margin-bottom: 20px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.network-options {
+    background-color: white;
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 80px;
+    flex-wrap: wrap;
+    padding: 20px;
+    position: relative;
+}
+
+.divider {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: calc(100% - 120px);
+    width: 1px;
+    background-color: #d0f0ff;
+}
+
+.option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.option:hover {
+    transform: translateY(-5px);
+}
+
+.icon-wrapper {
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.highlighted-icon {
+    height: 80px;
+    filter: drop-shadow(0 0 8px rgba(100, 200, 255, 0.6));
+}
+
+.option p {
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 25px;
+    max-width: 300px;
+    line-height: 1.5;
+}
+
+.option button {
+    background-color: transparent;
+    border: 2px solid #b3f0ff;
+    border-radius: 25px;
+    padding: 12px 25px;
+    color: #007a99;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.option button:hover {
+    background-color: #b3f0ff;
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .network-options {
+        flex-direction: column;
+        gap: 50px;
+        height: auto;
+        min-height: 60vh;
+    }
+
+    .network-header {
+        height: auto;
+        min-height: 40vh;
+    }
+
+    .option {
+        padding: 10px;
+    }
+
+    .divider {
+        display: none;
+    }
+
+    .network-header h1 {
+        font-size: 2em;
+    }
+
+    .network-header p {
+        font-size: 1em;
+    }
+}

@@ -1,119 +1,272 @@
-/* Profile Container */
+/* Profile Page Layout */
+.profile-page {
+    min-height: 100vh;
+    background-color: #fff;
+}
+
 .profile-container {
-    max-width: 800px;
+    width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
-    text-align: center;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 40px;
 }
 
-/* Picture Container */
-.picture-container {
-    width: 300px;
-    height: 300px;
-    margin: 0 auto;
-    position: relative;
-    border: 2px dashed #ccc;
-    border-radius: 10px;
+.profile-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    height: 100%;
+}
+
+/* Profile Information Section */
+.profile-info {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f0f0f0;
+    flex-direction: column;
+    padding: 20px;
 }
 
-.profile-picture {
+.profile-image-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 30px;
+    border: 3px solid #f0f0f0;
+}
+
+.profile-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 10px;
 }
 
-.picture-placeholder {
-    font-size: 48px;
+.profile-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
     color: #888;
-    cursor: pointer;
 }
 
-/* Delete Button */
-.delete-button {
+.edit-icon {
     position: absolute;
-    top: 10px;
+    bottom: 10px;
     right: 10px;
-    background-color: #dc3545;
+    background-color: #007bff;
     color: white;
-    border: none;
     border-radius: 50%;
     width: 30px;
     height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
     cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.edit-icon:hover {
+    transform: scale(1.1);
+}
+
+.profile-name {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 14px;
+    flex-wrap: wrap;
+    gap: 5px;
 }
 
-.delete-button:hover {
-    background-color: #c82333;
+.username-brackets {
+    font-size: 20px;
+    color: #777;
+    font-weight: normal;
 }
 
-/* Upload Section */
-.upload-section {
-    margin: 20px 0;
-}
-
-.upload-button {
-    padding: 10px 20px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.upload-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-.upload-button:hover:not(:disabled) {
-    background-color: #218838;
-}
-
-/* Buttons Section */
-.buttons-section {
+.profile-details {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    gap: 15px;
+    margin-bottom: 25px;
+    color: #555;
+    font-size: 16px;
+    flex-wrap: wrap;
+}
+
+.profile-detail {
+    background-color: #f5f5f5;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+.profile-section {
+    margin-bottom: 20px;
+    color: #555;
+    font-size: 16px;
+    line-height: 1.7;
+    width: 100%;
+}
+
+.profile-section b {
+    font-weight: bold;
+    color: #333;
+    margin-right: 5px;
+}
+
+.social-networks-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
     margin-top: 20px;
 }
 
-.update-hobbies-button,
-.update-specialties-button,
-.update-social-networks-button,
-.edit-profile-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.social-networks-title {
+    margin: 0;
     font-size: 16px;
 }
 
-.update-hobbies-button:hover,
-.update-specialties-button:hover,
-.update-social-networks-button:hover,
-.edit-profile-button:hover {
-    background-color: #0056b3;
+.social-icons-container {
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 
-/* Error Message */
+.social-link {
+    color: #555;
+    font-size: 22px;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    color: #007bff;
+    transform: translateY(-2px);
+}
+
+.no-social {
+    color: #999;
+    font-size: 15px;
+}
+
+/* Profile Actions Section */
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    height: fit-content;
+    margin-top: 30px;
+}
+
+.welcome-message {
+    font-size: 32px;
+    color: #007bff;
+    margin-bottom: 15px;
+}
+
+.complete-profile-text {
+    color: #666;
+    line-height: 1.7;
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+.action-item {
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.action-item:hover {
+    background-color: #f0f0f0;
+    transform: translateX(5px);
+}
+
+.action-item svg {
+    margin-left: 10px;
+    color: #777;
+    transition: all 0.3s ease;
+}
+
+.action-item:hover svg {
+    color: #007bff;
+}
+
 .error-message {
     color: red;
     text-align: center;
-    font-size: 18px;
+    font-size: 16px;
     margin-top: 20px;
+    width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .profile-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .profile-actions {
+        margin-top: 0;
+        padding: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-container {
+        padding: 20px;
+    }
+
+    .profile-name {
+        font-size: 28px;
+    }
+
+    .username-brackets {
+        font-size: 18px;
+    }
+
+    .social-networks-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .profile-image-container {
+        width: 120px;
+        height: 120px;
+    }
+
+    .profile-name {
+        font-size: 24px;
+    }
+
+    .profile-details {
+        gap: 10px;
+    }
+
+    .profile-detail {
+        font-size: 14px;
+    }
 }

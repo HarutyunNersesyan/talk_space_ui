@@ -16,6 +16,7 @@ import Edit from "../components/Edit";
 import ChangePassword from "../components/ChangePassword";
 import Search from "../components/Search";
 import Chat from "../components/Chat";
+import NetworkPage from "../components/NetworkPage";
 
 
 const RoutesConfig: React.FC = () => (
@@ -39,7 +40,7 @@ const RoutesConfig: React.FC = () => (
         <Route path="/hobbies" element={<ProtectedRoute element={<Hobbies/>}/>}/>
         <Route path="/specialities" element={<ProtectedRoute element={<Specialities/>}/>}/>
         <Route path="/social-networks" element={<ProtectedRoute element={<SocialNetworks/>}/>}/>
-
+            <Route path="/choose" element={<ProtectedRoute element={<NetworkPage/>}/>}/>
         {/* Discovery Routes */}
         <Route path="/search" element={<ProtectedRoute element={<Search/>}/>}/>
 
@@ -49,6 +50,7 @@ const RoutesConfig: React.FC = () => (
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
+
     </Routes>
 );
 
