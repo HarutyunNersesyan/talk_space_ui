@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 import './Specialities.css';
 
 interface Speciality {
@@ -27,6 +28,9 @@ const Specialities: React.FC = () => {
     const [expandedSpecialityId, setExpandedSpecialityId] = useState<number | null>(null);
     const [selectedSpecialities, setSelectedSpecialities] = useState<SpecialityRequest[]>([]);
     const [userName, setUserName] = useState<string | null>(null);
+    const navigate = useNavigate();
+    const [initialSelectedSpecialities, setInitialSelectedSpecialities] = useState<SpecialityRequest[]>([]);
+    const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
     const token = localStorage.getItem('token');
 
@@ -89,10 +93,10 @@ const Specialities: React.FC = () => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                const userName = response.data;
+                const fetchedUserName = response.data;
 
-                console.log('Fetched userName:', userName);
-                setUserName(userName);
+                console.log('Fetched userName:', fetchedUserName);
+                setUserName(fetchedUserName);
             } catch (err) {
                 console.error('Error fetching userName:', err);
                 alert('Failed to fetch userName. Please try again later.');
@@ -121,12 +125,12 @@ const Specialities: React.FC = () => {
                 console.log('Selected specialties response:', response.data);
 
                 if (response.data && Array.isArray(response.data)) {
-                    const selectedSpecialities = response.data.map((speciality: Speciality) => ({
+                    const initialSelectedSpecialities = response.data.map((speciality: Speciality) => ({
                         id: speciality.id,
                         name: speciality.name,
                     }));
-
-                    setSelectedSpecialities(selectedSpecialities);
+                    setSelectedSpecialities(initialSelectedSpecialities);
+                    setInitialSelectedSpecialities(initialSelectedSpecialities);
                 } else {
                     console.error('Invalid response format:', response.data);
                     alert('Invalid response format received from the server.');
@@ -152,9 +156,9 @@ const Specialities: React.FC = () => {
     // Handle expanding/collapsing a specialty
     const handleSpecialityClick = (specialityId: number) => {
         if (expandedSpecialityId === specialityId) {
-            setExpandedSpecialityId(null); // Collapse if already expanded
+            setExpandedSpecialityId(null);
         } else {
-            setExpandedSpecialityId(specialityId); // Expand the clicked specialty
+            setExpandedSpecialityId(specialityId);
         }
     };
 
@@ -162,10 +166,8 @@ const Specialities: React.FC = () => {
     const handleSelectSpeciality = (speciality: Speciality) => {
         const selectedSpeciality = { id: speciality.id, name: speciality.name };
         if (selectedSpecialities.some((selected) => selected.id === speciality.id)) {
-            // If the specialty is already selected, remove it
             setSelectedSpecialities(selectedSpecialities.filter((selected) => selected.id !== speciality.id));
         } else {
-            // If the specialty is not selected, add it (if less than 5 are selected)
             if (selectedSpecialities.length < 5) {
                 setSelectedSpecialities([...selectedSpecialities, selectedSpeciality]);
             } else {
@@ -182,7 +184,6 @@ const Specialities: React.FC = () => {
                 return;
             }
 
-            // Prepare the data to be sent to the backend
             const specialityDto: SpecialityDto = {
                 userName: userName,
                 specialities: selectedSpecialities,
@@ -195,7 +196,13 @@ const Specialities: React.FC = () => {
                 },
             });
             console.log('Save response:', response.data);
-            alert('Specialities saved successfully!');
+            setSaveSuccess(true);
+            setInitialSelectedSpecialities([...selectedSpecialities]);
+
+            // Hide success message after 3 seconds
+            setTimeout(() => {
+                setSaveSuccess(false);
+            }, 3000);
         } catch (err) {
             console.error('Error saving specialties:', err);
             if (axios.isAxiosError(err)) {
@@ -206,6 +213,14 @@ const Specialities: React.FC = () => {
                 alert('Failed to save specialties. Please try again later.');
             }
         }
+    };
+
+    const handleBack = () => {
+        navigate('/profile');
+    };
+
+    const handleCancelSelections = () => {
+        setSelectedSpecialities([]);
     };
 
     // Loading state
@@ -226,6 +241,11 @@ const Specialities: React.FC = () => {
     return (
         <div className="specialities-container">
             <h1>Specialities</h1>
+            {saveSuccess && (
+                <div className="success-message">
+                    Specialities saved successfully!
+                </div>
+            )}
             <div className="selected-specialities-section">
                 <h2>Selected Specialities</h2>
                 {selectedSpecialities.length > 0 ? (
@@ -268,7 +288,17 @@ const Specialities: React.FC = () => {
                     </li>
                 ))}
             </ul>
-            <button className="save-button" onClick={handleSave}>Save</button>
+            <div className="button-group">
+                <button className="action-button back-button" onClick={handleBack}>
+                    Back
+                </button>
+                <button className="action-button cancel-button" onClick={handleCancelSelections}>
+                    Cancel
+                </button>
+                <button className="action-button save-button" onClick={handleSave}>
+                    Save
+                </button>
+            </div>
         </div>
     );
 };

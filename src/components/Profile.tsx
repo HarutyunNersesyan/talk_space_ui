@@ -1,3 +1,5 @@
+// Profile.tsx
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
@@ -30,6 +32,7 @@ import editIcon from '../assets/edit.svg';
 import hobbiesIcon from '../assets/search/hobbies-icon.svg';
 import specialtiesIcon from '../assets/search/specialties-icon.svg';
 import internetIcon from '../assets/search/internet.svg';
+import aboutIcon from '../assets/info.svg'; // Import an icon for "About"
 
 interface SearchUser {
     firstName: string;
@@ -39,9 +42,9 @@ interface SearchUser {
     age: number;
     gender: string;
     zodiac: string;
-    aboutMe: string;
+    about: string;
     hobbies: string[];
-    specialties: string[];
+    specialities: string[];
     socialNetworks: string[] | undefined;
 }
 
@@ -149,6 +152,10 @@ const Profile: React.FC = () => {
         }
     };
 
+    const handleEditUsernameClick = () => {
+        navigate('/edit');
+    };
+
     const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && userName) {
             const file = e.target.files[0];
@@ -254,6 +261,13 @@ const Profile: React.FC = () => {
                                 <h2 className="profile-name">
                                     {userInfo.firstName} {userInfo.lastName}
                                     <span className="username-brackets"> ({userName})</span>
+                                    <button
+                                        className="edit-username-button"
+                                        onClick={handleEditUsernameClick}
+                                        aria-label="Edit username"
+                                    >
+                                        <img src={editIcon} alt="Edit" className="edit-username-icon" />
+                                    </button>
                                 </h2>
                                 <div className="profile-details">
                                     <span className="profile-detail">Age: {userInfo.age}</span>
@@ -288,13 +302,13 @@ const Profile: React.FC = () => {
                             </>
                         )}
                         <div className="profile-section">
-                            <p><b>About:</b> {userInfo?.aboutMe || "No information available"}</p>
+                            <p><b>About me:</b> {userInfo?.about || "No information available"}</p>
                         </div>
                         <div className="profile-section">
                             <p><b>Hobbies:</b> {userInfo?.hobbies?.join(', ') || "No Hobbies"}</p>
                         </div>
                         <div className="profile-section">
-                            <p><b>Specialties:</b> {userInfo?.specialties?.join(', ') || "No Specialties"}</p>
+                            <p><b>Specialities:</b> {userInfo?.specialities?.join(', ') || "No Specialties"}</p>
                         </div>
                         <div className="profile-section social-networks-section">
                             <p className="social-networks-title"><b>Social Networks:</b></p>

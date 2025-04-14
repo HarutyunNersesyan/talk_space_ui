@@ -95,6 +95,30 @@
     filter: brightness(0) invert(1);
 }
 
+.edit-username-button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.edit-username-icon {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0);
+    transition: all 0.2s ease;
+}
+
+.edit-username-button:hover .edit-username-icon {
+    filter: brightness(0) invert(0.5);
+}
+
 /* Fullscreen Image Styles */
 .fullscreen-image-overlay {
     position: fixed;
@@ -459,6 +483,16 @@
     .edit-icon {
         width: 18px;
         height: 18px;
+    }
+
+    .edit-username-button {
+        width: 20px;
+        height: 20px;
+    }
+
+    .edit-username-icon {
+        width: 14px;
+        height: 14px;
     }
 
     .action-item {

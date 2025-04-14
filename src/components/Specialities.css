@@ -1,6 +1,6 @@
 .specialities-container {
     padding: 20px;
-    max-width: 1200px;
+    max-width: 2000px;
     margin: 0 auto;
     font-family: 'Arial', sans-serif;
 }
@@ -117,11 +117,17 @@
     background-color: #e0e0e0;
 }
 
-.save-button {
+.button-group {
     margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.back-button,
+.cancel-button,
+.save-button {
     padding: 10px 20px;
-    background-color: #28a745;
-    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -129,6 +135,42 @@
     transition: background-color 0.3s ease;
 }
 
+.back-button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.back-button:hover {
+    background-color: #5a6268;
+}
+
+.cancel-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #c82333;
+}
+
+.save-button {
+    background-color: #28a745;
+    color: white;
+}
+
 .save-button:hover {
     background-color: #218838;
+}
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.error-message {
+    color: red;
+    margin-top: 10px;
 }

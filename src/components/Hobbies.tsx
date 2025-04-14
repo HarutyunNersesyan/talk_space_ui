@@ -1,6 +1,9 @@
+// Hobbies.tsx
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 import './Hobbies.css';
 
 interface Hobby {
@@ -27,6 +30,7 @@ const Hobbies: React.FC = () => {
     const [expandedHobbyId, setExpandedHobbyId] = useState<number | null>(null);
     const [selectedHobbies, setSelectedHobbies] = useState<HobbyRequest[]>([]);
     const [userName, setUserName] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const token = localStorage.getItem('token');
 
@@ -89,10 +93,10 @@ const Hobbies: React.FC = () => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                const userName = response.data;
+                const fetchedUserName = response.data;
 
-                console.log('Fetched userName:', userName);
-                setUserName(userName);
+                console.log('Fetched userName:', fetchedUserName);
+                setUserName(fetchedUserName);
             } catch (err) {
                 console.error('Error fetching userName:', err);
                 alert('Failed to fetch userName. Please try again later.');
@@ -121,12 +125,11 @@ const Hobbies: React.FC = () => {
                 console.log('Selected hobbies response:', response.data);
 
                 if (response.data && Array.isArray(response.data)) {
-                    const selectedHobbies = response.data.map((hobby: Hobby) => ({
+                    const initialSelectedHobbies = response.data.map((hobby: Hobby) => ({
                         id: hobby.id,
                         name: hobby.name,
                     }));
-
-                    setSelectedHobbies(selectedHobbies);
+                    setSelectedHobbies(initialSelectedHobbies);
                 } else {
                     console.error('Invalid response format:', response.data);
                     alert('Invalid response format received from the server.');
@@ -208,6 +211,14 @@ const Hobbies: React.FC = () => {
         }
     };
 
+    const handleBack = () => {
+        navigate('/profile');
+    };
+
+    const handleCancelSelections = () => {
+        setSelectedHobbies([]);
+    };
+
     // Loading state
     if (loading) {
         return <div className="loading-spinner">Loading...</div>;
@@ -268,9 +279,17 @@ const Hobbies: React.FC = () => {
                     </div>
                 ))}
             </div>
-            <button className="save-button" onClick={handleSave}>
-                Save
-            </button>
+            <div className="button-group">
+                <button className="action-button back-button" onClick={handleBack}>
+                    Back
+                </button>
+                <button className="action-button cancel-button" onClick={handleCancelSelections}>
+                    Cancel
+                </button>
+                <button className="action-button save-button" onClick={handleSave}>
+                    Save
+                </button>
+            </div>
         </div>
     );
 };

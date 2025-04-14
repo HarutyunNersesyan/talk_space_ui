@@ -40,7 +40,7 @@ const RoutesConfig: React.FC = () => (
         <Route path="/hobbies" element={<ProtectedRoute element={<Hobbies/>}/>}/>
         <Route path="/specialities" element={<ProtectedRoute element={<Specialities/>}/>}/>
         <Route path="/social-networks" element={<ProtectedRoute element={<SocialNetworks/>}/>}/>
-            <Route path="/choose" element={<ProtectedRoute element={<NetworkPage/>}/>}/>
+        <Route path="/choose" element={<ProtectedRoute element={<NetworkPage/>}/>}/>
         {/* Discovery Routes */}
         <Route path="/search" element={<ProtectedRoute element={<Search/>}/>}/>
 
