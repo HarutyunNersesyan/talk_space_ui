@@ -27,6 +27,9 @@ import capricornIcon from '../assets/zodiac/capricorn.svg';
 import aquariusIcon from '../assets/zodiac/aquarius.svg';
 import piscesIcon from '../assets/zodiac/horoscope-pisces-solid.svg';
 import editIcon from '../assets/edit.svg';
+import hobbiesIcon from '../assets/search/hobbies-icon.svg';
+import specialtiesIcon from '../assets/search/specialties-icon.svg';
+import internetIcon from '../assets/search/internet.svg';
 
 interface SearchUser {
     firstName: string;
@@ -137,8 +140,13 @@ const Profile: React.FC = () => {
         if (userName) fetchProfilePicture();
     }, [userName, token]);
 
-    const handlePictureClick = () => {
-        fileInputRef.current?.click();
+    const handleEditClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (picture) {
+            setIsFullScreen(true);
+        } else {
+            fileInputRef.current?.click();
+        }
     };
 
     const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,31 +159,10 @@ const Profile: React.FC = () => {
         }
     };
 
-    const handleEditClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (picture) {
-            setIsFullScreen(true);
-        } else {
-            fileInputRef.current?.click();
-        }
-    };
-
     const handleCloseFullScreen = () => {
         setIsFullScreen(false);
-        if (!selectedFile) {
-            // If no new file was selected, revert to the original picture
-            if (userName) {
-                axios.get(`http://localhost:8080/api/public/user/image/${userName}`, {
-                    responseType: 'blob',
-                    headers: { Authorization: `Bearer ${token}` },
-                })
-                    .then(response => {
-                        const imageUrl = URL.createObjectURL(response.data);
-                        setPicture(imageUrl);
-                    })
-                    .catch(() => setPicture(null));
-            }
-        }
+        setSelectedFile(null);
+        window.location.reload();
     };
 
     const handleSavePicture = async () => {
@@ -193,14 +180,7 @@ const Profile: React.FC = () => {
                     },
                 });
 
-                const response = await axios.get(`http://localhost:8080/api/public/user/image/${userName}`, {
-                    responseType: 'blob',
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const imageUrl = URL.createObjectURL(response.data);
-                setPicture(imageUrl);
-                setSelectedFile(null);
-                setIsFullScreen(false);
+                window.location.reload();
             } catch (err) {
                 console.error('Error uploading profile picture:', err);
                 setError('Failed to upload profile picture. Please try again.');
@@ -217,15 +197,20 @@ const Profile: React.FC = () => {
                 await axios.delete(`http://localhost:8080/api/public/user/image/delete/${userName}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                setPicture(null);
-                setSelectedFile(null);
-                setIsFullScreen(false);
+                window.location.reload();
             } catch (err: any) {
                 console.error('Error deleting profile picture:', err);
                 setError(err.response?.data || 'Failed to delete profile picture.');
             } finally {
                 setDeleteLoading(false);
             }
+        }
+    };
+
+    const handleViewPicture = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (picture) {
+            setIsFullScreen(true);
         }
     };
 
@@ -242,11 +227,9 @@ const Profile: React.FC = () => {
                 <div className="profile-content">
                     <div className="profile-info">
                         <div className="profile-image-wrapper">
-                            <div className="profile-image-container" onClick={handlePictureClick}>
+                            <div className="profile-image-container" onClick={handleViewPicture}>
                                 {picture ? (
-                                    <>
-                                        <img src={picture} alt="Profile" className="profile-image" />
-                                    </>
+                                    <img src={picture} alt="Profile" className="profile-image" />
                                 ) : (
                                     <div className="profile-image-placeholder"></div>
                                 )}
@@ -257,7 +240,6 @@ const Profile: React.FC = () => {
                                     accept="image/*"
                                     style={{ display: 'none' }}
                                 />
-                                {loading && <div className="upload-loading">Uploading...</div>}
                             </div>
                             <button
                                 className="edit-image-button"
@@ -347,12 +329,15 @@ const Profile: React.FC = () => {
                         </div>
                         <p className="complete-profile-text">Complete your profile so others can find you more easily and get to know you better.</p>
                         <button className="action-item" onClick={handleUpdateHobbiesClick}>
+                            <img src={hobbiesIcon} alt="Hobbies" className="action-icon" />
                             Update Hobbies <FontAwesomeIcon icon={faArrowRight} />
                         </button>
                         <button className="action-item" onClick={handleUpdateSpecialtiesClick}>
+                            <img src={specialtiesIcon} alt="Specialties" className="action-icon" />
                             Update Specialties <FontAwesomeIcon icon={faArrowRight} />
                         </button>
                         <button className="action-item" onClick={handleUpdateSocialNetworksClick}>
+                            <img src={internetIcon} alt="Social Networks" className="action-icon" />
                             Update Social Networks <FontAwesomeIcon icon={faArrowRight} />
                         </button>
                     </div>
@@ -371,13 +356,15 @@ const Profile: React.FC = () => {
                             >
                                 <FontAwesomeIcon icon={faTrash} /> {deleteLoading ? 'Deleting...' : 'Delete'}
                             </button>
-                            <button
-                                className="fullscreen-button save-button"
-                                onClick={handleSavePicture}
-                                disabled={loading || !selectedFile}
-                            >
-                                <FontAwesomeIcon icon={faSave} /> {loading ? 'Saving...' : 'Save'}
-                            </button>
+                            {selectedFile && (
+                                <button
+                                    className="fullscreen-button save-button"
+                                    onClick={handleSavePicture}
+                                    disabled={loading}
+                                >
+                                    <FontAwesomeIcon icon={faSave} /> {loading ? 'Saving...' : 'Save'}
+                                </button>
+                            )}
                             <button
                                 className="fullscreen-button close-button"
                                 onClick={handleCloseFullScreen}

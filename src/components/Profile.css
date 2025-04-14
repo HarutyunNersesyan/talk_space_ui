@@ -39,15 +39,13 @@
     border-radius: 50%;
     overflow: hidden;
     border: 3px solid #f0f0f0;
-    cursor: pointer;
-    transition: all 0.3s ease;
     background-color: white;
     position: relative;
+    cursor: pointer;
 }
 
 .profile-image-container:hover {
     border-color: #007bff;
-    transform: scale(1.02);
 }
 
 .profile-image {
@@ -95,20 +93,6 @@
     width: 20px;
     height: 20px;
     filter: brightness(0) invert(1);
-}
-
-.upload-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 14px;
 }
 
 /* Fullscreen Image Styles */
@@ -373,6 +357,26 @@
     color: #007bff;
 }
 
+.action-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.action-item > * {
+    flex-shrink: 0;
+}
+
+.action-item > *:first-child {
+    margin-right: 10px;
+}
+
 .error-message {
     color: red;
     text-align: center;
@@ -455,5 +459,15 @@
     .edit-icon {
         width: 18px;
         height: 18px;
+    }
+
+    .action-item {
+        font-size: 14px;
+    }
+
+    .action-icon {
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
     }
 }
