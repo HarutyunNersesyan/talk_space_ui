@@ -2,6 +2,7 @@
 .profile-page {
     min-height: 100vh;
     background-color: #fff;
+    position: relative;
 }
 
 .profile-container {
@@ -25,27 +26,28 @@
     padding: 20px;
 }
 
-.profile-image-container {
+.profile-image-wrapper {
     position: relative;
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
+    margin-bottom: 30px;
+}
+
+.profile-image-container {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     overflow: hidden;
-    margin-bottom: 30px;
     border: 3px solid #f0f0f0;
     cursor: pointer;
     transition: all 0.3s ease;
+    background-color: white;
+    position: relative;
 }
 
 .profile-image-container:hover {
     border-color: #007bff;
     transform: scale(1.02);
-}
-
-.profile-image-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
 }
 
 .profile-image {
@@ -65,6 +67,36 @@
     color: #888;
 }
 
+.edit-image-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    padding: 0;
+}
+
+.edit-image-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+}
+
+.edit-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
 .upload-loading {
     position: absolute;
     top: 0;
@@ -79,45 +111,94 @@
     font-size: 14px;
 }
 
-.delete-image-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: rgba(255, 255, 255, 0.9);
-    color: #ff4444;
-    border: none;
-    border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 10;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.delete-image-button:hover {
-    background-color: white;
-    color: #ff0000;
-    transform: scale(1.1);
-}
-
-.delete-loading {
-    position: absolute;
+/* Fullscreen Image Styles */
+.fullscreen-image-overlay {
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
+    background-color: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 12px;
-    border-radius: 50%;
+    z-index: 1000;
+}
+
+.fullscreen-image-container {
+    position: relative;
+    max-width: 80%;
+    max-height: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.fullscreen-image {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.fullscreen-image-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.fullscreen-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.fullscreen-button:hover {
+    transform: translateY(-2px);
+}
+
+.save-button {
+    background-color: #28a745;
+    color: white;
+}
+
+.save-button:hover {
+    background-color: #218838;
+}
+
+.save-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.delete-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+.delete-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.close-button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.close-button:hover {
+    background-color: #5a6268;
 }
 
 .profile-name {
@@ -144,6 +225,7 @@
     color: #555;
     font-size: 16px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .profile-detail {
@@ -164,17 +246,19 @@
 .gender-icon {
     width: 20px;
     height: 20px;
+    cursor: help;
 }
 
 .zodiac-container {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
 }
 
 .zodiac-icon {
     width: 20px;
     height: 20px;
+    cursor: help;
 }
 
 .profile-section {
@@ -231,16 +315,22 @@
     display: flex;
     flex-direction: column;
     padding: 40px;
-    background-color: #f9f9f9;
     border-radius: 10px;
     height: fit-content;
     margin-top: 30px;
+    background: white;
+}
+
+.welcome-container {
+    background-color: white;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
 }
 
 .welcome-message {
     font-size: 32px;
-    color: #007bff;
-    margin-bottom: 15px;
+    color: black;
+    margin-bottom: 0;
 }
 
 .complete-profile-text {
@@ -322,12 +412,27 @@
         align-items: flex-start;
         gap: 10px;
     }
+
+    .fullscreen-image-controls {
+        flex-direction: column;
+        width: 80%;
+    }
+
+    .fullscreen-button {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 576px) {
+    .profile-image-wrapper {
+        width: 150px;
+        height: 150px;
+    }
+
     .profile-image-container {
-        width: 120px;
-        height: 120px;
+        width: 100%;
+        height: 100%;
     }
 
     .profile-name {
@@ -340,5 +445,15 @@
 
     .profile-detail {
         font-size: 14px;
+    }
+
+    .edit-image-button {
+        width: 35px;
+        height: 35px;
+    }
+
+    .edit-icon {
+        width: 18px;
+        height: 18px;
     }
 }

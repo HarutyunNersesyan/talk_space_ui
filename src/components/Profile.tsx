@@ -11,7 +11,7 @@ import {
     faLinkedin,
     faYoutube,
 } from '@fortawesome/free-brands-svg-icons';
-import { faArrowRight, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faTimes, faSave, faTrash } from '@fortawesome/free-solid-svg-icons';
 import femaleIcon from '../assets/gender/female-symbol.svg';
 import maleIcon from '../assets/gender/male-symbol.svg';
 import ariesIcon from '../assets/zodiac/aries.svg';
@@ -26,6 +26,7 @@ import sagittariusIcon from '../assets/zodiac/sagittarius.svg';
 import capricornIcon from '../assets/zodiac/capricorn.svg';
 import aquariusIcon from '../assets/zodiac/aquarius.svg';
 import piscesIcon from '../assets/zodiac/horoscope-pisces-solid.svg';
+import editIcon from '../assets/edit.svg';
 
 interface SearchUser {
     firstName: string;
@@ -85,6 +86,8 @@ const Profile: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [userName, setUserName] = useState<string | null>(null);
     const [userInfo, setUserInfo] = useState<SearchUser | null>(null);
+    const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
@@ -140,10 +143,47 @@ const Profile: React.FC = () => {
 
     const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && userName) {
+            const file = e.target.files[0];
+            setSelectedFile(file);
+            const previewUrl = URL.createObjectURL(file);
+            setPicture(previewUrl);
+            setIsFullScreen(true);
+        }
+    };
+
+    const handleEditClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (picture) {
+            setIsFullScreen(true);
+        } else {
+            fileInputRef.current?.click();
+        }
+    };
+
+    const handleCloseFullScreen = () => {
+        setIsFullScreen(false);
+        if (!selectedFile) {
+            // If no new file was selected, revert to the original picture
+            if (userName) {
+                axios.get(`http://localhost:8080/api/public/user/image/${userName}`, {
+                    responseType: 'blob',
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                    .then(response => {
+                        const imageUrl = URL.createObjectURL(response.data);
+                        setPicture(imageUrl);
+                    })
+                    .catch(() => setPicture(null));
+            }
+        }
+    };
+
+    const handleSavePicture = async () => {
+        if (selectedFile && userName) {
             try {
                 setLoading(true);
                 const formData = new FormData();
-                formData.append('file', e.target.files[0]);
+                formData.append('file', selectedFile);
                 formData.append('userName', userName);
 
                 await axios.post('http://localhost:8080/api/public/user/image/upload', formData, {
@@ -159,6 +199,8 @@ const Profile: React.FC = () => {
                 });
                 const imageUrl = URL.createObjectURL(response.data);
                 setPicture(imageUrl);
+                setSelectedFile(null);
+                setIsFullScreen(false);
             } catch (err) {
                 console.error('Error uploading profile picture:', err);
                 setError('Failed to upload profile picture. Please try again.');
@@ -168,8 +210,7 @@ const Profile: React.FC = () => {
         }
     };
 
-    const handleDeletePicture = async (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleDeletePicture = async () => {
         if (userName) {
             setDeleteLoading(true);
             try {
@@ -177,6 +218,8 @@ const Profile: React.FC = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setPicture(null);
+                setSelectedFile(null);
+                setIsFullScreen(false);
             } catch (err: any) {
                 console.error('Error deleting profile picture:', err);
                 setError(err.response?.data || 'Failed to delete profile picture.');
@@ -198,31 +241,31 @@ const Profile: React.FC = () => {
             <div className="profile-container">
                 <div className="profile-content">
                     <div className="profile-info">
-                        <div className="profile-image-container" onClick={handlePictureClick}>
-                            {picture ? (
-                                <div className="profile-image-wrapper">
-                                    <img src={picture} alt="Profile" className="profile-image" />
-                                    <button
-                                        className="delete-image-button"
-                                        onClick={handleDeletePicture}
-                                        disabled={deleteLoading}
-                                        aria-label="Delete profile picture"
-                                    >
-                                        <FontAwesomeIcon icon={faTimes} />
-                                    </button>
-                                    {deleteLoading && <div className="delete-loading">Deleting...</div>}
-                                </div>
-                            ) : (
-                                <div className="profile-image-placeholder"></div>
-                            )}
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handlePictureChange}
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                            />
-                            {loading && <div className="upload-loading">Uploading...</div>}
+                        <div className="profile-image-wrapper">
+                            <div className="profile-image-container" onClick={handlePictureClick}>
+                                {picture ? (
+                                    <>
+                                        <img src={picture} alt="Profile" className="profile-image" />
+                                    </>
+                                ) : (
+                                    <div className="profile-image-placeholder"></div>
+                                )}
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handlePictureChange}
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                />
+                                {loading && <div className="upload-loading">Uploading...</div>}
+                            </div>
+                            <button
+                                className="edit-image-button"
+                                onClick={handleEditClick}
+                                aria-label="Edit profile picture"
+                            >
+                                <img src={editIcon} alt="Edit" className="edit-icon" />
+                            </button>
                         </div>
                         {userInfo && (
                             <>
@@ -234,7 +277,6 @@ const Profile: React.FC = () => {
                                     <span className="profile-detail">Age: {userInfo.age}</span>
                                     {userInfo.gender && (
                                         <span className="profile-detail gender-icon-container">
-                                            Gender: {userInfo.gender.charAt(0).toUpperCase() + userInfo.gender.slice(1).toLowerCase()}
                                             {['FEMALE', 'MALE'].includes(userInfo.gender.toUpperCase()) && (
                                                 <img
                                                     src={genderIcons[userInfo.gender.toUpperCase()]}
@@ -244,18 +286,19 @@ const Profile: React.FC = () => {
                                                             ? 'female-icon'
                                                             : 'male-icon'
                                                     }`}
-                                                    title={userInfo.gender}
+                                                    title={userInfo.gender.toUpperCase()}
                                                 />
                                             )}
                                         </span>
                                     )}
                                     {userInfo.zodiac && (
                                         <span className="profile-detail zodiac-container">
-                                            Zodiac: {formatZodiac(userInfo.zodiac)}
+                                            Zodiac:
                                             <img
                                                 src={zodiacIcons[userInfo.zodiac.toUpperCase()]}
                                                 alt={userInfo.zodiac}
                                                 className="zodiac-icon"
+                                                title={formatZodiac(userInfo.zodiac)}
                                             />
                                         </span>
                                     )}
@@ -299,7 +342,9 @@ const Profile: React.FC = () => {
                     </div>
 
                     <div className="profile-actions">
-                        <h2 className="welcome-message">Welcome !</h2>
+                        <div className="welcome-container">
+                            <h2 className="welcome-message">Welcome !</h2>
+                        </div>
                         <p className="complete-profile-text">Complete your profile so others can find you more easily and get to know you better.</p>
                         <button className="action-item" onClick={handleUpdateHobbiesClick}>
                             Update Hobbies <FontAwesomeIcon icon={faArrowRight} />
@@ -313,6 +358,36 @@ const Profile: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {isFullScreen && picture && (
+                <div className="fullscreen-image-overlay">
+                    <div className="fullscreen-image-container">
+                        <img src={picture} alt="Profile Preview" className="fullscreen-image" />
+                        <div className="fullscreen-image-controls">
+                            <button
+                                className="fullscreen-button delete-button"
+                                onClick={handleDeletePicture}
+                                disabled={deleteLoading}
+                            >
+                                <FontAwesomeIcon icon={faTrash} /> {deleteLoading ? 'Deleting...' : 'Delete'}
+                            </button>
+                            <button
+                                className="fullscreen-button save-button"
+                                onClick={handleSavePicture}
+                                disabled={loading || !selectedFile}
+                            >
+                                <FontAwesomeIcon icon={faSave} /> {loading ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                                className="fullscreen-button close-button"
+                                onClick={handleCloseFullScreen}
+                            >
+                                <FontAwesomeIcon icon={faTimes} /> Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {error && <div className="error-message">{error}</div>}
         </div>
