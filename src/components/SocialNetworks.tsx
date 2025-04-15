@@ -9,6 +9,7 @@ import {
     faLinkedin,
     faYoutube,
 } from '@fortawesome/free-brands-svg-icons';
+import { useNavigate } from 'react-router-dom';
 import './SocialNetworks.css';
 
 interface SocialNetwork {
@@ -36,6 +37,7 @@ const SocialNetworks: React.FC = () => {
     const [userName, setUserName] = useState<string | null>(null);
     const [selectedPlatform, setSelectedPlatform] = useState<string>('');
     const [newUrl, setNewUrl] = useState<string>('');
+    const navigate = useNavigate();
 
     // Retrieve the token from local storage
     const token = localStorage.getItem('token');
@@ -158,6 +160,11 @@ const SocialNetworks: React.FC = () => {
         setSelectedPlatform(platform);
     };
 
+    // Handle cancel button click
+    const handleCancel = () => {
+        navigate('/profile');
+    };
+
     // Loading state
     if (loading) {
         return <div className="loading-spinner">Loading...</div>;
@@ -208,9 +215,15 @@ const SocialNetworks: React.FC = () => {
                         required
                     />
                 </div>
-                <button type="submit" className="update-button">
-                    Update Social Network
-                </button>
+                <div className="form-buttons">
+                    <button type="button" className="cancel-button" onClick={handleCancel}>
+                        Cancel
+                    </button>
+                    <button type="submit" className="update-button">
+                        Update
+                    </button>
+
+                </div>
             </form>
         </div>
     );

@@ -90,6 +90,7 @@ body, html {
     cursor: pointer;
     padding: 20px;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .option:hover {
@@ -126,9 +127,23 @@ body, html {
     font-weight: 500;
 }
 
-.option button:hover {
+.option button:hover:not(:disabled) {
     background-color: #b3f0ff;
     transform: scale(1.05);
+}
+
+.option button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.search-error {
+    color: #ff6b6b;
+    margin-top: 15px;
+    font-size: 0.9em;
+    position: absolute;
+    bottom: -30px;
+    width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -158,5 +173,11 @@ body, html {
 
     .network-header p {
         font-size: 1em;
+    }
+
+    .search-error {
+        position: relative;
+        bottom: auto;
+        margin-top: 10px;
     }
 }

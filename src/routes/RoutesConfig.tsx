@@ -17,6 +17,8 @@ import ChangePassword from "../components/ChangePassword";
 import Search from "../components/Search";
 import Chat from "../components/Chat";
 import NetworkPage from "../components/NetworkPage";
+import SearchByHobbies from "../components/SearchByHobbies";
+import SearchBySpecialities from "../components/SearchBySpecialities";
 
 
 const RoutesConfig: React.FC = () => (
@@ -43,6 +45,9 @@ const RoutesConfig: React.FC = () => (
         <Route path="/choose" element={<ProtectedRoute element={<NetworkPage/>}/>}/>
         {/* Discovery Routes */}
         <Route path="/search" element={<ProtectedRoute element={<Search/>}/>}/>
+        <Route path="/SearchByHobbies" element={<ProtectedRoute element={<SearchByHobbies/>}/>}/>
+        <Route path="/searchBySpecialities" element={<ProtectedRoute element={<SearchBySpecialities/>}/>}/>
+
 
         {/* Chat Route */}
         <Route path="/chat/:userName" element={<ProtectedRoute element={<Chat/>}/>}/>

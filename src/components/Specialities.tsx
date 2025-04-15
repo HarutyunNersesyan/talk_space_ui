@@ -293,7 +293,7 @@ const Specialities: React.FC = () => {
                     Back
                 </button>
                 <button className="action-button cancel-button" onClick={handleCancelSelections}>
-                    Cancel
+                    Remove selected list
                 </button>
                 <button className="action-button save-button" onClick={handleSave}>
                     Save

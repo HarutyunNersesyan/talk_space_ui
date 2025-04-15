@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import eye icons from FontAwesome
-import './ChangePassword.css'; // Ensure you have the corresponding CSS file
+import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa';
+import './ChangePassword.css';
 
 const ChangePassword: React.FC = () => {
     const [oldPassword, setOldPassword] = useState<string>("");
@@ -16,11 +16,9 @@ const ChangePassword: React.FC = () => {
     const [showOldPassword, setShowOldPassword] = useState<boolean>(false);
     const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
     const [showNewPasswordRepeat, setShowNewPasswordRepeat] = useState<boolean>(false);
-    const navigate = useNavigate(); // Initialize useNavigate
-
+    const navigate = useNavigate();
 
     const token = localStorage.getItem('token');
-
 
     const validateForm = () => {
         const errors: { [key: string]: string } = {};
@@ -36,10 +34,9 @@ const ChangePassword: React.FC = () => {
         }
 
         setValidationErrors(errors);
-        return Object.keys(errors).length === 0; // Return true if no errors
+        return Object.keys(errors).length === 0;
     };
 
-    // Handle form submission
     const handleUpdatePassword = async () => {
         try {
             setLoading(true);
@@ -47,9 +44,8 @@ const ChangePassword: React.FC = () => {
             setSuccessMessage(null);
             setValidationErrors({});
 
-            // Validate form fields
             if (!validateForm()) {
-                return; // Stop if validation fails
+                return;
             }
 
             if (!token) {
@@ -59,14 +55,12 @@ const ChangePassword: React.FC = () => {
             const decodedToken = jwtDecode<{ sub: string }>(token);
             const email = decodedToken.sub;
 
-            // Prepare the data to be sent to the backend
             const changePasswordData = {
                 oldPassword,
                 newPassword,
                 newPasswordRepeat,
             };
 
-            // Send the change password request to the backend
             const response = await axios.put(
                 `http://localhost:8080/api/public/user/changePassword?email=${email}`,
                 changePasswordData,
@@ -78,18 +72,15 @@ const ChangePassword: React.FC = () => {
                 }
             );
 
-            // Handle success response
-            console.log('Password updated successfully:', response.data); // Debug log
-            setSuccessMessage(response.data); // Set success message
-            alert(response.data); // Show success alert
-            navigate('/profile'); // Redirect back to the profile page
+            console.log('Password updated successfully:', response.data);
+            setSuccessMessage(response.data);
+            alert(response.data);
+            navigate('/profile');
         } catch (err: any) {
             console.error('Error updating password:', err);
 
-            // Handle backend validation errors
             if (err.response?.status === 400 && err.response?.data) {
                 if (Array.isArray(err.response.data)) {
-                    // Handle validation errors (e.g., from @Valid)
                     const errors: { [key: string]: string } = {};
                     err.response.data.forEach((error: string) => {
                         if (error.includes("oldPassword")) {
@@ -102,17 +93,19 @@ const ChangePassword: React.FC = () => {
                     });
                     setValidationErrors(errors);
                 } else {
-                    // Handle other error messages
                     setError(err.response.data.message || err.response.data);
                 }
             } else {
-                // Handle generic errors
                 setError(err.message || 'Failed to update password. Please try again later.');
             }
-            alert(error); // Show error alert
+            alert(error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleBackClick = () => {
+        navigate('/edit');
     };
 
     return (
@@ -166,9 +159,14 @@ const ChangePassword: React.FC = () => {
                 </div>
                 {validationErrors.newPasswordRepeat && <div className="validation-error">{validationErrors.newPasswordRepeat}</div>}
             </div>
-            <button onClick={handleUpdatePassword} className="update-button" disabled={loading}>
-                {loading ? 'Updating...' : 'Update Password'}
-            </button>
+            <div className="buttons-container">
+                <button onClick={handleBackClick} className="back-button">
+                    <FaArrowLeft /> Cancel
+                </button>
+                <button onClick={handleUpdatePassword} className="update-button" disabled={loading}>
+                    {loading ? 'Updating...' : 'Update Password'}
+                </button>
+            </div>
             {error && <div className="error-message">{error}</div>}
             {successMessage && <div className="success-message">{successMessage}</div>}
         </div>

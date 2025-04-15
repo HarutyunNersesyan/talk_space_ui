@@ -1,19 +1,19 @@
+// Edit.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import './Edit.css'; // Ensure you have the corresponding CSS file
+import './Edit.css';
 
 const Edit: React.FC = () => {
     const [firstName, setFirstName] = useState<string>("");
     const [lastName, setLastName] = useState<string>("");
     const [aboutMe, setAboutMe] = useState<string>("");
-    const [birthDate, setBirthDate] = useState<string>(""); // New state for birth date
+    const [birthDate, setBirthDate] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate(); // Initialize useNavigate
+    const navigate = useNavigate();
 
-    // Retrieve the token from local storage
     const token = localStorage.getItem('token');
 
     useEffect(() => {
@@ -23,8 +23,7 @@ const Edit: React.FC = () => {
                     const decodedToken = jwtDecode<{ sub: string }>(token);
                     const email = decodedToken.sub;
 
-                    // Fetch user profile data using the /api/public/user/get/{email} endpoint
-                    const response = await axios.get(`http://localhost:8080/api/public/user/get/${email}`, {
+                    const response = await axios.get(`http://localhost:8080/api/public/user/edit/${email}`, {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
@@ -35,12 +34,23 @@ const Edit: React.FC = () => {
                     setLastName(userData.lastName || "");
                     setAboutMe(userData.aboutMe || "");
 
-                    // Format birthDate to yyyy-MM-dd for the input field
+                    // Handle birth date more robustly
                     if (userData.birthDate) {
-                        const formattedDate = new Date(userData.birthDate).toISOString().split('T')[0];
-                        setBirthDate(formattedDate);
+                        // Check if the date is already in the correct format (YYYY-MM-DD)
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(userData.birthDate)) {
+                            setBirthDate(userData.birthDate);
+                        } else {
+                            // Parse and format the date if it's not in the correct format
+                            const date = new Date(userData.birthDate);
+                            if (!isNaN(date.getTime())) {
+                                const year = date.getFullYear();
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const day = String(date.getDate()).padStart(2, '0');
+                                setBirthDate(`${year}-${month}-${day}`);
+                            }
+                        }
                     } else {
-                        setBirthDate(""); // Handle null or undefined birthDate
+                        setBirthDate("");
                     }
                 } catch (err) {
                     console.error('Error fetching user profile:', err);
@@ -52,7 +62,6 @@ const Edit: React.FC = () => {
         fetchUserProfile();
     }, [token]);
 
-    // Handle form submission
     const handleSave = async () => {
         try {
             setLoading(true);
@@ -65,18 +74,26 @@ const Edit: React.FC = () => {
             const decodedToken = jwtDecode<{ sub: string }>(token);
             const email = decodedToken.sub;
 
-            // Prepare the data to be sent to the backend
+            // Prepare the birth date for sending to the backend
+            let formattedBirthDate = null;
+            if (birthDate) {
+                // Ensure the date is in the correct format
+                const date = new Date(birthDate);
+                if (!isNaN(date.getTime())) {
+                    formattedBirthDate = date.toISOString().split('T')[0];
+                }
+            }
+
             const updatedProfile = {
                 firstName,
                 lastName,
                 aboutMe,
-                birthDate: birthDate || null, // Send null if birthDate is empty
+                birthDate: formattedBirthDate,
             };
 
-            // Send the updated profile data to the backend
             const response = await axios.put(
-                `http://localhost:8080/api/public/user/editUser?email=${email}`, // Updated endpoint
-                updatedProfile, // Request body
+                `http://localhost:8080/api/public/user/editUser?email=${email}`,
+                updatedProfile,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -85,9 +102,9 @@ const Edit: React.FC = () => {
                 }
             );
 
-            console.log('Profile updated successfully:', response.data); // Debug log
+            console.log('Profile updated successfully:', response.data);
             alert('Profile updated successfully!');
-            navigate('/profile'); // Redirect back to the profile page
+            navigate('/profile');
         } catch (err) {
             console.error('Error updating profile:', err);
             setError('Failed to update profile. Please try again later.');
@@ -97,9 +114,12 @@ const Edit: React.FC = () => {
         }
     };
 
-    // Handle navigation to the change password page
     const handleChangePasswordClick = () => {
         navigate('/changePassword');
+    };
+
+    const handleBackClick = () => {
+        navigate('/profile');
     };
 
     return (
@@ -144,7 +164,10 @@ const Edit: React.FC = () => {
                     rows={4}
                 />
             </div>
-            <div className="buttons-section">
+            <div className="buttons-container">
+                <button onClick={handleBackClick} className="back-button">
+                    Cancel
+                </button>
                 <button onClick={handleSave} className="save-button" disabled={loading}>
                     {loading ? 'Saving...' : 'Save Changes'}
                 </button>

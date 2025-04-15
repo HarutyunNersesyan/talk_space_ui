@@ -24,6 +24,7 @@
     font-size: 24px;
     margin-right: 15px;
     color: #007bff;
+    cursor: pointer;
 }
 
 .platform-details {
@@ -63,6 +64,12 @@
     font-size: 16px;
 }
 
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
 .update-button {
     background-color: #007bff;
     color: white;
@@ -71,10 +78,26 @@
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
+    flex: 1;
 }
 
 .update-button:hover {
     background-color: #0056b3;
+}
+
+.cancel-button {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    flex: 1;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268;
 }
 
 .loading-spinner {

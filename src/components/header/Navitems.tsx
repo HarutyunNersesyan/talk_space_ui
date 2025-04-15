@@ -15,7 +15,7 @@ const navItems: NavItem[] = [
     { to: '/', icon: <HomeIcon />, label: 'Home' },
     { to: '/about', icon: <InfoIcon />, label: 'About Us' },
     { to: '/profile', icon: <SettingsIcon />, label: 'Profile' },
-    { to: '/search', icon: <SearchIcon />, label: 'Search' },
+    { to: '/choose', icon: <SearchIcon />, label: 'Search' },
     { to: '/chat', icon: <ChatIcon />, label: 'Chat' },
 ];
 
