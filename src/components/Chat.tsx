@@ -62,13 +62,57 @@ const Chat: React.FC = () => {
     const { partnerUsername } = useParams();
     const token = localStorage.getItem('token');
 
-    const handleIncomingMessage = (receivedMessage: ChatMessageDto) => {
-        console.log('Received message:', receivedMessage);
+    const parseTimestamp = (timestamp: string): Date => {
+        if (!timestamp) return new Date();
 
+        try {
+            const date = new Date(timestamp);
+            if (!isNaN(date.getTime())) return date;
+
+            if (/^\d+$/.test(timestamp)) {
+                const epochDate = new Date(parseInt(timestamp));
+                if (!isNaN(epochDate.getTime())) return epochDate;
+            }
+
+            return new Date();
+        } catch {
+            return new Date();
+        }
+    };
+
+    const formatTime = (timestamp: string): string => {
+        const date = parseTimestamp(timestamp);
+        return date.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+
+    const formatDate = (timestamp: string): string => {
+        const date = parseTimestamp(timestamp);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return 'Today';
+        }
+        if (date.toDateString() === yesterday.toDateString()) {
+            return 'Yesterday';
+        }
+        return date.toLocaleDateString([], {
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
+    const handleIncomingMessage = (receivedMessage: ChatMessageDto) => {
         if (selectedPartner &&
             (receivedMessage.sender === selectedPartner ||
                 receivedMessage.receiver === selectedPartner)) {
             setActiveChat(prev => [...prev, receivedMessage]);
+            scrollToBottom();
         }
 
         setChats(prev => prev.map(chat =>
@@ -85,8 +129,6 @@ const Chat: React.FC = () => {
                 }
                 : chat
         ));
-
-        scrollToBottom();
     };
 
     const setupWebSocket = useCallback(() => {
@@ -197,7 +239,6 @@ const Chat: React.FC = () => {
                 );
                 setChats(response.data);
 
-                // Fetch images for all partners
                 response.data.forEach((chat: UserChatDto) => {
                     fetchPartnerImage(chat.partnerUsername);
                 });
@@ -317,35 +358,6 @@ const Chat: React.FC = () => {
         setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }, 100);
-    };
-
-    const formatTime = (dateTimeString: string) => {
-        return new Date(dateTimeString).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
-    };
-
-    const formatDate = (dateTimeString: string) => {
-        const today = new Date();
-        const messageDate = new Date(dateTimeString);
-
-        if (messageDate.toDateString() === today.toDateString()) {
-            return 'Today';
-        }
-
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        if (messageDate.toDateString() === yesterday.toDateString()) {
-            return 'Yesterday';
-        }
-
-        return messageDate.toLocaleDateString([], {
-            month: 'short',
-            day: 'numeric'
-        });
     };
 
     const selectChat = (partner: string) => {
@@ -469,41 +481,37 @@ const Chat: React.FC = () => {
                             {activeChat.length === 0 ? (
                                 <div className="empty">No messages yet</div>
                             ) : (
-                                activeChat
-                                    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-                                    .map((message, index) => {
-                                        const showDate = index === 0 ||
-                                            formatDate(activeChat[index - 1].timestamp) !== formatDate(message.timestamp);
+                                activeChat.map((message, index) => {
+                                    const showDate = index === 0 ||
+                                        formatDate(activeChat[index - 1]?.timestamp) !== formatDate(message.timestamp);
 
-                                        return (
-                                            <React.Fragment key={message.id}>
-                                                {showDate && (
-                                                    <div className="message-date">
-                                                        {formatDate(message.timestamp)}
-                                                    </div>
-                                                )}
-                                                <div
-                                                    className={`message ${message.sender === userName ? 'sent' : 'received'}`}
-                                                >
-                                                    <div className="message-content">
-                                                        <p>{message.content}</p>
-                                                        <span className="message-time">
-                                                            {formatTime(message.timestamp)}
-                                                            {message.sender === userName && (
-                                                                <span className="status">
-                                                                    {message.isRead ? (
-                                                                        <BsCheck2All color="#4fc3f7" />
-                                                                    ) : (
-                                                                        <BsCheck2 color="#90a4ae" />
-                                                                    )}
-                                                                </span>
-                                                            )}
-                                                        </span>
-                                                    </div>
+                                    return (
+                                        <React.Fragment key={message.id}>
+                                            {showDate && (
+                                                <div className="message-date">
+                                                    {formatDate(message.timestamp)}
                                                 </div>
-                                            </React.Fragment>
-                                        );
-                                    })
+                                            )}
+                                            <div className={`message ${message.sender === userName ? 'sent' : 'received'}`}>
+                                                <div className="message-content">
+                                                    <p>{message.content}</p>
+                                                    <span className="message-time">
+                                                        {formatTime(message.timestamp)}
+                                                        {message.sender === userName && (
+                                                            <span className="status">
+                                                                {message.isRead ? (
+                                                                    <BsCheck2All color="#4fc3f7" />
+                                                                ) : (
+                                                                    <BsCheck2 color="#90a4ae" />
+                                                                )}
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </React.Fragment>
+                                    );
+                                })
                             )}
                             <div ref={messagesEndRef} />
                         </div>
