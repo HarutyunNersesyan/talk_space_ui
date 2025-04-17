@@ -1,13 +1,14 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
 import './Chat.css';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FiSend, FiPaperclip, FiSmile, FiChevronLeft } from 'react-icons/fi';
-import { Client } from '@stomp/stompjs';
+import {jwtDecode} from 'jwt-decode';
+import {useNavigate, useParams} from 'react-router-dom';
+import {FiSend, FiPaperclip, FiSmile, FiChevronLeft} from 'react-icons/fi';
+import {Client} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { IoMdSend } from 'react-icons/io';
-import { BsCheck2All, BsCheck2 } from 'react-icons/bs';
+import {IoMdSend} from 'react-icons/io';
+import {BsCheck2All, BsCheck2} from 'react-icons/bs';
+import EmojiPicker, {EmojiClickData} from 'emoji-picker-react';
 
 interface UserChatDto {
     partnerUsername: string;
@@ -43,6 +44,140 @@ interface NotificationDto {
     receiver: string;
 }
 
+const emojis = [
+
+    "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇",
+    "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚",
+    "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🥸",
+    "🤩", "🥳", "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️",
+    "😣", "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡",
+    "🤬", "🤯", "😳", "🥵", "🥶", "😱", "😨", "😰", "😥", "😓",
+    "🫣", "🤗", "🫡", "🤔", "🫢", "🤭", "🤫", "🤥", "😶", "😶‍🌫️",
+    "😐", "😑", "😬", "🫠", "🙄", "😯", "😦", "😧", "😮", "😲",
+    "🥱", "😴", "🤤", "😪", "😵", "😵‍💫", "🫥", "🤐", "🥴", "🤢",
+    "🤮", "🤧", "😷", "🤒", "🤕", "🤑", "🤠", "😈", "👿", "👹",
+    "👺", "🤡", "👻", "👽", "👾", "🤖", "😺", "😸", "😹", "😻",
+    "😼", "😽", "🙀", "😿", "😾", "🙈", "🙉", "🙊", "💋", "💌",
+    "💘", "💝", "💖", "💗", "💓", "💞", "💕", "💟", "❣️", "💔",
+    "❤️‍🔥", "❤️‍🩹", "❤️", "🧡", "💛", "💚", "💙", "💜", "🤎", "🖤",
+    "🤍", "💯", "💢", "💥", "💫", "💦", "💨", "🕳️", "💣", "💬",
+    "👁️‍🗨️", "🗨️", "🗯️", "💭", "💤", "👋", "🤚", "🖐️", "✋", "🖖",
+    "👌", "🤌", "🤏", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉",
+    "👆", "🖕", "👇", "☝️", "👍", "👎", "✊", "👊", "🤛", "🤜",
+    "👏", "🙌", "👐", "🤲", "🤝", "🙏", "✍️", "💅", "🤳", "💪",
+    "🦾", "🦿", "🦵", "🦶", "👂", "🦻", "👃", "🧠", "🫀", "🫁",
+    "🦷", "🦴", "👀", "👁️", "👅", "👄", "👶", "🧒", "👦", "👧",
+    "🧑", "👱", "👨", "🧔", "👨‍🦰", "👨‍🦱", "👨‍🦳", "👨‍🦲", "👩", "👩‍🦰",
+    "👩‍🦱", "👩‍🦳", "👩‍🦲", "🧓", "👴", "👵", "🙍", "🙎", "🙅", "🙆",
+    "💁", "🙋", "🧏", "🙇", "🤦", "🤷", "👮", "🕵️", "💂", "🥷",
+    "👷", "🤴", "👸", "👳", "👲", "🧕", "🤵", "👰", "🤰", "🤱",
+    "👼", "🎅", "🤶", "🦸", "🦹", "🧙", "🧚", "🧛", "🧜", "🧝",
+    "🧞", "🧟", "💆", "💇", "🚶", "🧍", "🧎", "🏃", "💃", "🕺",
+    "🕴️", "👯", "🧖", "🧗", "🤺", "🏇", "⛷️", "🏂", "🏌️", "🏄",
+    "🚣", "🏊", "⛹️", "🏋️", "🚴", "🚵", "🤸", "🤼", "🤽", "🤾",
+    "🤹", "🧘", "🛀", "🛌", "👭", "👫", "👬", "💏", "💑", "👪",
+        "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯",
+        "🦁", "🐮", "🐷", "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒",
+        "🐔", "🐧", "🐦", "🐤", "🐣", "🐥", "🦆", "🦅", "🦉", "🦇",
+        "🐺", "🐗", "🐴", "🦄", "🐝", "🪱", "🐛", "🦋", "🐌", "🐞",
+        "🐜", "🪰", "🪲", "🪳", "🦟", "🦗", "🕷️", "🕸️", "🦂", "🐢",
+        "🐍", "🦎", "🦖", "🦕", "🐙", "🦑", "🦐", "🦞", "🦀", "🐡",
+        "🐠", "🐟", "🐬", "🐳", "🐋", "🦈", "🐊", "🐅", "🐆", "🦓",
+        "🦍", "🦧", "🦣", "🐘", "🦛", "🦏", "🐪", "🐫", "🦒", "🦘",
+        "🦬", "🐃", "🐂", "🐄", "🐎", "🐖", "🐏", "🐑", "🦙", "🐐",
+        "🦌", "🐕", "🐩", "🦮", "🐕‍🦺", "🐈", "🐈‍⬛", "🪶", "🐓", "🦃",
+        "🦚", "🦜", "🦢", "🦩", "🕊️", "🐇", "🦝", "🦨", "🦡", "🦫",
+        "🦦", "🦥", "🐁", "🐀", "🐿️", "🦔", "🌵", "🎄", "🌲", "🌳",
+        "🌴", "🪵", "🌱", "🌿", "☘️", "🍀", "🎍", "🪴", "🎋", "🍃",
+        "🍂", "🍁", "🍄", "🐚", "🪨", "🌾", "💐", "🌷", "🌹", "🥀",
+        "🌺", "🌸", "🌼", "🌻", "🌞", "🌝", "🌛", "🌜", "🌚", "🌕",
+        "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔", "🌙", "🌎", "🌍",
+        "🌏", "🪐", "💫", "⭐", "🌟", "✨", "⚡", "☄️", "💥", "🔥",
+        "🌪️", "🌈", "☀️", "🌤️", "⛅", "🌥️", "☁️", "🌦️", "🌧️", "⛈️",
+        "🌩️", "🌨️", "❄️", "☃️", "⛄", "🌬️", "💨", "💧", "💦", "☔",
+        "☂️", "🌊", "🌫️",
+        "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐",
+        "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑",
+        "🥦", "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅",
+        "🥔", "🍠", "🥐", "🥯", "🍞", "🥖", "🥨", "🧀", "🥚", "🍳",
+        "🧈", "🥞", "🧇", "🥓", "🥩", "🍗", "🍖", "🦴", "🌭", "🍔",
+        "🍟", "🍕", "🫓", "🥪", "🥙", "🧆", "🌮", "🌯", "🫔", "🥗",
+        "🥘", "🫕", "🥫", "🍝", "🍜", "🍲", "🍛", "🍣", "🍱", "🥟",
+        "🦪", "🍤", "🍙", "🍚", "🍘", "🍥", "🥠", "🥮", "🍢", "🍡",
+        "🍧", "🍨", "🍦", "🥧", "🧁", "🍰", "🎂", "🍮", "🍭", "🍬",
+        "🍫", "🍿", "🍩", "🍪", "🌰", "🥜", "🍯", "🥛", "🍼", "🫖",
+        "☕", "🍵", "🧃", "🥤", "🍶", "🍺", "🍻", "🥂", "🍷", "🥃",
+        "🍸", "🍹", "🧉", "🍾", "🧊", "🥄", "🍴", "🍽️", "🥣", "🥡",
+        "🥢", "🧂", "🫙",
+        "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱",
+        "🪀", "🏓", "🏸", "🏒", "🏑", "🥍", "🏏", "🪃", "🥅", "⛳",
+        "🪁", "🏹", "🎣", "🤿", "🥊", "🥋", "🎽", "🛹", "🛼", "🛷",
+        "⛸️", "🥌", "🎯", "🪂", "🎱", "🎮", "🕹️", "🎰", "🎲", "🧩",
+        "♟️", "🀄", "🎴", "🎭", "🖼️", "🎨", "🧵", "🪡", "🧶", "🪢",
+        "👓", "🕶️", "🥽", "🥼", "🦺", "👔", "👕", "👖", "🧣", "🧤",
+        "🧥", "🧦", "👗", "👘", "🥻", "🩱", "🩲", "🩳", "👙", "👚",
+        "👛", "👜", "👝", "🛍️", "🎒", "🩴", "👞", "👟", "🥾", "🥿",
+        "👠", "👡", "🩰", "👢", "👑", "👒", "🎩", "🎓", "🧢", "🪖",
+        "💄", "💍", "💼", "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐",
+        "🛻", "🚚", "🚛", "🚜", "🦯", "🦽", "🦼", "🛴", "🚲", "🛵",
+        "🏍️", "🛺", "🚨", "🚔", "🚍", "🚘", "🚖", "🚡", "🚠", "🚟",
+        "🚃", "🚋", "🚞", "🚝", "🚄", "🚅", "🚈", "🚂", "🚆", "🚇",
+        "🚊", "🚉", "✈️", "🛫", "🛬", "🛩️", "💺", "🛰️", "🚀", "🛸",
+        "🚁", "🛶", "⛵", "🚤", "🛥️", "🛳️", "⛴️", "🚢", "⚓", "🪝",
+        "🚧", "⛽", "🚏", "🚦", "🚥", "🗺️", "🗿", "🗽", "🗼", "🏰",
+        "🏯", "🏟️", "🎡", "🎢", "🎠", "⛲", "⛱️", "🏖️", "🏝️", "🏜️",
+        "🌋", "⛰️", "🏔️", "🗻", "🏕️", "⛺", "🛖", "🏠", "🏡", "🏘️",
+        "🏚️", "🏗️", "🏭", "🏢", "🏬", "🏣", "🏤", "🏥", "🏦", "🏨",
+        "🏪", "🏫", "🏩", "💒", "🏛️", "⛪", "🕌", "🛕", "🕍", "⛩️",
+        "🕋", "⛲", "⛺", "🌁", "🌃", "🏙️", "🌄", "🌅", "🌆", "🌇",
+        "🌉", "♨️", "🎠", "🎡", "🎢", "💈", "🎪", "🚂", "🚃", "🚄",
+        "🚅", "🚆", "🚇", "🚈", "🚉", "🚊", "🚝", "🚞", "🚋", "🚌",
+        "🚍", "🚎", "🚐", "🚑", "🚒", "🚓", "🚔", "🚕", "🚖", "🚗",
+        "🚘", "🚙", "🚚", "🚛", "🚜", "🚲", "🛴", "🛵", "🏍️", "🛺",
+        "🚨", "🚔", "🚍", "🚘", "🚖", "🚡", "🚠", "🚟", "🚃", "🚋",
+        "🚞", "🚝", "🚄", "🚅", "🚈", "🚂", "🚆", "🚇", "🚊", "🚉",
+        "✈️", "🛫", "🛬", "🛩️", "💺", "🛰️", "🚀", "🛸", "🚁", "🛶",
+        "⛵", "🚤", "🛥️", "🛳️", "⛴️", "🚢", "⚓", "🪝", "🚧", "⛽",
+        "🚏", "🚦", "🚥", "🗺️", "🗿", "🗽", "🗼", "🏰", "🏯", "🏟️",
+        "🎡", "🎢", "🎠", "⛲", "⛱️", "🏖️", "🏝️", "🏜️", "🌋", "⛰️",
+        "🏔️", "🗻", "🏕️", "⛺", "🛖", "🏠", "🏡", "🏘️", "🏚️", "🏗️",
+        "🏭", "🏢", "🏬", "🏣", "🏤", "🏥", "🏦", "🏨", "🏪", "🏫",
+        "🏩", "💒", "🏛️", "⛪", "🕌", "🛕", "🕍", "⛩️", "🕋", "⛲",
+        "⛺", "🌁", "🌃", "🏙️", "🌄", "🌅", "🌆", "🌇", "🌉", "♨️",
+        "🎠", "🎡", "🎢", "💈", "🎪", "🚂", "🚃", "🚄", "🚅", "🚆",
+        "🚇", "🚈", "🚉", "🚊", "🚝", "🚞", "🚋", "🚌", "🚍", "🚎",
+        "🚐", "🚑", "🚒", "🚓", "🚔", "🚕", "🚖", "🚗", "🚘", "🚙",
+        "🚚", "🚛", "🚜", "🚲", "🛴", "🛵", "🏍️", "🛺", "🚨", "🚔",
+        "🏳️", "🏴", "🏴‍☠️", "🏁", "🚩", "🎌",  "🏳️‍⚧️",
+        "🇦🇫", "🇦🇽", "🇦🇱", "🇩🇿", "🇦🇸", "🇦🇩", "🇦🇴", "🇦🇮", "🇦🇶", "🇦🇬",
+        "🇦🇷", "🇦🇲", "🇦🇼", "🇦🇺", "🇦🇹", "🇦🇿", "🇧🇸", "🇧🇭", "🇧🇩", "🇧🇧",
+        "🇧🇾", "🇧🇪", "🇧🇿", "🇧🇯", "🇧🇲", "🇧🇹", "🇧🇴", "🇧🇦", "🇧🇼", "🇧🇷",
+        "🇮🇴", "🇻🇬", "🇧🇳", "🇧🇬", "🇧🇫", "🇧🇮", "🇨🇻", "🇰🇭", "🇨🇲", "🇨🇦",
+        "🇮🇨", "🇨🇫", "🇹🇩", "🇨🇱", "🇨🇳", "🇨🇽", "🇨🇨", "🇨🇴", "🇰🇲", "🇨🇬",
+        "🇨🇩", "🇨🇰", "🇨🇷", "🇨🇮", "🇭🇷", "🇨🇺", "🇨🇼", "🇨🇾", "🇨🇿", "🇩🇰",
+        "🇩🇯", "🇩🇲", "🇩🇴", "🇪🇨", "🇪🇬", "🇸🇻", "🇬🇶", "🇪🇷", "🇪🇪", "🇪🇹",
+        "🇪🇺", "🇫🇰", "🇫🇴", "🇫🇯", "🇫🇮", "🇫🇷", "🇬🇫", "🇵🇫", "🇹🇫", "🇬🇦",
+        "🇬🇲", "🇬🇪", "🇩🇪", "🇬🇭", "🇬🇮", "🇬🇷", "🇬🇱", "🇬🇩", "🇬🇵", "🇬🇺",
+        "🇬🇹", "🇬🇬", "🇬🇳", "🇬🇼", "🇬🇾", "🇭🇹", "🇭🇳", "🇭🇰", "🇭🇺", "🇮🇸",
+        "🇮🇳", "🇮🇩", "🇮🇷", "🇮🇶", "🇮🇪", "🇮🇲", "🇮🇱", "🇮🇹", "🇯🇲", "🇯🇵",
+        "🇯🇪", "🇯🇴", "🇰🇿", "🇰🇪", "🇰🇮", "🇽🇰", "🇰🇼", "🇰🇬", "🇱🇦", "🇱🇻",
+        "🇱🇧", "🇱🇸", "🇱🇷", "🇱🇾", "🇱🇮", "🇱🇹", "🇱🇺", "🇲🇴", "🇲🇰", "🇲🇬",
+        "🇲🇼", "🇲🇾", "🇲🇻", "🇲🇱", "🇲🇹", "🇲🇭", "🇲🇶", "🇲🇷", "🇲🇺", "🇾🇹",
+        "🇲🇽", "🇫🇲", "🇲🇩", "🇲🇨", "🇲🇳", "🇲🇪", "🇲🇸", "🇲🇦", "🇲🇿", "🇲🇲",
+        "🇳🇦", "🇳🇷", "🇳🇵", "🇳🇱", "🇳🇨", "🇳🇿", "🇳🇮", "🇳🇪", "🇳🇬", "🇳🇺",
+        "🇳🇫", "🇰🇵", "🇲🇵", "🇳🇴", "🇴🇲", "🇵🇰", "🇵🇼", "🇵🇸", "🇵🇦", "🇵🇬",
+        "🇵🇾", "🇵🇪", "🇵🇭", "🇵🇳", "🇵🇱", "🇵🇹", "🇵🇷", "🇶🇦", "🇷🇪", "🇷🇴",
+        "🇷🇺", "🇷🇼", "🇼🇸", "🇸🇲", "🇸🇦", "🇸🇳", "🇷🇸", "🇸🇨", "🇸🇱", "🇸🇬",
+        "🇸🇽", "🇸🇰", "🇸🇮", "🇸🇸", "🇿🇦", "🇰🇷", "🇪🇸", "🇱🇰", "🇧🇱", "🇸🇭",
+        "🇰🇳", "🇱🇨", "🇵🇲", "🇻🇨", "🇸🇩", "🇸🇷", "🇸🇿", "🇸🇪", "🇨🇭", "🇸🇾",
+        "🇹🇼", "🇹🇯", "🇹🇿", "🇹🇭", "🇹🇱", "🇹🇬", "🇹🇰", "🇹🇴", "🇹🇹", "🇹🇳",
+        "🇹🇷", "🇹🇲", "🇹🇨", "🇹🇻", "🇻🇮", "🇺🇬", "🇺🇦", "🇦🇪", "🇬🇧", "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+        "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "🏴󠁧󠁢󠁷󠁬󠁳󠁿", "🇺🇸", "🇺🇾", "🇺🇿", "🇻🇺", "🇻🇦", "🇻🇪",
+        "🇻🇳", "🇼🇫", "🇪🇭", "🇾🇪", "🇿🇲", "🇿🇼"
+
+]
+;
+
 const Chat: React.FC = () => {
     const [chats, setChats] = useState<UserChatDto[]>([]);
     const [activeChat, setActiveChat] = useState<ChatMessageDto[]>([]);
@@ -56,10 +191,12 @@ const Chat: React.FC = () => {
     const [stompClient, setStompClient] = useState<Client | null>(null);
     const [showMobileConversationList, setShowMobileConversationList] = useState(true);
     const [partnerImages, setPartnerImages] = useState<Record<string, string>>({});
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const emojiPickerRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const { partnerUsername } = useParams();
+    const {partnerUsername} = useParams();
     const token = localStorage.getItem('token');
 
     const parseTimestamp = (timestamp: string): Date => {
@@ -137,7 +274,7 @@ const Chat: React.FC = () => {
         const socketFactory = () => new SockJS('http://localhost:8080/ws');
         const client = new Client({
             webSocketFactory: socketFactory,
-            connectHeaders: { Authorization: `Bearer ${token}` },
+            connectHeaders: {Authorization: `Bearer ${token}`},
             debug: (str) => console.log('STOMP: ', str),
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -198,7 +335,7 @@ const Chat: React.FC = () => {
                 const decodedToken = jwtDecode<{ sub: string }>(token);
                 const response = await axios.get(
                     `http://localhost:8080/api/public/user/get/userName/${decodedToken.sub}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
+                    {headers: {Authorization: `Bearer ${token}`}}
                 );
                 setUserName(response.data);
             } catch (err) {
@@ -217,15 +354,15 @@ const Chat: React.FC = () => {
             const response = await axios.get(
                 `http://localhost:8080/api/public/user/image/${username}`,
                 {
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: {Authorization: `Bearer ${token}`},
                     responseType: 'blob'
                 }
             );
             const imageUrl = URL.createObjectURL(response.data);
-            setPartnerImages(prev => ({ ...prev, [username]: imageUrl }));
+            setPartnerImages(prev => ({...prev, [username]: imageUrl}));
         } catch (err) {
             console.error('Error fetching partner image:', err);
-            setPartnerImages(prev => ({ ...prev, [username]: '' }));
+            setPartnerImages(prev => ({...prev, [username]: ''}));
         }
     };
 
@@ -235,7 +372,7 @@ const Chat: React.FC = () => {
                 if (!userName) return;
                 const response = await axios.get(
                     `http://localhost:8080/api/public/chat/conversations/${userName}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
+                    {headers: {Authorization: `Bearer ${token}`}}
                 );
                 setChats(response.data);
 
@@ -263,7 +400,7 @@ const Chat: React.FC = () => {
             setLoading(true);
             const response = await axios.get(
                 `http://localhost:8080/api/public/chat/history/${userName}/${partner}`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                {headers: {Authorization: `Bearer ${token}`}}
             );
             setActiveChat(response.data);
             await markMessagesAsRead(partner);
@@ -281,11 +418,11 @@ const Chat: React.FC = () => {
             await axios.post(
                 `http://localhost:8080/api/public/chat/read/${partner}/${userName}`,
                 null,
-                { headers: { Authorization: `Bearer ${token}` } }
+                {headers: {Authorization: `Bearer ${token}`}}
             );
             setChats(prev => prev.map(chat =>
                 chat.partnerUsername === partner
-                    ? { ...chat, unreadCount: 0 }
+                    ? {...chat, unreadCount: 0}
                     : chat
             ));
         } catch (err) {
@@ -311,6 +448,7 @@ const Chat: React.FC = () => {
         setActiveChat(prev => [...prev, tempMessage]);
         setNewMessage('');
         scrollToBottom();
+        setShowEmojiPicker(false);
 
         try {
             await stompClient.publish({
@@ -320,7 +458,7 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     content: newMessage
                 }),
-                headers: { Authorization: `Bearer ${token}` }
+                headers: {Authorization: `Bearer ${token}`}
             });
         } catch (err) {
             console.error('Error sending message:', err);
@@ -349,14 +487,14 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     typing: !!value
                 }),
-                headers: { Authorization: `Bearer ${token}` }
+                headers: {Authorization: `Bearer ${token}`}
             });
         }
     };
 
     const scrollToBottom = () => {
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
         }, 100);
     };
 
@@ -365,11 +503,37 @@ const Chat: React.FC = () => {
         loadChatHistory(partner);
         navigate(`/chat/${partner}`);
         setShowMobileConversationList(false);
+        setShowEmojiPicker(false);
     };
 
     const toggleConversationList = () => {
         setShowMobileConversationList(!showMobileConversationList);
+        setShowEmojiPicker(false);
     };
+
+    const toggleEmojiPicker = () => {
+        setShowEmojiPicker(!showEmojiPicker);
+    };
+
+    const handleEmojiClick = (emojiData: EmojiClickData) => {
+        setNewMessage(prev => prev + emojiData.emoji);
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+        if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+            setShowEmojiPicker(false);
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     if (loading && !activeChat.length) {
         return <div className="chat-loading">Loading chats...</div>;
@@ -445,7 +609,7 @@ const Chat: React.FC = () => {
                     <>
                         <div className="chat-header">
                             <button className="mobile-back-button" onClick={toggleConversationList}>
-                                <FiChevronLeft size={24} />
+                                <FiChevronLeft size={24}/>
                             </button>
                             <div className="partner-info">
                                 <div className="avatar">
@@ -492,7 +656,8 @@ const Chat: React.FC = () => {
                                                     {formatDate(message.timestamp)}
                                                 </div>
                                             )}
-                                            <div className={`message ${message.sender === userName ? 'sent' : 'received'}`}>
+                                            <div
+                                                className={`message ${message.sender === userName ? 'sent' : 'received'}`}>
                                                 <div className="message-content">
                                                     <p>{message.content}</p>
                                                     <span className="message-time">
@@ -500,9 +665,9 @@ const Chat: React.FC = () => {
                                                         {message.sender === userName && (
                                                             <span className="status">
                                                                 {message.isRead ? (
-                                                                    <BsCheck2All color="#4fc3f7" />
+                                                                    <BsCheck2All color="#4fc3f7"/>
                                                                 ) : (
-                                                                    <BsCheck2 color="#90a4ae" />
+                                                                    <BsCheck2 color="#90a4ae"/>
                                                                 )}
                                                             </span>
                                                         )}
@@ -513,18 +678,31 @@ const Chat: React.FC = () => {
                                     );
                                 })
                             )}
-                            <div ref={messagesEndRef} />
+                            <div ref={messagesEndRef}/>
                         </div>
 
                         <div className="message-editor">
                             <div className="editor-tools">
                                 <button className="tool-button">
-                                    <FiPaperclip />
+                                    <FiPaperclip/>
                                 </button>
-                                <button className="tool-button">
-                                    <FiSmile />
+                                <button className="tool-button" onClick={toggleEmojiPicker}>
+                                    <FiSmile/>
                                 </button>
                             </div>
+                            {showEmojiPicker && (
+                                <div className="emoji-picker-container" ref={emojiPickerRef}>
+                                    <EmojiPicker
+                                        onEmojiClick={handleEmojiClick}
+                                        width={300}
+                                        height={350}
+                                        searchDisabled
+                                        skinTonesDisabled
+                                        previewConfig={{showPreview: false}}
+                                        lazyLoadEmojis
+                                    />
+                                </div>
+                            )}
                             <textarea
                                 ref={inputRef}
                                 value={newMessage}
@@ -539,7 +717,7 @@ const Chat: React.FC = () => {
                                 disabled={!newMessage.trim() || !stompClient?.connected}
                                 className={`send-button ${newMessage.trim() ? 'active' : ''}`}
                             >
-                                <IoMdSend size={20} />
+                                <IoMdSend size={20}/>
                             </button>
                         </div>
                     </>

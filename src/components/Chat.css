@@ -9,7 +9,6 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     position: relative;
-
 }
 
 /* Conversation list sidebar */
@@ -326,6 +325,13 @@
     color: #1890ff;
 }
 
+.emoji-picker-container {
+    position: absolute;
+    bottom: 70px;
+    left: 20px;
+    z-index: 100;
+}
+
 .message-input {
     flex: 1;
     border: none;
@@ -470,6 +476,12 @@
 
     .message {
         max-width: 85%;
+    }
+
+    .emoji-picker-container {
+        left: 10px;
+        right: 10px;
+        width: calc(100% - 20px);
     }
 }
 
