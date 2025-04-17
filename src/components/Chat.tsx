@@ -3,9 +3,11 @@ import './Chat.css';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiSend, FiPaperclip, FiSmile } from 'react-icons/fi';
+import { FiSend, FiPaperclip, FiSmile, FiChevronLeft } from 'react-icons/fi';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { IoMdSend } from 'react-icons/io';
+import { BsCheck2All, BsCheck2 } from 'react-icons/bs';
 
 interface UserChatDto {
     partnerUsername: string;
@@ -52,6 +54,8 @@ const Chat: React.FC = () => {
     const [isTyping, setIsTyping] = useState<boolean>(false);
     const [partnerTyping, setPartnerTyping] = useState<boolean>(false);
     const [stompClient, setStompClient] = useState<Client | null>(null);
+    const [showMobileConversationList, setShowMobileConversationList] = useState(true);
+    const [partnerImages, setPartnerImages] = useState<Record<string, string>>({});
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const navigate = useNavigate();
@@ -102,13 +106,11 @@ const Chat: React.FC = () => {
             console.log('WebSocket Connected');
             setStompClient(client);
 
-            // Message subscription
             client.subscribe(`/user/queue/messages`, (message) => {
                 const receivedMessage: ChatMessageDto = JSON.parse(message.body);
                 handleIncomingMessage(receivedMessage);
             });
 
-            // Typing notification subscription
             client.subscribe(`/user/queue/typing`, (message) => {
                 const typingUpdate: TypingNotificationDto = JSON.parse(message.body);
                 if (typingUpdate.sender === selectedPartner) {
@@ -117,7 +119,6 @@ const Chat: React.FC = () => {
                 }
             });
 
-            // Reload notification subscription
             client.subscribe(`/user/queue/notifications`, (message) => {
                 const notification: NotificationDto = JSON.parse(message.body);
                 if (notification.type === 'reload' && notification.receiver === userName) {
@@ -167,6 +168,25 @@ const Chat: React.FC = () => {
         fetchUserData();
     }, [token]);
 
+    const fetchPartnerImage = async (username: string) => {
+        try {
+            if (partnerImages[username]) return;
+
+            const response = await axios.get(
+                `http://localhost:8080/api/public/user/image/${username}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    responseType: 'blob'
+                }
+            );
+            const imageUrl = URL.createObjectURL(response.data);
+            setPartnerImages(prev => ({ ...prev, [username]: imageUrl }));
+        } catch (err) {
+            console.error('Error fetching partner image:', err);
+            setPartnerImages(prev => ({ ...prev, [username]: '' }));
+        }
+    };
+
     useEffect(() => {
         const fetchConversations = async () => {
             try {
@@ -176,9 +196,16 @@ const Chat: React.FC = () => {
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setChats(response.data);
+
+                // Fetch images for all partners
+                response.data.forEach((chat: UserChatDto) => {
+                    fetchPartnerImage(chat.partnerUsername);
+                });
+
                 if (partnerUsername) {
                     setSelectedPartner(partnerUsername);
                     loadChatHistory(partnerUsername);
+                    setShowMobileConversationList(false);
                 }
             } catch (err) {
                 console.error('Error fetching conversations:', err);
@@ -300,10 +327,36 @@ const Chat: React.FC = () => {
         });
     };
 
+    const formatDate = (dateTimeString: string) => {
+        const today = new Date();
+        const messageDate = new Date(dateTimeString);
+
+        if (messageDate.toDateString() === today.toDateString()) {
+            return 'Today';
+        }
+
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (messageDate.toDateString() === yesterday.toDateString()) {
+            return 'Yesterday';
+        }
+
+        return messageDate.toLocaleDateString([], {
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
     const selectChat = (partner: string) => {
         setSelectedPartner(partner);
         loadChatHistory(partner);
         navigate(`/chat/${partner}`);
+        setShowMobileConversationList(false);
+    };
+
+    const toggleConversationList = () => {
+        setShowMobileConversationList(!showMobileConversationList);
     };
 
     if (loading && !activeChat.length) {
@@ -316,14 +369,16 @@ const Chat: React.FC = () => {
 
     return (
         <div className="chat-app">
-            <div className="conversation-list">
+            <div className={`conversation-list ${showMobileConversationList ? 'mobile-show' : 'mobile-hide'}`}>
                 <div className="conversation-header">
                     <h2>Messages</h2>
-                    {stompClient?.connected ? (
-                        <span className="connection-status connected">Online</span>
-                    ) : (
-                        <span className="connection-status disconnected">Offline</span>
-                    )}
+                    <div className="connection-status-container">
+                        {stompClient?.connected ? (
+                            <span className="connection-status connected">Online</span>
+                        ) : (
+                            <span className="connection-status disconnected">Offline</span>
+                        )}
+                    </div>
                 </div>
                 <div className="conversation-items">
                     {chats.length === 0 ? (
@@ -336,8 +391,15 @@ const Chat: React.FC = () => {
                                 onClick={() => selectChat(chat.partnerUsername)}
                             >
                                 <div className="avatar">
-                                    {chat.partnerImage ? (
-                                        <img src={`http://localhost:8080${chat.partnerImage}`} alt={chat.partnerName} />
+                                    {partnerImages[chat.partnerUsername] ? (
+                                        <img
+                                            src={partnerImages[chat.partnerUsername]}
+                                            alt={chat.partnerName}
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                target.style.display = 'none';
+                                            }}
+                                        />
                                     ) : (
                                         <div className="default-avatar">
                                             {chat.partnerName.charAt(0).toUpperCase()}
@@ -366,16 +428,23 @@ const Chat: React.FC = () => {
                 </div>
             </div>
 
-            <div className="chat-area">
+            <div className={`chat-area ${!showMobileConversationList ? 'mobile-show' : 'mobile-hide'}`}>
                 {selectedPartner ? (
                     <>
                         <div className="chat-header">
+                            <button className="mobile-back-button" onClick={toggleConversationList}>
+                                <FiChevronLeft size={24} />
+                            </button>
                             <div className="partner-info">
                                 <div className="avatar">
-                                    {chats.find(c => c.partnerUsername === selectedPartner)?.partnerImage ? (
+                                    {partnerImages[selectedPartner] ? (
                                         <img
-                                            src={`http://localhost:8080${chats.find(c => c.partnerUsername === selectedPartner)?.partnerImage}`}
+                                            src={partnerImages[selectedPartner]}
                                             alt={chats.find(c => c.partnerUsername === selectedPartner)?.partnerName}
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                target.style.display = 'none';
+                                            }}
                                         />
                                     ) : (
                                         <div className="default-avatar">
@@ -383,10 +452,16 @@ const Chat: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                <h3>{chats.find(c => c.partnerUsername === selectedPartner)?.partnerName}</h3>
-                                {partnerTyping && (
-                                    <span className="typing-indicator">typing...</span>
-                                )}
+                                <div className="partner-details">
+                                    <h3>{chats.find(c => c.partnerUsername === selectedPartner)?.partnerName}</h3>
+                                    {partnerTyping ? (
+                                        <span className="typing-indicator">typing...</span>
+                                    ) : (
+                                        <span className="status-indicator">
+                                            {stompClient?.connected ? 'online' : 'offline'}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -396,24 +471,39 @@ const Chat: React.FC = () => {
                             ) : (
                                 activeChat
                                     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-                                    .map(message => (
-                                        <div
-                                            key={message.id}
-                                            className={`message ${message.sender === userName ? 'sent' : 'received'}`}
-                                        >
-                                            <div className="message-content">
-                                                <p>{message.content}</p>
-                                                <span className="message-time">
-                                                    {formatTime(message.timestamp)}
-                                                    {message.sender === userName && (
-                                                        <span className="status">
-                                                            {message.isRead ? '✓✓' : '✓'}
+                                    .map((message, index) => {
+                                        const showDate = index === 0 ||
+                                            formatDate(activeChat[index - 1].timestamp) !== formatDate(message.timestamp);
+
+                                        return (
+                                            <React.Fragment key={message.id}>
+                                                {showDate && (
+                                                    <div className="message-date">
+                                                        {formatDate(message.timestamp)}
+                                                    </div>
+                                                )}
+                                                <div
+                                                    className={`message ${message.sender === userName ? 'sent' : 'received'}`}
+                                                >
+                                                    <div className="message-content">
+                                                        <p>{message.content}</p>
+                                                        <span className="message-time">
+                                                            {formatTime(message.timestamp)}
+                                                            {message.sender === userName && (
+                                                                <span className="status">
+                                                                    {message.isRead ? (
+                                                                        <BsCheck2All color="#4fc3f7" />
+                                                                    ) : (
+                                                                        <BsCheck2 color="#90a4ae" />
+                                                                    )}
+                                                                </span>
+                                                            )}
                                                         </span>
-                                                    )}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))
+                                                    </div>
+                                                </div>
+                                            </React.Fragment>
+                                        );
+                                    })
                             )}
                             <div ref={messagesEndRef} />
                         </div>
@@ -441,7 +531,7 @@ const Chat: React.FC = () => {
                                 disabled={!newMessage.trim() || !stompClient?.connected}
                                 className={`send-button ${newMessage.trim() ? 'active' : ''}`}
                             >
-                                <FiSend />
+                                <IoMdSend size={20} />
                             </button>
                         </div>
                     </>
