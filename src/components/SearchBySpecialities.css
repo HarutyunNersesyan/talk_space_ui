@@ -1,3 +1,5 @@
+/* SearchBySpecialities.css */
+
 .parent-container {
     display: flex;
     justify-content: center;
@@ -18,15 +20,16 @@
     border-radius: 12px;
     max-width: 550px;
     background-color: #ffffff;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     width: 100%;
+    overflow: hidden; /* Added to prevent any overflow */
 }
 
 .image-container {
     position: relative;
-    width: 50%;
-    height: 200px;
-    margin-bottom: 10px;
+    width: 100%; /* Changed to 100% to fill container */
+    height: 400px;
+    margin: 0; /* Ensure no margin */
+    padding: 0; /* Ensure no padding */
 }
 
 .image-placeholder {
@@ -38,6 +41,8 @@
     justify-content: center;
     border-radius: 10px;
     overflow: hidden;
+    margin: 0; /* Ensure no margin */
+    padding: 0; /* Ensure no padding */
 }
 
 .profile-image {
@@ -139,8 +144,8 @@
 .user-about {
     font-size: 16px;
     color: #444;
-    text-align: center;
-    margin: 15px 0;
+    text-align: left;
+    margin: 10px 0;
     line-height: 1.5;
     padding: 0 10px;
 }
@@ -150,9 +155,10 @@
 .user-social-networks {
     font-size: 16px;
     color: #444;
-    text-align: center;
-    margin: 12px 0;
+    text-align: left;
+    margin: 10px 0;
     line-height: 1.5;
+    padding: 0 10px;
 }
 
 .user-hobbies strong,
@@ -160,15 +166,16 @@
 .user-social-networks strong {
     color: #214875;
     font-weight: 600;
+    margin-right: 5px;
 }
 
 .social-icons {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-top: 15px;
-    justify-content: center;
-    padding: 10px 0;
+    margin-top: 5px;
+    justify-content: flex-start;
+    padding: 0;
 }
 
 .social-network-item {
@@ -214,7 +221,7 @@
 }
 
 .back-button {
-    padding: 10px 20px;
+    padding: 10px 10px;
     background-color: #6c757d;
     color: white;
     border: none;
@@ -223,17 +230,25 @@
     font-size: 16px;
     font-weight: 500;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .back-button:hover {
     background-color: #5a6268;
-    transform: translateY(-2px);
+    transform: translateX(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .back-button:active {
-    transform: translateY(0);
+    transform: translateX(0);
+}
+
+.back-icon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
 }
 
 .search-icon-button {
@@ -328,6 +343,10 @@
 @media (max-width: 600px) {
     .search-container {
         padding: 20px 15px;
+    }
+
+    .image-container {
+        height: 350px; /* Slightly reduced height for mobile */
     }
 
     .user-details {

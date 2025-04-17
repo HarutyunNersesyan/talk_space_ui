@@ -1,3 +1,5 @@
+// SearchBySpecialities.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -13,7 +15,8 @@ import {
     faYoutube
 } from '@fortawesome/free-brands-svg-icons';
 import likeIcon from '../assets/search/like.svg';
-import loopIcon from '../assets/search/loop.svg';
+import backIcon from '../assets/search/back.svg';
+import searchIcon from '../assets/search/loop.svg'; // Using loopIcon as searchIcon
 import femaleIcon from '../assets/gender/female-symbol.svg';
 import maleIcon from '../assets/gender/male-symbol.svg';
 import ariesIcon from '../assets/zodiac/aries.svg';
@@ -84,6 +87,7 @@ const SearchBySpecialities: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [currentUserName, setCurrentUserName] = useState<string | null>(null);
     const [isLiking, setIsLiking] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
     const [imageUrls, setImageUrls] = useState<{[key: string]: string}>({});
     const navigate = useNavigate();
     const location = useLocation();
@@ -107,8 +111,14 @@ const SearchBySpecialities: React.FC = () => {
                 );
 
                 setCurrentUserName(response.data);
+
+                // If we didn't get an initial profile, search immediately
+                if (!location.state?.initialProfile) {
+                    handleSearchBySpecialities();
+                }
             } catch (error) {
                 console.error('Failed to fetch userName:', error);
+                setError('Failed to authenticate user');
             }
         };
 
@@ -168,6 +178,9 @@ const SearchBySpecialities: React.FC = () => {
             return;
         }
 
+        setIsSearching(true);
+        setError(null);
+
         try {
             const response = await axios.get(
                 `http://localhost:8080/api/public/user/searchBySpecialities/${currentUserName}`,
@@ -186,20 +199,22 @@ const SearchBySpecialities: React.FC = () => {
                     socialNetworks: Array.isArray(response.data.socialNetworks) ? response.data.socialNetworks : []
                 };
                 setUserProfile(userData);
-                setError(null);
             } else {
-                navigate('/choose');
+                setError('No matching profiles found, please try again later.');
             }
         } catch (error: any) {
+            setIsSearching(false);
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 404) {
-                    navigate('/choose');
+                    setError('No matching profiles found, please try again later.');
                 } else {
                     setError(error.response?.data || 'Failed to fetch by specialities');
                 }
             } else {
                 setError('An unexpected error occurred');
             }
+        } finally {
+            setIsSearching(false);
         }
     };
 
@@ -344,12 +359,14 @@ const SearchBySpecialities: React.FC = () => {
                         </div>
                     </>
                 ) : (
-                    <div className="no-profile">No profile data available</div>
+                    <div className="no-profile">
+                        {isSearching ? 'Searching for matching profiles...' : 'No matching profiles found, please try again later.'}
+                    </div>
                 )}
                 {error && <div className="error-message">{error}</div>}
                 <div className="action-buttons">
                     <button className="back-button" onClick={handleBack}>
-                        Back
+                        <img src={backIcon} alt="back" className="back-icon" />
                     </button>
                     <div className="search-like-buttons">
                         <button
@@ -360,8 +377,13 @@ const SearchBySpecialities: React.FC = () => {
                             <img src={likeIcon} alt="Like" className="like-icon" />
                             {isLiking ? 'Liking...' : 'Like'}
                         </button>
-                        <button className="search-icon-button" onClick={handleSearchBySpecialities}>
-                            <img src={loopIcon} alt="Search" className="search-icon" />
+                        <button
+                            className="search-icon-button"
+                            onClick={handleSearchBySpecialities}
+                            disabled={isSearching}
+                        >
+                            <img src={searchIcon} alt="Search" className="search-icon" />
+                            {isSearching ? 'Searching...' : ''}
                         </button>
                     </div>
                 </div>

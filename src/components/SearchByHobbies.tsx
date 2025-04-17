@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+// SearchByHobbies.tsx
+
+import React, {useState, useEffect} from 'react';
+import {useNavigate, useLocation} from 'react-router-dom';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 import './SearchByHobbies.css';
 import defaultProfileImage from '../assets/default-profile-image.jpg';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
     faFacebook,
     faInstagram,
@@ -14,6 +16,7 @@ import {
 } from '@fortawesome/free-brands-svg-icons';
 import likeIcon from '../assets/search/like.svg';
 import searchIcon from '../assets/search/loop.svg';
+import backIcon from '../assets/search/back.svg'; // Import the back icon
 import femaleIcon from '../assets/gender/female-symbol.svg';
 import maleIcon from '../assets/gender/male-symbol.svg';
 import ariesIcon from '../assets/zodiac/aries.svg';
@@ -86,7 +89,7 @@ const SearchByHobbies: React.FC = () => {
     const [currentUserName, setCurrentUserName] = useState<string | null>(null);
     const [isLiking, setIsLiking] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
-    const [imageUrls, setImageUrls] = useState<{[key: string]: string}>({});
+    const [imageUrls, setImageUrls] = useState<{ [key: string]: string }>({});
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -184,12 +187,12 @@ const SearchByHobbies: React.FC = () => {
                 };
                 setUserProfile(userData);
             } else {
-                setError('No matching profiles found');
+                setError('No matching profiles found, please try again later.');
             }
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 404) {
-                    setError('No matching profiles found');
+                    setError('No matching profiles found, please try again later.');
                 } else {
                     setError(error.response?.data || 'Failed to fetch by hobbies');
                 }
@@ -209,8 +212,8 @@ const SearchByHobbies: React.FC = () => {
             const response = await axios.post(
                 'http://localhost:8080/api/public/user/like',
                 {
-                    liker: { userName: currentUserName },
-                    liked: { userName: userProfile.userName }
+                    liker: {userName: currentUserName},
+                    liked: {userName: userProfile.userName}
                 },
                 {
                     headers: {
@@ -241,7 +244,7 @@ const SearchByHobbies: React.FC = () => {
     };
 
     const handleNavigateToNetwork = () => {
-        navigate('/network');
+        navigate('/choose');
     };
 
     const getPlatformFromUrl = (url: string): string => {
@@ -328,7 +331,7 @@ const SearchByHobbies: React.FC = () => {
                                                             rel="noopener noreferrer"
                                                             className="social-icon-link"
                                                         >
-                                                            <FontAwesomeIcon icon={icon} size="2x" />
+                                                            <FontAwesomeIcon icon={icon} size="2x"/>
                                                         </a>
                                                     )}
                                                 </div>
@@ -349,7 +352,7 @@ const SearchByHobbies: React.FC = () => {
                 {error && <div className="error-message">{error}</div>}
                 <div className="search-buttons">
                     <button className="back-button" onClick={handleNavigateToNetwork}>
-                        Back to Network
+                        <img src={backIcon} alt="Back" className="back-icon"/>
                     </button>
 
                     <button
@@ -357,7 +360,7 @@ const SearchByHobbies: React.FC = () => {
                         onClick={handleLike}
                         disabled={isLiking || !userProfile}
                     >
-                        <img src={likeIcon} alt="Like" className="like-icon" />
+                        <img src={likeIcon} alt="Like" className="like-icon"/>
                         {isLiking ? 'Liking...' : 'Like'}
                     </button>
                     <button
@@ -365,7 +368,7 @@ const SearchByHobbies: React.FC = () => {
                         onClick={handleSearchByHobbies}
                         disabled={isSearching}
                     >
-                        <img src={searchIcon} alt="Search" className="search-icon" />
+                        <img src={searchIcon} alt="Search" className="search-icon"/>
                         {isSearching ? 'Searching...' : ''}
                     </button>
                 </div>

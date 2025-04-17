@@ -14,7 +14,7 @@ import SocialNetworks from '../components/SocialNetworks';
 import Image from '../components/Image';
 import Edit from "../components/Edit";
 import ChangePassword from "../components/ChangePassword";
-import Search from "../components/Search";
+// import Search from "../components/Search";
 import Chat from "../components/Chat";
 import NetworkPage from "../components/NetworkPage";
 import SearchByHobbies from "../components/SearchByHobbies";
@@ -44,7 +44,7 @@ const RoutesConfig: React.FC = () => (
         <Route path="/social-networks" element={<ProtectedRoute element={<SocialNetworks/>}/>}/>
         <Route path="/choose" element={<ProtectedRoute element={<NetworkPage/>}/>}/>
         {/* Discovery Routes */}
-        <Route path="/search" element={<ProtectedRoute element={<Search/>}/>}/>
+        {/*<Route path="/search" element={<ProtectedRoute element={<Search/>}/>}/>*/}
         <Route path="/SearchByHobbies" element={<ProtectedRoute element={<SearchByHobbies/>}/>}/>
         <Route path="/searchBySpecialities" element={<ProtectedRoute element={<SearchBySpecialities/>}/>}/>
 
