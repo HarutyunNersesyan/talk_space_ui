@@ -30,7 +30,7 @@
     align-items: center;
     background-color: #fff;
     position: sticky;
-    top: 0;
+    top: 20px;
     z-index: 1;
 }
 
@@ -191,7 +191,7 @@
     align-items: center;
     background-color: #fff;
     position: sticky;
-    top: 0;
+    top: 20px;
     z-index: 1;
 }
 
