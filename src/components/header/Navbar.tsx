@@ -8,15 +8,20 @@ import axios from 'axios';
 
 interface DecodedToken {
     sub: string;
-    // Add other token fields if needed
+}
+
+interface UserChatDto {
+    partnerUsername: string;
+    unreadCount: number;
 }
 
 const Navbar: React.FC = () => {
     const [userName, setUserName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
-        const fetchUserName = async () => {
+        const fetchUserData = async () => {
             const token = localStorage.getItem('token');
             if (token) {
                 try {
@@ -24,19 +29,25 @@ const Navbar: React.FC = () => {
                     const decoded = jwtDecode<DecodedToken>(token);
                     const email = decoded.sub;
 
-                    // Fetch the username using the email
-                    const response = await axios.get(
+                    // Fetch the username
+                    const userResponse = await axios.get(
                         `http://localhost:8080/api/public/user/get/userName/${email}`,
-                        {
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        }
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    setUserName(userResponse.data);
+
+                    // Fetch unread messages count
+                    const chatsResponse = await axios.get(
+                        `http://localhost:8080/api/public/chat/conversations/${userResponse.data}`,
+                        { headers: { Authorization: `Bearer ${token}` } }
                     );
 
-                    setUserName(response.data);
+                    const totalUnread = chatsResponse.data.reduce(
+                        (sum: number, chat: UserChatDto) => sum + chat.unreadCount, 0
+                    );
+                    setUnreadCount(totalUnread);
                 } catch (error) {
-                    console.error('Error fetching username:', error);
+                    console.error('Error fetching data:', error);
                 } finally {
                     setLoading(false);
                 }
@@ -45,7 +56,11 @@ const Navbar: React.FC = () => {
             }
         };
 
-        fetchUserName();
+        fetchUserData();
+
+        // Set up polling for new messages
+        const interval = setInterval(fetchUserData, 10000);
+        return () => clearInterval(interval);
     }, []);
 
     if (loading) {
@@ -55,15 +70,19 @@ const Navbar: React.FC = () => {
     return (
         <nav className="navbar">
             {navItems.map((item) => {
-                // Special handling for chat route
                 const to = item.to === '/chat' && userName
                     ? `/chat/${userName}`
                     : item.to;
 
                 return (
-                    <Link key={item.to} to={to} className="navbar-item">
+                    <Link key={item.to} to={to} className={`navbar-item ${item.to === '/chat' ? 'chat' : ''}`}>
                         {item.icon ? (
-                            <span className="navbar-icon">{item.icon}</span>
+                            <>
+                                <span className="navbar-icon">{item.icon}</span>
+                                {item.to === '/chat' && unreadCount > 0 && (
+                                    <span className="chat-badge">{unreadCount}</span>
+                                )}
+                            </>
                         ) : (
                             item.label
                         )}
