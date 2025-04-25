@@ -16,7 +16,7 @@ import {
 } from '@fortawesome/free-brands-svg-icons';
 import likeIcon from '../assets/search/like.svg';
 import searchIcon from '../assets/search/loop.svg';
-import backIcon from '../assets/search/back.svg'; // Import the back icon
+import backIcon from '../assets/search/back.svg';
 import femaleIcon from '../assets/gender/female-symbol.svg';
 import maleIcon from '../assets/gender/male-symbol.svg';
 import ariesIcon from '../assets/zodiac/aries.svg';
@@ -90,6 +90,7 @@ const SearchByHobbies: React.FC = () => {
     const [isLiking, setIsLiking] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [imageUrls, setImageUrls] = useState<{ [key: string]: string }>({});
+    const [hasLiked, setHasLiked] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -112,7 +113,6 @@ const SearchByHobbies: React.FC = () => {
 
                 setCurrentUserName(response.data);
 
-                // If we didn't get an initial profile, search immediately
                 if (!location.state?.initialProfile) {
                     handleSearchByHobbies();
                 }
@@ -150,6 +150,7 @@ const SearchByHobbies: React.FC = () => {
             };
 
             fetchImage();
+            setHasLiked(false); // Reset liked status when profile changes
         }
     }, [userProfile]);
 
@@ -205,11 +206,11 @@ const SearchByHobbies: React.FC = () => {
     };
 
     const handleLike = async () => {
-        if (!currentUserName || !userProfile || isLiking) return;
+        if (!currentUserName || !userProfile || isLiking || hasLiked) return;
 
         setIsLiking(true);
         try {
-            const response = await axios.post(
+            await axios.post(
                 'http://localhost:8080/api/public/user/like',
                 {
                     liker: {userName: currentUserName},
@@ -222,21 +223,16 @@ const SearchByHobbies: React.FC = () => {
                     }
                 }
             );
-
-            if (response.status === 201) {
-                alert('Like sent successfully!');
-            }
+            setHasLiked(true);
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 409) {
-                    alert('You already liked this profile');
-                } else if (error.response?.status === 404) {
-                    alert('User not found');
+                    setHasLiked(true);
                 } else {
-                    alert('Failed to send like: ' + error.response?.data);
+                    setError('Failed to send like');
                 }
             } else {
-                alert('An unexpected error occurred');
+                setError('An unexpected error occurred');
             }
         } finally {
             setIsLiking(false);
@@ -358,10 +354,10 @@ const SearchByHobbies: React.FC = () => {
                     <button
                         className="like-button"
                         onClick={handleLike}
-                        disabled={isLiking || !userProfile}
+                        disabled={isLiking || !userProfile || hasLiked}
                     >
                         <img src={likeIcon} alt="Like" className="like-icon"/>
-                        {isLiking ? 'Liking...' : 'Like'}
+                        {hasLiked ? 'Liked' : isLiking ? 'Liking...' : 'Like'}
                     </button>
                     <button
                         className="search-button"

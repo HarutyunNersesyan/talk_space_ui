@@ -1,5 +1,3 @@
-// Hobbies.tsx
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
@@ -31,6 +29,8 @@ const Hobbies: React.FC = () => {
     const [selectedHobbies, setSelectedHobbies] = useState<HobbyRequest[]>([]);
     const [userName, setUserName] = useState<string | null>(null);
     const navigate = useNavigate();
+    const [initialSelectedHobbies, setInitialSelectedHobbies] = useState<HobbyRequest[]>([]);
+    const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
     const token = localStorage.getItem('token');
 
@@ -130,6 +130,7 @@ const Hobbies: React.FC = () => {
                         name: hobby.name,
                     }));
                     setSelectedHobbies(initialSelectedHobbies);
+                    setInitialSelectedHobbies(initialSelectedHobbies);
                 } else {
                     console.error('Invalid response format:', response.data);
                     alert('Invalid response format received from the server.');
@@ -155,9 +156,9 @@ const Hobbies: React.FC = () => {
     // Handle expanding/collapsing a hobby
     const handleHobbyClick = (hobbyId: number) => {
         if (expandedHobbyId === hobbyId) {
-            setExpandedHobbyId(null); // Collapse if already expanded
+            setExpandedHobbyId(null);
         } else {
-            setExpandedHobbyId(hobbyId); // Expand the clicked hobby
+            setExpandedHobbyId(hobbyId);
         }
     };
 
@@ -165,15 +166,9 @@ const Hobbies: React.FC = () => {
     const handleSelectHobby = (hobby: Hobby) => {
         const selectedHobby = { id: hobby.id, name: hobby.name };
         if (selectedHobbies.some((selected) => selected.id === hobby.id)) {
-            // If the hobby is already selected, remove it
             setSelectedHobbies(selectedHobbies.filter((selected) => selected.id !== hobby.id));
-        } else {
-            // If the hobby is not selected, add it (if less than 5 are selected)
-            if (selectedHobbies.length < 5) {
-                setSelectedHobbies([...selectedHobbies, selectedHobby]);
-            } else {
-                alert('You can only select up to 5 hobbies.');
-            }
+        } else if (selectedHobbies.length < 5) {
+            setSelectedHobbies([...selectedHobbies, selectedHobby]);
         }
     };
 
@@ -185,7 +180,6 @@ const Hobbies: React.FC = () => {
                 return;
             }
 
-            // Prepare the data to be sent to the backend
             const hobbyDto: HobbyDto = {
                 userName: userName,
                 hobbies: selectedHobbies,
@@ -198,7 +192,13 @@ const Hobbies: React.FC = () => {
                 },
             });
             console.log('Save response:', response.data);
-            alert('Hobbies saved successfully!');
+            setSaveSuccess(true);
+            setInitialSelectedHobbies([...selectedHobbies]);
+
+            // Hide success message after 3 seconds
+            setTimeout(() => {
+                setSaveSuccess(false);
+            }, 3000);
         } catch (err) {
             console.error('Error saving hobbies:', err);
             if (axios.isAxiosError(err)) {
@@ -237,6 +237,11 @@ const Hobbies: React.FC = () => {
     return (
         <div className="hobbies-container">
             <h1>Hobbies</h1>
+            {saveSuccess && (
+                <div className="success-message">
+                    Hobbies saved successfully!
+                </div>
+            )}
             <div className="selected-hobbies-section">
                 <h2>Selected Hobbies</h2>
                 {selectedHobbies.length > 0 ? (
@@ -268,7 +273,7 @@ const Hobbies: React.FC = () => {
                                 {hobby.children.map((child) => (
                                     <div
                                         key={child.id}
-                                        className={`sub-hobby-item ${selectedHobbies.some((selected) => selected.id === child.id) ? 'selected' : ''}`}
+                                        className={`sub-hobby-item ${selectedHobbies.some(selected => selected.id === child.id) ? 'selected' : ''} ${selectedHobbies.length >= 5 && !selectedHobbies.some(selected => selected.id === child.id) ? 'disabled' : ''}`}
                                         onClick={() => handleSelectHobby(child)}
                                     >
                                         {child.name}
@@ -281,10 +286,10 @@ const Hobbies: React.FC = () => {
             </div>
             <div className="button-group">
                 <button className="action-button back-button" onClick={handleBack}>
-                    Back
+                    Cancel
                 </button>
                 <button className="action-button cancel-button" onClick={handleCancelSelections}>
-                    Cancel
+                    Remove selected list
                 </button>
                 <button className="action-button save-button" onClick={handleSave}>
                     Save

@@ -167,12 +167,8 @@ const Specialities: React.FC = () => {
         const selectedSpeciality = { id: speciality.id, name: speciality.name };
         if (selectedSpecialities.some((selected) => selected.id === speciality.id)) {
             setSelectedSpecialities(selectedSpecialities.filter((selected) => selected.id !== speciality.id));
-        } else {
-            if (selectedSpecialities.length < 5) {
-                setSelectedSpecialities([...selectedSpecialities, selectedSpeciality]);
-            } else {
-                alert('You can only select up to 5 specialties.');
-            }
+        } else if (selectedSpecialities.length < 5) {
+            setSelectedSpecialities([...selectedSpecialities, selectedSpeciality]);
         }
     };
 
@@ -277,7 +273,7 @@ const Specialities: React.FC = () => {
                                 {speciality.children.map((child) => (
                                     <li
                                         key={child.id}
-                                        className={`sub-speciality-item ${selectedSpecialities.some(selected => selected.id === child.id) ? 'selected' : ''}`}
+                                        className={`sub-speciality-item ${selectedSpecialities.some(selected => selected.id === child.id) ? 'selected' : ''} ${selectedSpecialities.length >= 5 && !selectedSpecialities.some(selected => selected.id === child.id) ? 'disabled' : ''}`}
                                         onClick={() => handleSelectSpeciality(child)}
                                     >
                                         {child.name}
@@ -290,7 +286,7 @@ const Specialities: React.FC = () => {
             </ul>
             <div className="button-group">
                 <button className="action-button back-button" onClick={handleBack}>
-                    Back
+                    Cancel
                 </button>
                 <button className="action-button cancel-button" onClick={handleCancelSelections}>
                     Remove selected list
