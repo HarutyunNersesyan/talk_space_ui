@@ -2,9 +2,9 @@
 .chat-app {
     display: flex;
     height: 90vh;
-    max-width: 1200px;
+    max-width: 2100px;
     margin: 20px auto;
-    background-color: #fff;
+    background-color: white;
     border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     overflow: hidden;

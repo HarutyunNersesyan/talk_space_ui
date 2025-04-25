@@ -555,9 +555,7 @@ const Chat: React.FC = () => {
 
                         <div className="message-editor">
                             <div className="editor-tools">
-                                <button className="tool-button">
-                                    <FiPaperclip/>
-                                </button>
+
                                 <button className="tool-button" onClick={toggleEmojiPicker}>
                                     <FiSmile/>
                                 </button>
