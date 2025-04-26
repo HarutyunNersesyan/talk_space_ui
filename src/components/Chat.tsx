@@ -1,14 +1,14 @@
-import React, {useEffect, useState, useRef, useCallback} from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import './Chat.css';
 import axios from 'axios';
-import {jwtDecode} from 'jwt-decode';
-import {useNavigate, useParams} from 'react-router-dom';
-import {FiSend, FiPaperclip, FiSmile, FiChevronLeft} from 'react-icons/fi';
-import {Client} from '@stomp/stompjs';
+import { jwtDecode } from 'jwt-decode';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FiSend, FiPaperclip, FiSmile, FiChevronLeft } from 'react-icons/fi';
+import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import {IoMdSend} from 'react-icons/io';
-import {BsCheck2All, BsCheck2} from 'react-icons/bs';
-import EmojiPicker, {EmojiClickData} from 'emoji-picker-react';
+import { IoMdSend } from 'react-icons/io';
+import { BsCheck2All, BsCheck2 } from 'react-icons/bs';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 
 interface UserChatDto {
     partnerUsername: string;
@@ -62,7 +62,7 @@ const Chat: React.FC = () => {
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const emojiPickerRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const {partnerUsername} = useParams();
+    const { partnerUsername } = useParams();
     const token = localStorage.getItem('token');
 
     const parseTimestamp = (timestamp: string): Date => {
@@ -125,8 +125,7 @@ const Chat: React.FC = () => {
                     ...chat,
                     lastMessage: receivedMessage.content,
                     lastMessageTime: receivedMessage.timestamp,
-                    unreadCount: receivedMessage.sender === userName ||
-                    chat.partnerUsername !== selectedPartner
+                    unreadCount: chat.partnerUsername !== selectedPartner
                         ? chat.unreadCount + 1
                         : 0
                 }
@@ -140,7 +139,7 @@ const Chat: React.FC = () => {
         const socketFactory = () => new SockJS('http://localhost:8080/ws');
         const client = new Client({
             webSocketFactory: socketFactory,
-            connectHeaders: {Authorization: `Bearer ${token}`},
+            connectHeaders: { Authorization: `Bearer ${token}` },
             debug: (str) => console.log('STOMP: ', str),
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -151,16 +150,14 @@ const Chat: React.FC = () => {
             console.log('WebSocket Connected');
             setStompClient(client);
 
-            // Subscribe to user-specific queue
             client.subscribe(`/user/queue/messages`, (message) => {
                 const receivedMessage: ChatMessageDto = JSON.parse(message.body);
                 handleIncomingMessage(receivedMessage);
             });
 
-            // Subscribe to public topic for real-time updates
             client.subscribe(`/topic/public`, (message) => {
                 const receivedMessage: ChatMessageDto = JSON.parse(message.body);
-                if (receivedMessage.sender !== userName) { // Only handle messages from others
+                if (receivedMessage.sender !== userName) {
                     handleIncomingMessage(receivedMessage);
                 }
             });
@@ -210,7 +207,7 @@ const Chat: React.FC = () => {
                 const decodedToken = jwtDecode<{ sub: string }>(token);
                 const response = await axios.get(
                     `http://localhost:8080/api/public/user/get/userName/${decodedToken.sub}`,
-                    {headers: {Authorization: `Bearer ${token}`}}
+                    { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setUserName(response.data);
             } catch (err) {
@@ -229,15 +226,15 @@ const Chat: React.FC = () => {
             const response = await axios.get(
                 `http://localhost:8080/api/public/user/image/${username}`,
                 {
-                    headers: {Authorization: `Bearer ${token}`},
+                    headers: { Authorization: `Bearer ${token}` },
                     responseType: 'blob'
                 }
             );
             const imageUrl = URL.createObjectURL(response.data);
-            setPartnerImages(prev => ({...prev, [username]: imageUrl}));
+            setPartnerImages(prev => ({ ...prev, [username]: imageUrl }));
         } catch (err) {
             console.error('Error fetching partner image:', err);
-            setPartnerImages(prev => ({...prev, [username]: ''}));
+            setPartnerImages(prev => ({ ...prev, [username]: '' }));
         }
     };
 
@@ -247,7 +244,7 @@ const Chat: React.FC = () => {
                 if (!userName) return;
                 const response = await axios.get(
                     `http://localhost:8080/api/public/chat/conversations/${userName}`,
-                    {headers: {Authorization: `Bearer ${token}`}}
+                    { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setChats(response.data);
 
@@ -275,11 +272,14 @@ const Chat: React.FC = () => {
             setLoading(true);
             const response = await axios.get(
                 `http://localhost:8080/api/public/chat/history/${userName}/${partner}`,
-                {headers: {Authorization: `Bearer ${token}`}}
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             setActiveChat(response.data);
             await markMessagesAsRead(partner);
             scrollToBottom();
+
+            // Notify Navbar that chat is opened
+            window.dispatchEvent(new CustomEvent('chatOpened'));
         } catch (err) {
             console.error('Error loading chat history:', err);
             setError('Failed to load messages');
@@ -293,11 +293,11 @@ const Chat: React.FC = () => {
             await axios.post(
                 `http://localhost:8080/api/public/chat/read/${partner}/${userName}`,
                 null,
-                {headers: {Authorization: `Bearer ${token}`}}
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             setChats(prev => prev.map(chat =>
                 chat.partnerUsername === partner
-                    ? {...chat, unreadCount: 0}
+                    ? { ...chat, unreadCount: 0 }
                     : chat
             ));
         } catch (err) {
@@ -333,14 +333,13 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     content: newMessage
                 }),
-                headers: {Authorization: `Bearer ${token}`}
+                headers: { Authorization: `Bearer ${token}` }
             });
 
-            // Also publish to public topic for real-time updates
             await stompClient.publish({
                 destination: '/topic/public',
                 body: JSON.stringify(tempMessage),
-                headers: {Authorization: `Bearer ${token}`}
+                headers: { Authorization: `Bearer ${token}` }
             });
         } catch (err) {
             console.error('Error sending message:', err);
@@ -369,14 +368,14 @@ const Chat: React.FC = () => {
                     receiver: selectedPartner,
                     typing: !!value
                 }),
-                headers: {Authorization: `Bearer ${token}`}
+                headers: { Authorization: `Bearer ${token}` }
             });
         }
     };
 
     const scrollToBottom = () => {
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }, 100);
     };
 
