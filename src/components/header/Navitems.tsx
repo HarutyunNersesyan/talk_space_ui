@@ -12,7 +12,6 @@ export interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    {to: '/', icon: <HomeIcon/>, label: 'Home'},
     {to: '/profile', icon: <SettingsIcon/>, label: 'Profile'},
     {to: '/choose', icon: <SearchIcon/>, label: 'Search'},
     {to: '/chat', icon: <ChatIcon/>, label: 'Chat'},

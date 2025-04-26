@@ -30,7 +30,7 @@ const RoutesConfig: React.FC = () => (
         <Route path="/forgotPassword" element={<PublicRoute element={<Forgot/>}/>}/>
 
         {/* Main App Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard/>}/>}/>
+        <Route path="/home" element={<ProtectedRoute element={<Dashboard/>}/>}/>
 
         {/* Profile Management Routes */}
         <Route path="/profile" element={<ProtectedRoute element={<Profile/>}/>}/>

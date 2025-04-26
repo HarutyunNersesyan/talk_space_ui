@@ -69,28 +69,33 @@ const Navbar: React.FC = () => {
 
     return (
         <nav className="navbar">
-            {navItems.map((item) => {
-                const to = item.to === '/chat' && userName
-                    ? `/chat/${userName}`
-                    : item.to;
+            <Link to="/home" className="navbar-brand">
+                Talk Space
+            </Link>
+            <div className="navbar-items-container">
+                {navItems.map((item) => {
+                    const to = item.to === '/chat' && userName
+                        ? `/chat/${userName}`
+                        : item.to;
 
-                return (
-                    <Link key={item.to} to={to} className={`navbar-item ${item.to === '/chat' ? 'chat' : ''}`}>
-                        {item.icon ? (
-                            <>
-                                <span className="navbar-icon">{item.icon}</span>
-                                {item.to === '/chat' && unreadCount > 0 && (
-                                    <span className="chat-badge">{unreadCount}</span>
-                                )}
-                            </>
-                        ) : (
-                            item.label
-                        )}
-                    </Link>
-                );
-            })}
-            <div className="navbar-item">
-                <LogoutForm />
+                    return (
+                        <Link key={item.to} to={to} className={`navbar-item ${item.to === '/chat' ? 'chat' : ''}`}>
+                            {item.icon ? (
+                                <>
+                                    <span className="navbar-icon">{item.icon}</span>
+                                    {item.to === '/chat' && unreadCount > 0 && (
+                                        <span className="chat-badge">{unreadCount}</span>
+                                    )}
+                                </>
+                            ) : (
+                                item.label
+                            )}
+                        </Link>
+                    );
+                })}
+                <div className="navbar-item">
+                    <LogoutForm />
+                </div>
             </div>
         </nav>
     );

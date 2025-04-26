@@ -34,7 +34,7 @@ const LoginForm: React.FC = () => {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('userName', response.data.userName);
             authContext.setUser(response.data.userName);
-            navigate('/dashboard');
+            navigate('/home');
         } catch (err) {
             setError('Wrong email or password');
         }
