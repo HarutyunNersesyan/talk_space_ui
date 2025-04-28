@@ -30,34 +30,34 @@ const Specialities: React.FC = () => {
     const [userName, setUserName] = useState<string | null>(null);
     const navigate = useNavigate();
     const [initialSelectedSpecialities, setInitialSelectedSpecialities] = useState<SpecialityRequest[]>([]);
-    const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     const token = localStorage.getItem('token');
 
-    // Fetch all specialties from the backend
+    const showNotification = (message: string, type: 'success' | 'error') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 3000);
+    };
+
     useEffect(() => {
         const fetchSpecialities = async () => {
             try {
                 if (!token) {
-                    alert('User not logged in.');
+                    showNotification('User not logged in.', 'error');
                     return;
                 }
 
-                console.log('Fetching specialities...');
                 const response = await axios.get('http://localhost:8080/api/public/user/speciality', {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                console.log('Specialities response:', response.data);
 
-                // Organize specialties into parent-child relationships
                 const specialitiesWithChildren = response.data.map((speciality: Speciality) => ({
                     ...speciality,
                     children: response.data.filter((child: Speciality) => child.parentId === speciality.id),
                 }));
 
-                // Filter out only parent specialties (specialties with no parentId)
                 const parentSpecialities = specialitiesWithChildren.filter(
                     (speciality: Speciality) => speciality.parentId === null
                 );
@@ -74,55 +74,42 @@ const Specialities: React.FC = () => {
         fetchSpecialities();
     }, [token]);
 
-    // Fetch userName from the backend using the token
     useEffect(() => {
         const fetchUserName = async () => {
             try {
                 if (!token) {
-                    alert('User not logged in.');
+                    showNotification('User not logged in.', 'error');
                     return;
                 }
 
-                // Decode the token to get the sub (email)
                 const decodedToken = jwtDecode<{ sub: string }>(token);
                 const email = decodedToken.sub;
 
-                console.log('Fetching userName for email:', email);
                 const response = await axios.get(`http://localhost:8080/api/public/user/get/userName/${email}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                const fetchedUserName = response.data;
-
-                console.log('Fetched userName:', fetchedUserName);
-                setUserName(fetchedUserName);
+                setUserName(response.data);
             } catch (err) {
                 console.error('Error fetching userName:', err);
-                alert('Failed to fetch userName. Please try again later.');
+                showNotification('Failed to fetch userName. Please try again later.', 'error');
             }
         };
 
         fetchUserName();
     }, [token]);
 
-    // Fetch selected specialties from the backend when userName is available
     useEffect(() => {
         const fetchSelectedSpecialities = async () => {
             try {
-                if (!userName) {
-                    console.error('User name is not available.');
-                    return;
-                }
+                if (!userName) return;
 
-                console.log('Fetching selected specialties for user:', userName);
                 const response = await axios.get(`http://localhost:8080/api/public/user/get/specialities/${userName}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-
-                console.log('Selected specialties response:', response.data);
 
                 if (response.data && Array.isArray(response.data)) {
                     const initialSelectedSpecialities = response.data.map((speciality: Speciality) => ({
@@ -131,19 +118,11 @@ const Specialities: React.FC = () => {
                     }));
                     setSelectedSpecialities(initialSelectedSpecialities);
                     setInitialSelectedSpecialities(initialSelectedSpecialities);
-                } else {
-                    console.error('Invalid response format:', response.data);
-                    alert('Invalid response format received from the server.');
                 }
             } catch (err) {
-                console.error('Error fetching selected specialties:', err);
+                console.error('Error fetching selected specialities:', err);
                 if (axios.isAxiosError(err)) {
-                    console.error('Axios error details:', err.response?.data);
-                    alert(`Failed to fetch selected specialties: ${err.response?.data?.message || err.message}`);
-                } else if (err instanceof Error) {
-                    alert(`Failed to fetch selected specialties: ${err.message}`);
-                } else {
-                    alert('Failed to fetch selected specialties. Please try again later.');
+                    showNotification(`Failed to fetch selected specialities: ${err.response?.data?.message || err.message}`, 'error');
                 }
             }
         };
@@ -153,16 +132,10 @@ const Specialities: React.FC = () => {
         }
     }, [userName, token]);
 
-    // Handle expanding/collapsing a specialty
     const handleSpecialityClick = (specialityId: number) => {
-        if (expandedSpecialityId === specialityId) {
-            setExpandedSpecialityId(null);
-        } else {
-            setExpandedSpecialityId(specialityId);
-        }
+        setExpandedSpecialityId(expandedSpecialityId === specialityId ? null : specialityId);
     };
 
-    // Handle selecting/deselecting a specialty
     const handleSelectSpeciality = (speciality: Speciality) => {
         const selectedSpeciality = { id: speciality.id, name: speciality.name };
         if (selectedSpecialities.some((selected) => selected.id === speciality.id)) {
@@ -172,11 +145,10 @@ const Specialities: React.FC = () => {
         }
     };
 
-    // Handle saving selected specialties
     const handleSave = async () => {
         try {
             if (!userName) {
-                alert('User name not found. Please try again later.');
+                showNotification('User name not found. Please try again later.', 'error');
                 return;
             }
 
@@ -185,28 +157,18 @@ const Specialities: React.FC = () => {
                 specialities: selectedSpecialities,
             };
 
-            console.log('Saving selected specialties:', specialityDto);
-            const response = await axios.put('http://localhost:8080/api/public/user/update/speciality', specialityDto, {
+            await axios.put('http://localhost:8080/api/public/user/update/speciality', specialityDto, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            console.log('Save response:', response.data);
-            setSaveSuccess(true);
-            setInitialSelectedSpecialities([...selectedSpecialities]);
 
-            // Hide success message after 3 seconds
-            setTimeout(() => {
-                setSaveSuccess(false);
-            }, 3000);
+            showNotification('Specialities saved successfully!', 'success');
+            setInitialSelectedSpecialities([...selectedSpecialities]);
         } catch (err) {
-            console.error('Error saving specialties:', err);
+            console.error('Error saving specialities:', err);
             if (axios.isAxiosError(err)) {
-                alert(`Failed to save specialties: ${err.response?.data?.message || err.message}`);
-            } else if (err instanceof Error) {
-                alert(`Failed to save specialties: ${err.message}`);
-            } else {
-                alert('Failed to save specialties. Please try again later.');
+                showNotification(`Failed to save specialities: ${err.response?.data?.message || err.message}`, 'error');
             }
         }
     };
@@ -219,29 +181,21 @@ const Specialities: React.FC = () => {
         setSelectedSpecialities([]);
     };
 
-    // Loading state
     if (loading) {
         return <div className="loading-spinner">Loading...</div>;
     }
 
-    // Error state
     if (error) {
         return <div className="error-message">{error}</div>;
     }
 
-    // No specialties found
     if (specialities.length === 0) {
-        return <div>No specialties found.</div>;
+        return <div>No specialities found.</div>;
     }
 
     return (
         <div className="specialities-container">
             <h1>Specialities</h1>
-            {saveSuccess && (
-                <div className="success-message">
-                    Specialities saved successfully!
-                </div>
-            )}
             <div className="selected-specialities-section">
                 <h2>Selected Specialities</h2>
                 {selectedSpecialities.length > 0 ? (
@@ -295,6 +249,12 @@ const Specialities: React.FC = () => {
                     Save
                 </button>
             </div>
+
+            {notification && (
+                <div className={`notification ${notification.type}`}>
+                    {notification.message}
+                </div>
+            )}
         </div>
     );
 };

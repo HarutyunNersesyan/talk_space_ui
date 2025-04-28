@@ -30,34 +30,35 @@ const Hobbies: React.FC = () => {
     const [userName, setUserName] = useState<string | null>(null);
     const navigate = useNavigate();
     const [initialSelectedHobbies, setInitialSelectedHobbies] = useState<HobbyRequest[]>([]);
-    const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     const token = localStorage.getItem('token');
+
+    const showNotification = (message: string, type: 'success' | 'error') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 3000);
+    };
 
     // Fetch all hobbies from the backend
     useEffect(() => {
         const fetchHobbies = async () => {
             try {
                 if (!token) {
-                    alert('User not logged in.');
+                    showNotification('User not logged in.', 'error');
                     return;
                 }
 
-                console.log('Fetching hobbies...');
                 const response = await axios.get('http://localhost:8080/api/public/user/hobby', {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                console.log('Hobbies response:', response.data);
 
-                // Organize hobbies into parent-child relationships
                 const hobbiesWithChildren = response.data.map((hobby: Hobby) => ({
                     ...hobby,
                     children: response.data.filter((child: Hobby) => child.parentId === hobby.id),
                 }));
 
-                // Filter out only parent hobbies (hobbies with no parentId)
                 const parentHobbies = hobbiesWithChildren.filter(
                     (hobby: Hobby) => hobby.parentId === null
                 );
@@ -79,27 +80,22 @@ const Hobbies: React.FC = () => {
         const fetchUserName = async () => {
             try {
                 if (!token) {
-                    alert('User not logged in.');
+                    showNotification('User not logged in.', 'error');
                     return;
                 }
 
-                // Decode the token to get the sub (email)
                 const decodedToken = jwtDecode<{ sub: string }>(token);
                 const email = decodedToken.sub;
 
-                console.log('Fetching userName for email:', email);
                 const response = await axios.get(`http://localhost:8080/api/public/user/get/userName/${email}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                const fetchedUserName = response.data;
-
-                console.log('Fetched userName:', fetchedUserName);
-                setUserName(fetchedUserName);
+                setUserName(response.data);
             } catch (err) {
                 console.error('Error fetching userName:', err);
-                alert('Failed to fetch userName. Please try again later.');
+                showNotification('Failed to fetch userName. Please try again later.', 'error');
             }
         };
 
@@ -110,19 +106,13 @@ const Hobbies: React.FC = () => {
     useEffect(() => {
         const fetchSelectedHobbies = async () => {
             try {
-                if (!userName) {
-                    console.error('User name is not available.');
-                    return;
-                }
+                if (!userName) return;
 
-                console.log('Fetching selected hobbies for user:', userName);
                 const response = await axios.get(`http://localhost:8080/api/public/user/get/hobbies/${userName}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-
-                console.log('Selected hobbies response:', response.data);
 
                 if (response.data && Array.isArray(response.data)) {
                     const initialSelectedHobbies = response.data.map((hobby: Hobby) => ({
@@ -131,19 +121,11 @@ const Hobbies: React.FC = () => {
                     }));
                     setSelectedHobbies(initialSelectedHobbies);
                     setInitialSelectedHobbies(initialSelectedHobbies);
-                } else {
-                    console.error('Invalid response format:', response.data);
-                    alert('Invalid response format received from the server.');
                 }
             } catch (err) {
                 console.error('Error fetching selected hobbies:', err);
                 if (axios.isAxiosError(err)) {
-                    console.error('Axios error details:', err.response?.data);
-                    alert(`Failed to fetch selected hobbies: ${err.response?.data?.message || err.message}`);
-                } else if (err instanceof Error) {
-                    alert(`Failed to fetch selected hobbies: ${err.message}`);
-                } else {
-                    alert('Failed to fetch selected hobbies. Please try again later.');
+                    showNotification(`Failed to fetch selected hobbies: ${err.response?.data?.message || err.message}`, 'error');
                 }
             }
         };
@@ -153,16 +135,10 @@ const Hobbies: React.FC = () => {
         }
     }, [userName, token]);
 
-    // Handle expanding/collapsing a hobby
     const handleHobbyClick = (hobbyId: number) => {
-        if (expandedHobbyId === hobbyId) {
-            setExpandedHobbyId(null);
-        } else {
-            setExpandedHobbyId(hobbyId);
-        }
+        setExpandedHobbyId(expandedHobbyId === hobbyId ? null : hobbyId);
     };
 
-    // Handle selecting/deselecting a hobby
     const handleSelectHobby = (hobby: Hobby) => {
         const selectedHobby = { id: hobby.id, name: hobby.name };
         if (selectedHobbies.some((selected) => selected.id === hobby.id)) {
@@ -172,11 +148,10 @@ const Hobbies: React.FC = () => {
         }
     };
 
-    // Handle saving selected hobbies
     const handleSave = async () => {
         try {
             if (!userName) {
-                alert('User name not found. Please try again later.');
+                showNotification('User name not found. Please try again later.', 'error');
                 return;
             }
 
@@ -185,28 +160,18 @@ const Hobbies: React.FC = () => {
                 hobbies: selectedHobbies,
             };
 
-            console.log('Saving selected hobbies:', hobbyDto);
-            const response = await axios.put('http://localhost:8080/api/public/user/update/hobby', hobbyDto, {
+            await axios.put('http://localhost:8080/api/public/user/update/hobby', hobbyDto, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            console.log('Save response:', response.data);
-            setSaveSuccess(true);
-            setInitialSelectedHobbies([...selectedHobbies]);
 
-            // Hide success message after 3 seconds
-            setTimeout(() => {
-                setSaveSuccess(false);
-            }, 3000);
+            showNotification('Hobbies saved successfully!', 'success');
+            setInitialSelectedHobbies([...selectedHobbies]);
         } catch (err) {
             console.error('Error saving hobbies:', err);
             if (axios.isAxiosError(err)) {
-                alert(`Failed to save hobbies: ${err.response?.data?.message || err.message}`);
-            } else if (err instanceof Error) {
-                alert(`Failed to save hobbies: ${err.message}`);
-            } else {
-                alert('Failed to save hobbies. Please try again later.');
+                showNotification(`Failed to save hobbies: ${err.response?.data?.message || err.message}`, 'error');
             }
         }
     };
@@ -219,17 +184,14 @@ const Hobbies: React.FC = () => {
         setSelectedHobbies([]);
     };
 
-    // Loading state
     if (loading) {
         return <div className="loading-spinner">Loading...</div>;
     }
 
-    // Error state
     if (error) {
         return <div className="error-message">{error}</div>;
     }
 
-    // No hobbies found
     if (hobbies.length === 0) {
         return <div>No hobbies found.</div>;
     }
@@ -237,11 +199,6 @@ const Hobbies: React.FC = () => {
     return (
         <div className="hobbies-container">
             <h1>Hobbies</h1>
-            {saveSuccess && (
-                <div className="success-message">
-                    Hobbies saved successfully!
-                </div>
-            )}
             <div className="selected-hobbies-section">
                 <h2>Selected Hobbies</h2>
                 {selectedHobbies.length > 0 ? (
@@ -295,6 +252,12 @@ const Hobbies: React.FC = () => {
                     Save
                 </button>
             </div>
+
+            {notification && (
+                <div className={`notification ${notification.type}`}>
+                    {notification.message}
+                </div>
+            )}
         </div>
     );
 };

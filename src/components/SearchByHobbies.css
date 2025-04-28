@@ -1,5 +1,3 @@
-/* SearchByHobbies.css */
-
 .parent-container {
     display: flex;
     justify-content: center;
@@ -63,6 +61,7 @@
     flex-direction: column;
     gap: 15px;
     margin-top: 15px;
+    padding: 0 20px;
 }
 
 .user-name {
@@ -141,25 +140,18 @@
     transform: rotate(10deg);
 }
 
-.user-about {
-    font-size: 16px;
-    color: #444;
-    text-align: center;
-    margin: 15px 0;
-    line-height: 1.5;
-    padding: 0 10px;
-}
-
+.user-about,
 .user-hobbies,
 .user-specialities,
 .user-social-networks {
     font-size: 16px;
     color: #444;
-    text-align: center;
-    margin: 12px 0;
+    text-align: left;
+    margin: 8px 0;
     line-height: 1.5;
 }
 
+.user-about strong,
 .user-hobbies strong,
 .user-specialities strong,
 .user-social-networks strong {
@@ -167,42 +159,45 @@
     font-weight: 600;
 }
 
-.social-icons {
+.social-networks-header {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 12px;
-    margin-top: 15px;
-    justify-content: center;
-    padding: 10px 0;
+    flex-wrap: wrap;
 }
 
-.social-network-item {
+.social-icons {
     display: flex;
-    flex-direction: column;
+    gap: 10px;
+}
+
+.social-icon-container {
+    width: 40px;
+    height: 40px;
+    display: flex;
     align-items: center;
+    justify-content: center;
     transition: transform 0.2s ease;
 }
 
-.social-network-item:hover {
-    transform: translateY(-3px);
-}
-
-.social-icon-link {
-    color: inherit;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: #f5f7fa;
-    border-radius: 50%;
+.social-icon {
+    font-size: 32px;
     transition: all 0.3s ease;
 }
 
-.social-icon-link:hover {
-    background-color: #e9ecef;
+.social-icon-link:hover .social-icon {
     transform: scale(1.1);
+}
+
+/* Platform Colors */
+.fa-facebook { color: #3b5998; }
+.fa-instagram { color: #e4405f; }
+.fa-twitter { color: #1da1f2; }
+.fa-linkedin { color: #0077b5; }
+.fa-youtube { color: #ff0000; }
+
+.no-social {
+    color: #666;
 }
 
 .error-message {
@@ -349,5 +344,22 @@
 
     .search-buttons {
         flex-wrap: wrap;
+    }
+
+    .social-networks-header {
+        gap: 8px;
+    }
+
+    .social-icons {
+        gap: 8px;
+    }
+
+    .social-icon-container {
+        width: 36px;
+        height: 36px;
+    }
+
+    .social-icon {
+        font-size: 28px;
     }
 }

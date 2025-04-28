@@ -161,7 +161,7 @@ const SearchBySpecialities: React.FC = () => {
             };
 
             fetchImage();
-            setHasLiked(false); // Reset liked status when profile changes
+            setHasLiked(false);
         }
     }, [userProfile]);
 
@@ -324,31 +324,34 @@ const SearchBySpecialities: React.FC = () => {
                                 <strong>Specialities:</strong> {userProfile.specialities.length > 0 ? userProfile.specialities.join(', ') : 'No specialities listed'}
                             </div>
                             <div className="user-social-networks">
-                                <strong>Social Networks:</strong>
-                                {userProfile.socialNetworks.length > 0 ? (
-                                    <div className="social-icons">
-                                        {userProfile.socialNetworks.map((url, index) => {
-                                            const platform = getPlatformFromUrl(url);
-                                            const icon = socialIcons[platform];
-                                            return (
-                                                <div key={index} className="social-network-item">
-                                                    {icon && (
+                                <div className="social-networks-header">
+                                    <strong>Social Networks:</strong>
+                                    {userProfile.socialNetworks.length > 0 ? (
+                                        <div className="social-icons">
+                                            {userProfile.socialNetworks.map((url, index) => {
+                                                const platform = getPlatformFromUrl(url);
+                                                const icon = socialIcons[platform];
+                                                return (
+                                                    <div key={index} className="social-icon-container">
                                                         <a
                                                             href={url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="social-icon-link"
                                                         >
-                                                            <FontAwesomeIcon icon={icon} size="2x" />
+                                                            <FontAwesomeIcon
+                                                                icon={icon}
+                                                                className="social-icon"
+                                                            />
                                                         </a>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <span>No social networks listed</span>
-                                )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <span className="no-social">No social networks listed</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </>
