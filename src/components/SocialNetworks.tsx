@@ -37,25 +37,27 @@ const SocialNetworks: React.FC = () => {
     const [userName, setUserName] = useState<string | null>(null);
     const [selectedPlatform, setSelectedPlatform] = useState<string>('');
     const [newUrl, setNewUrl] = useState<string>('');
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const navigate = useNavigate();
 
-    // Retrieve the token from local storage
     const token = localStorage.getItem('token');
 
-    // Fetch userName from the token
+    const showNotification = (message: string, type: 'success' | 'error') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 5000);
+    };
+
     useEffect(() => {
         const fetchUserName = async () => {
             try {
                 if (!token) {
-                    alert('User not logged in.');
+                    showNotification('User not logged in.', 'error');
                     return;
                 }
 
-                // Decode the token to get the sub (email)
                 const decodedToken = jwtDecode<{ sub: string }>(token);
                 const email = decodedToken.sub;
 
-                // Fetch userName from the backend
                 const response = await axios.get(`http://localhost:8080/api/public/user/get/userName/${email}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -65,14 +67,13 @@ const SocialNetworks: React.FC = () => {
                 setUserName(userName);
             } catch (err) {
                 console.error('Error fetching userName:', err);
-                alert('Failed to fetch userName. Please try again later.');
+                showNotification('Failed to fetch userName. Please try again later.', 'error');
             }
         };
 
         fetchUserName();
     }, [token]);
 
-    // Fetch social networks for the user
     useEffect(() => {
         const fetchSocialNetworks = async () => {
             try {
@@ -99,78 +100,64 @@ const SocialNetworks: React.FC = () => {
         }
     }, [userName, token]);
 
-    // Handle updating social networks
     const handleUpdateSocialNetworks = async (e: React.FormEvent) => {
         e.preventDefault();
 
         try {
             if (!userName || !selectedPlatform || !newUrl) {
-                alert('Please select a platform and provide a valid URL.');
+                showNotification('Please select a platform and provide a valid URL.', 'error');
                 return;
             }
 
-            // Check if the platform already exists in the user's social networks
             const existingNetworkIndex = socialNetworks.findIndex(
                 (network) => network.platform === selectedPlatform
             );
 
             let updatedSocialNetworks: SocialNetwork[];
             if (existingNetworkIndex !== -1) {
-                // Update the existing platform's URL
                 updatedSocialNetworks = socialNetworks.map((network, index) =>
                     index === existingNetworkIndex ? { ...network, url: newUrl } : network
                 );
             } else {
-                // Add a new platform
                 updatedSocialNetworks = [...socialNetworks, { platform: selectedPlatform, url: newUrl }];
             }
 
-            // Prepare the data to be sent to the backend
             const socialNetworksDto: SocialNetworksDto = {
-                userName: userName, // Set the userName at the root level
+                userName: userName,
                 socialNetworks: updatedSocialNetworks.map((network) => ({
                     platform: network.platform,
                     url: network.url,
-                })), // Ensure socialNetworks contains only platform and url
+                })),
             };
 
-            console.log('Updating social networks:', socialNetworksDto); // Debug log
-
-            // Send the PUT request to the backend
-            const response = await axios.put('http://localhost:8080/api/public/user/update/socialNetworks', socialNetworksDto, {
+            await axios.put('http://localhost:8080/api/public/user/update/socialNetworks', socialNetworksDto, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            console.log('Update response:', response.data); // Debug log
 
-            // Update the local state with the new data
             setSocialNetworks(updatedSocialNetworks);
             setSelectedPlatform('');
             setNewUrl('');
-            alert('Social networks updated successfully!');
+            showNotification('Social networks updated successfully!', 'success');
         } catch (err) {
             console.error('Error updating social networks:', err);
-            alert('Failed to update social networks. Please try again later.');
+            showNotification('Please select a platform and provide a valid URL.', 'error');
         }
     };
 
-    // Handle clicking on an icon to select the platform
     const handleIconClick = (platform: string) => {
         setSelectedPlatform(platform);
     };
 
-    // Handle cancel button click
     const handleCancel = () => {
         navigate('/profile');
     };
 
-    // Loading state
     if (loading) {
         return <div className="loading-spinner">Loading...</div>;
     }
 
-    // Error state
     if (error) {
         return <div className="error-message">{error}</div>;
     }
@@ -222,9 +209,14 @@ const SocialNetworks: React.FC = () => {
                     <button type="submit" className="update-button">
                         Update
                     </button>
-
                 </div>
             </form>
+
+            {notification && (
+                <div className={`notification ${notification.type}`}>
+                    {notification.message}
+                </div>
+            )}
         </div>
     );
 };

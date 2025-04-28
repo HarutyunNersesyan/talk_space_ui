@@ -10,8 +10,7 @@ const ChangePassword: React.FC = () => {
     const [newPassword, setNewPassword] = useState<string>("");
     const [newPasswordRepeat, setNewPasswordRepeat] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
     const [showOldPassword, setShowOldPassword] = useState<boolean>(false);
     const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
@@ -37,11 +36,15 @@ const ChangePassword: React.FC = () => {
         return Object.keys(errors).length === 0;
     };
 
+    const showNotification = (message: string, type: 'success' | 'error') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 5000);
+    };
+
     const handleUpdatePassword = async () => {
         try {
             setLoading(true);
-            setError(null);
-            setSuccessMessage(null);
+            setNotification(null);
             setValidationErrors({});
 
             if (!validateForm()) {
@@ -72,10 +75,11 @@ const ChangePassword: React.FC = () => {
                 }
             );
 
-            console.log('Password updated successfully:', response.data);
-            setSuccessMessage(response.data);
-            alert(response.data);
-            navigate('/profile');
+            showNotification("Password has changed successfully", 'success');
+
+            setTimeout(() => {
+                navigate('/profile');
+            }, 1500);
         } catch (err: any) {
             console.error('Error updating password:', err);
 
@@ -93,12 +97,11 @@ const ChangePassword: React.FC = () => {
                     });
                     setValidationErrors(errors);
                 } else {
-                    setError(err.response.data.message || err.response.data);
+                    showNotification(err.response.data.message || err.response.data, 'error');
                 }
             } else {
-                setError(err.message || 'Failed to update password. Please try again later.');
+                showNotification(err.message || 'Failed to update password. Please try again later.', 'error');
             }
-            alert(error);
         } finally {
             setLoading(false);
         }
@@ -167,8 +170,13 @@ const ChangePassword: React.FC = () => {
                     {loading ? 'Updating...' : 'Update Password'}
                 </button>
             </div>
-            {error && <div className="error-message">{error}</div>}
-            {successMessage && <div className="success-message">{successMessage}</div>}
+
+            {/* Notification */}
+            {notification && (
+                <div className={`notification ${notification.type}`}>
+                    {notification.message}
+                </div>
+            )}
         </div>
     );
 };
