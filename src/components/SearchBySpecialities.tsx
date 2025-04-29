@@ -137,7 +137,7 @@ const SearchBySpecialities: React.FC = () => {
     }, [currentUserName]);
 
     useEffect(() => {
-        if (userProfile) {
+        if (userProfile && currentUserName) {
             const fetchImage = async () => {
                 try {
                     const response = await axios.get(
@@ -160,10 +160,31 @@ const SearchBySpecialities: React.FC = () => {
                 }
             };
 
+            const checkIfLiked = async () => {
+                try {
+                    const response = await axios.get(
+                        'http://localhost:8080/api/public/user/like/get',
+                        {
+                            params: {
+                                liker: currentUserName,
+                                liked: userProfile.userName
+                            },
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                            }
+                        }
+                    );
+                    setHasLiked(response.data);
+                } catch (error) {
+                    console.error('Error checking like status:', error);
+                    setHasLiked(false);
+                }
+            };
+
             fetchImage();
-            setHasLiked(false);
+            checkIfLiked();
         }
-    }, [userProfile]);
+    }, [userProfile, currentUserName]);
 
     useEffect(() => {
         return () => {

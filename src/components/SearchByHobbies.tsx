@@ -43,15 +43,6 @@ interface SearchUser {
     socialNetworks: string[];
 }
 
-interface Like {
-    liker: {
-        userName: string;
-    };
-    liked: {
-        userName: string;
-    };
-}
-
 const socialIcons: { [key: string]: any } = {
     'facebook': faFacebook,
     'instagram': faInstagram,
@@ -124,7 +115,7 @@ const SearchByHobbies: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (userProfile) {
+        if (userProfile && currentUserName) {
             const fetchImage = async () => {
                 try {
                     const response = await axios.get(
@@ -148,9 +139,8 @@ const SearchByHobbies: React.FC = () => {
             };
 
             fetchImage();
-            setHasLiked(false);
         }
-    }, [userProfile]);
+    }, [userProfile, currentUserName]);
 
     useEffect(() => {
         return () => {
@@ -185,6 +175,7 @@ const SearchByHobbies: React.FC = () => {
                     socialNetworks: Array.isArray(response.data.socialNetworks) ? response.data.socialNetworks : []
                 };
                 setUserProfile(userData);
+                setHasLiked(false); // Reset like status when showing a new profile
             } else {
                 setError('No matching profiles found, please try again later.');
             }
@@ -204,20 +195,20 @@ const SearchByHobbies: React.FC = () => {
     };
 
     const handleLike = async () => {
-        if (!currentUserName || !userProfile || isLiking || hasLiked) return;
+        if (!currentUserName || !userProfile || isLiking) return;
 
         setIsLiking(true);
         try {
             await axios.post(
                 'http://localhost:8080/api/public/user/like',
+                {},
                 {
-                    liker: {userName: currentUserName},
-                    liked: {userName: userProfile.userName}
-                },
-                {
+                    params: {
+                        liker: currentUserName,
+                        liked: userProfile.userName
+                    },
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
                     }
                 }
             );
@@ -226,8 +217,9 @@ const SearchByHobbies: React.FC = () => {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 409) {
                     setHasLiked(true);
+                    setError('You have already liked this user');
                 } else {
-                    setError('Failed to send like');
+                    setError(error.response?.data || 'Failed to send like');
                 }
             } else {
                 setError('An unexpected error occurred');
