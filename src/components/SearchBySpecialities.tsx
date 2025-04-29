@@ -245,14 +245,14 @@ const SearchBySpecialities: React.FC = () => {
         try {
             await axios.post(
                 'http://localhost:8080/api/public/user/like',
+                null,
                 {
-                    liker: { userName: currentUserName },
-                    liked: { userName: userProfile.userName }
-                },
-                {
+                    params: {
+                        liker: currentUserName,
+                        liked: userProfile.userName
+                    },
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
                     }
                 }
             );
