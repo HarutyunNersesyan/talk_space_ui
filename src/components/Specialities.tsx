@@ -145,6 +145,10 @@ const Specialities: React.FC = () => {
         }
     };
 
+    const handleDeleteSpeciality = (specialityId: number) => {
+        setSelectedSpecialities(selectedSpecialities.filter((speciality) => speciality.id !== specialityId));
+    };
+
     const handleSave = async () => {
         try {
             if (!userName) {
@@ -203,6 +207,15 @@ const Specialities: React.FC = () => {
                         {selectedSpecialities.map((speciality) => (
                             <li key={speciality.id} className="selected-speciality-item">
                                 {speciality.name}
+                                <button
+                                    className="delete-speciality-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteSpeciality(speciality.id);
+                                    }}
+                                >
+                                    ×
+                                </button>
                             </li>
                         ))}
                     </ul>

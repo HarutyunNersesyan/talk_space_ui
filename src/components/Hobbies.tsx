@@ -148,6 +148,10 @@ const Hobbies: React.FC = () => {
         }
     };
 
+    const handleDeleteHobby = (hobbyId: number) => {
+        setSelectedHobbies(selectedHobbies.filter((hobby) => hobby.id !== hobbyId));
+    };
+
     const handleSave = async () => {
         try {
             if (!userName) {
@@ -206,6 +210,15 @@ const Hobbies: React.FC = () => {
                         {selectedHobbies.map((hobby) => (
                             <li key={hobby.id} className="selected-hobby-item">
                                 {hobby.name}
+                                <button
+                                    className="delete-hobby-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteHobby(hobby.id);
+                                    }}
+                                >
+                                    ×
+                                </button>
                             </li>
                         ))}
                     </ul>
