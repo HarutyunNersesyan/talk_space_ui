@@ -1,4 +1,3 @@
-// Edit.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
@@ -11,7 +10,7 @@ const Edit: React.FC = () => {
     const [aboutMe, setAboutMe] = useState<string>("");
     const [birthDate, setBirthDate] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
+    const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
     const navigate = useNavigate();
 
     const token = localStorage.getItem('token');
@@ -34,13 +33,10 @@ const Edit: React.FC = () => {
                     setLastName(userData.lastName || "");
                     setAboutMe(userData.aboutMe || "");
 
-                    // Handle birth date more robustly
                     if (userData.birthDate) {
-                        // Check if the date is already in the correct format (YYYY-MM-DD)
                         if (/^\d{4}-\d{2}-\d{2}$/.test(userData.birthDate)) {
                             setBirthDate(userData.birthDate);
                         } else {
-                            // Parse and format the date if it's not in the correct format
                             const date = new Date(userData.birthDate);
                             if (!isNaN(date.getTime())) {
                                 const year = date.getFullYear();
@@ -54,7 +50,7 @@ const Edit: React.FC = () => {
                     }
                 } catch (err) {
                     console.error('Error fetching user profile:', err);
-                    setError('Failed to fetch user profile. Please try again later.');
+                    setNotification({ message: 'Failed to fetch user profile. Please try again later.', type: 'error' });
                 }
             }
         };
@@ -62,10 +58,29 @@ const Edit: React.FC = () => {
         fetchUserProfile();
     }, [token]);
 
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                setNotification(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
+    const formatErrorMessage = (error: string): string => {
+        if (error.includes('value too long for type character varying(250)')) {
+            return 'Your information should not exceed 250 characters';
+        }
+        if (error.includes('Validation failed for object=\'editUser\'')) {
+            return 'First name and last name must start with a capital letter followed by lowercase letters';
+        }
+        return error;
+    };
+
     const handleSave = async () => {
         try {
             setLoading(true);
-            setError(null);
+            setNotification(null);
 
             if (!token) {
                 throw new Error('No token found.');
@@ -74,10 +89,8 @@ const Edit: React.FC = () => {
             const decodedToken = jwtDecode<{ sub: string }>(token);
             const email = decodedToken.sub;
 
-            // Prepare the birth date for sending to the backend
             let formattedBirthDate = null;
             if (birthDate) {
-                // Ensure the date is in the correct format
                 const date = new Date(birthDate);
                 if (!isNaN(date.getTime())) {
                     formattedBirthDate = date.toISOString().split('T')[0];
@@ -103,12 +116,12 @@ const Edit: React.FC = () => {
             );
 
             console.log('Profile updated successfully:', response.data);
-            alert('Profile updated successfully!');
-            navigate('/profile');
-        } catch (err) {
+            setNotification({ message: 'Profile updated successfully!', type: 'success' });
+        } catch (err: any) {
             console.error('Error updating profile:', err);
-            setError('Failed to update profile. Please try again later.');
-            alert('Failed to update profile. Please try again later.');
+            let errorMessage = err.response?.data?.message || err.message || 'Failed to update profile. Please try again later.';
+            errorMessage = formatErrorMessage(errorMessage);
+            setNotification({ message: errorMessage, type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -133,6 +146,8 @@ const Edit: React.FC = () => {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Enter your first name"
+                    pattern="[A-Z][a-z]*"
+                    title="First name must start with a capital letter followed by lowercase letters"
                 />
             </div>
             <div className="form-group">
@@ -143,6 +158,8 @@ const Edit: React.FC = () => {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Enter your last name"
+                    pattern="[A-Z][a-z]*"
+                    title="Last name must start with a capital letter followed by lowercase letters"
                 />
             </div>
             <div className="form-group">
@@ -155,13 +172,14 @@ const Edit: React.FC = () => {
                 />
             </div>
             <div className="form-group">
-                <label htmlFor="aboutMe">About Me</label>
+                <label htmlFor="aboutMe">About Me <span className="character-count">({aboutMe.length}/250)</span></label>
                 <textarea
                     id="aboutMe"
                     value={aboutMe}
                     onChange={(e) => setAboutMe(e.target.value)}
-                    placeholder="Tell us about yourself"
+                    placeholder="Tell us about yourself (max 250 characters)"
                     rows={4}
+                    maxLength={250}
                 />
             </div>
             <div className="buttons-container">
@@ -175,7 +193,12 @@ const Edit: React.FC = () => {
                     Change Password
                 </button>
             </div>
-            {error && <div className="error-message">{error}</div>}
+
+            {notification && (
+                <div className={`notification ${notification.type}`}>
+                    {notification.message}
+                </div>
+            )}
         </div>
     );
 };

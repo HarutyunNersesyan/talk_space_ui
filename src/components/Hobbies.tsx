@@ -3,6 +3,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import './Hobbies.css';
+import HobbiesIcon from '../assets/search/hobbies-icon.svg';
 
 interface Hobby {
     id: number;
@@ -202,7 +203,11 @@ const Hobbies: React.FC = () => {
 
     return (
         <div className="hobbies-container">
-            <h1>Hobbies</h1>
+            <h1 className="hobbies-title">
+                Hobbies
+                <img src={HobbiesIcon} alt="Hobbies Icon" className="hobbies-icon" />
+
+            </h1>
             <div className="selected-hobbies-section">
                 <h2>Selected Hobbies</h2>
                 {selectedHobbies.length > 0 ? (

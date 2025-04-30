@@ -3,6 +3,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import './Specialities.css';
+import SpecialitiesIcon from '../assets/search/specialties-icon.svg';
 
 interface Speciality {
     id: number;
@@ -199,7 +200,11 @@ const Specialities: React.FC = () => {
 
     return (
         <div className="specialities-container">
-            <h1>Specialities</h1>
+            <h1 className="specialities-title">
+                Specialities
+                <img src={SpecialitiesIcon} alt="Specialities Icon" className="specialities-icon" />
+
+            </h1>
             <div className="selected-specialities-section">
                 <h2>Selected Specialities</h2>
                 {selectedSpecialities.length > 0 ? (

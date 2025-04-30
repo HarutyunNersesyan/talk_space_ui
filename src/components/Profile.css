@@ -119,6 +119,23 @@
     filter: brightness(0) invert(0.5);
 }
 
+/* About Me Section */
+.about-me-section {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: inherit;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.about-me-text pre {
+    font-family: inherit;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+}
+
 /* Fullscreen Image Styles */
 .fullscreen-image-overlay {
     position: fixed;

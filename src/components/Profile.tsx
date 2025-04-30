@@ -1,5 +1,3 @@
-// Profile.tsx
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
@@ -32,7 +30,6 @@ import editIcon from '../assets/edit.svg';
 import hobbiesIcon from '../assets/search/hobbies-icon.svg';
 import specialtiesIcon from '../assets/search/specialties-icon.svg';
 import internetIcon from '../assets/search/internet.svg';
-import aboutIcon from '../assets/info.svg'; // Import an icon for "About"
 
 interface SearchUser {
     firstName: string;
@@ -142,6 +139,16 @@ const Profile: React.FC = () => {
 
         if (userName) fetchProfilePicture();
     }, [userName, token]);
+
+    const formatAboutText = (text: string) => {
+        if (!text) return "No information available";
+
+        const result = [];
+        for (let i = 0; i < text.length; i += 60) {
+            result.push(text.substring(i, i + 60));
+        }
+        return result.join('\n');
+    };
 
     const handleEditClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -302,7 +309,16 @@ const Profile: React.FC = () => {
                             </>
                         )}
                         <div className="profile-section">
-                            <p><b>About me:</b> {userInfo?.about || "No information available"}</p>
+                            <p className="about-me-section">
+                                <b>About me:</b>
+                                <span className="about-me-text">
+                                    {userInfo?.about ? (
+                                        <pre>{formatAboutText(userInfo.about)}</pre>
+                                    ) : (
+                                        "No information available"
+                                    )}
+                                </span>
+                            </p>
                         </div>
                         <div className="profile-section">
                             <p><b>Hobbies:</b> {userInfo?.hobbies?.join(', ') || "No Hobbies"}</p>
