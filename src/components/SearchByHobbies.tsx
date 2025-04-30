@@ -1,10 +1,10 @@
-import React, {useState, useEffect} from 'react';
-import {useNavigate, useLocation} from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import './SearchByHobbies.css';
 import defaultProfileImage from '../assets/default-profile-image.jpg';
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faFacebook,
     faInstagram,
@@ -41,6 +41,15 @@ interface SearchUser {
     hobbies: string[];
     specialities: string[];
     socialNetworks: string[];
+}
+
+interface Like {
+    liker: {
+        userName: string;
+    };
+    liked: {
+        userName: string;
+    };
 }
 
 const socialIcons: { [key: string]: any } = {
@@ -138,7 +147,29 @@ const SearchByHobbies: React.FC = () => {
                 }
             };
 
+            const checkIfLiked = async () => {
+                try {
+                    const response = await axios.get(
+                        'http://localhost:8080/api/public/user/like/get',
+                        {
+                            params: {
+                                liker: currentUserName,
+                                liked: userProfile.userName
+                            },
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                            }
+                        }
+                    );
+                    setHasLiked(response.data);
+                } catch (error) {
+                    console.error('Error checking like status:', error);
+                    setHasLiked(false);
+                }
+            };
+
             fetchImage();
+            checkIfLiked();
         }
     }, [userProfile, currentUserName]);
 
@@ -175,17 +206,16 @@ const SearchByHobbies: React.FC = () => {
                     socialNetworks: Array.isArray(response.data.socialNetworks) ? response.data.socialNetworks : []
                 };
                 setUserProfile(userData);
-                setHasLiked(false); // Reset like status when showing a new profile
+                setHasLiked(false);
             } else {
                 setError('No matching profiles found, please try again later.');
             }
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
-                if (error.response?.status === 404) {
-                    setError('No matching profiles found, please try again later.');
-                } else {
-                    setError(error.response?.data || 'Failed to fetch by hobbies');
-                }
+                const errorMessage = error.response?.data?.message ||
+                    error.response?.data?.error ||
+                    'Failed to fetch by hobbies';
+                setError(errorMessage);
             } else {
                 setError('An unexpected error occurred');
             }
@@ -195,13 +225,13 @@ const SearchByHobbies: React.FC = () => {
     };
 
     const handleLike = async () => {
-        if (!currentUserName || !userProfile || isLiking) return;
+        if (!currentUserName || !userProfile || isLiking || hasLiked) return;
 
         setIsLiking(true);
         try {
             await axios.post(
                 'http://localhost:8080/api/public/user/like',
-                {},
+                null,
                 {
                     params: {
                         liker: currentUserName,
@@ -215,11 +245,12 @@ const SearchByHobbies: React.FC = () => {
             setHasLiked(true);
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
+                const errorMessage = error.response?.data?.message ||
+                    error.response?.data?.error ||
+                    'Failed to send like';
+                setError(errorMessage);
                 if (error.response?.status === 409) {
                     setHasLiked(true);
-                    setError('You have already liked this user');
-                } else {
-                    setError(error.response?.data || 'Failed to send like');
                 }
             } else {
                 setError('An unexpected error occurred');
