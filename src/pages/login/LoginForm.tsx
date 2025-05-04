@@ -14,7 +14,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const apiUrl = process.env.REACT_APP_API_URL;
-const blue = '#1abc9c'; // Same blue color from SignUpForm
+const blue = '#1abc9c';
 
 const LoginForm: React.FC = () => {
     const [email, setEmail] = useState<string>('');
@@ -27,16 +27,23 @@ const LoginForm: React.FC = () => {
     const handleLogin = async (e: FormEvent) => {
         e.preventDefault();
         try {
-            const response = await axios.post<{ token: string; userName: string }>(`${apiUrl}/account/auth`, {
+            const response = await axios.post(`${apiUrl}/account/auth`, {
                 email,
                 password,
             });
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('userName', response.data.userName);
-            authContext.setUser(response.data.userName);
-            navigate('/home');
-        } catch (err) {
-            setError('Wrong email or password');
+
+            if (response.status === 200) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('userName', response.data.userName);
+                authContext.setUser(response.data.userName);
+                navigate('/home');
+            }
+        } catch (err: any) {
+            if (err.response && err.response.status === 403) {
+                setError(err.response.data);
+            } else {
+                setError('Wrong email or password');
+            }
         }
     };
 
@@ -187,7 +194,12 @@ const LoginForm: React.FC = () => {
 
                         {/* Error Message */}
                         {error && (
-                            <Typography color="error" sx={{ fontSize: '14px', textAlign: 'center' }}>
+                            <Typography color="error" sx={{
+                                fontSize: '14px',
+                                textAlign: 'left',
+                                whiteSpace: 'pre-line',
+                                marginBottom: '16px'
+                            }}>
                                 {error}
                             </Typography>
                         )}
