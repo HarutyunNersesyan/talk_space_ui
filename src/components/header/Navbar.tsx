@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import LogoutForm from '../Logout';
 import navItems from './Navitems';
 import adminNavItems from './AdminNavitems';
@@ -23,24 +23,30 @@ const Navbar: React.FC = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [isAdmin, setIsAdmin] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
 
     const fetchUnreadMessages = async (username: string) => {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const chatsResponse = await axios.get(
+            const response = await axios.get(
                 `http://localhost:8080/api/public/chat/conversations/${username}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            const totalUnread = chatsResponse.data.reduce(
+            const totalUnread = response.data.reduce(
                 (sum: number, chat: UserChatDto) => sum + chat.unreadCount, 0
             );
             setUnreadCount(totalUnread);
         } catch (error) {
             console.error('Error fetching unread messages:', error);
         }
+    };
+
+    const handleNavigation = (e: React.MouseEvent, path: string) => {
+        e.preventDefault();
+        navigate(path);
     };
 
     useEffect(() => {
@@ -51,22 +57,21 @@ const Navbar: React.FC = () => {
                     const decoded = jwtDecode<DecodedToken>(token);
                     const email = decoded.sub;
 
-                    // Check if user has ADMIN role
-                    if (decoded.roles && decoded.roles.includes('ADMIN')) {
+                    if (decoded.roles?.includes('ADMIN')) {
                         setIsAdmin(true);
                     }
 
-                    const userResponse = await axios.get(
+                    const response = await axios.get(
                         `http://localhost:8080/api/public/user/get/userName/${email}`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
-                    setUserName(userResponse.data);
+                    setUserName(response.data);
 
-                    if (!location.pathname.includes('/chat/')) {
-                        await fetchUnreadMessages(userResponse.data);
+                    if (!location.pathname.includes('/chat')) {
+                        await fetchUnreadMessages(response.data);
                     }
                 } catch (error) {
-                    console.error('Error fetching data:', error);
+                    console.error('Error fetching user data:', error);
                 } finally {
                     setLoading(false);
                 }
@@ -77,34 +82,19 @@ const Navbar: React.FC = () => {
 
         fetchUserData();
 
-        const handleChatOpened = () => {
-            setUnreadCount(0);
-        };
+        const interval = setInterval(() => {
+            if (userName && !location.pathname.includes('/chat')) {
+                fetchUnreadMessages(userName);
+            }
+        }, 10000);
 
-        window.addEventListener('chatOpened', handleChatOpened);
-
-        if (!location.pathname.includes('/chat/')) {
-            const interval = setInterval(() => {
-                if (userName) {
-                    fetchUnreadMessages(userName);
-                }
-            }, 10000);
-            return () => {
-                clearInterval(interval);
-                window.removeEventListener('chatOpened', handleChatOpened);
-            };
-        }
-
-        return () => {
-            window.removeEventListener('chatOpened', handleChatOpened);
-        };
+        return () => clearInterval(interval);
     }, [location.pathname, userName]);
 
     if (loading) {
         return <div className="navbar-loading">Loading...</div>;
     }
 
-    // Determine which nav items to use based on role
     const itemsToRender = isAdmin ? adminNavItems : navItems;
 
     return (
@@ -114,31 +104,32 @@ const Navbar: React.FC = () => {
             </Link>
             <div className="navbar-items-container">
                 {itemsToRender.map((item) => {
-                    const to = item.to === '/chat' && userName
+                    // Handle chat route with username
+                    const path = item.to === '/chat' && userName
                         ? `/chat/${userName}`
                         : item.to;
 
                     const showBadge = item.to === '/chat' &&
                         unreadCount > 0 &&
-                        !location.pathname.includes('/chat/');
+                        !location.pathname.includes('/chat');
 
                     return (
-                        <Link
+                        <a
                             key={item.to}
-                            to={to}
+                            href={path}
+                            onClick={(e) => handleNavigation(e, path)}
                             className={`navbar-item ${item.to === '/chat' ? 'chat' : ''} ${showBadge ? 'has-unread' : ''}`}
                         >
-                            {item.icon ? (
+                            {item.icon && (
                                 <>
                                     <span className="navbar-icon">{item.icon}</span>
                                     {showBadge && (
                                         <span className="chat-badge">{unreadCount}</span>
                                     )}
                                 </>
-                            ) : (
-                                item.label
                             )}
-                        </Link>
+                            {item.label}
+                        </a>
                     );
                 })}
                 <div className="navbar-item">
