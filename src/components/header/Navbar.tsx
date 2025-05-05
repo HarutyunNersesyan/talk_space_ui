@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import LogoutForm from '../Logout';
 import navItems from './Navitems';
+import adminNavItems from './AdminNavitems';
 import './Navbar.css';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 
 interface DecodedToken {
     sub: string;
+    roles?: string[];
 }
 
 interface UserChatDto {
@@ -19,6 +21,7 @@ const Navbar: React.FC = () => {
     const [userName, setUserName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [isAdmin, setIsAdmin] = useState(false);
     const location = useLocation();
 
     const fetchUnreadMessages = async (username: string) => {
@@ -47,6 +50,11 @@ const Navbar: React.FC = () => {
                 try {
                     const decoded = jwtDecode<DecodedToken>(token);
                     const email = decoded.sub;
+
+                    // Check if user has ADMIN role
+                    if (decoded.roles && decoded.roles.includes('ADMIN')) {
+                        setIsAdmin(true);
+                    }
 
                     const userResponse = await axios.get(
                         `http://localhost:8080/api/public/user/get/userName/${email}`,
@@ -96,13 +104,16 @@ const Navbar: React.FC = () => {
         return <div className="navbar-loading">Loading...</div>;
     }
 
+    // Determine which nav items to use based on role
+    const itemsToRender = isAdmin ? adminNavItems : navItems;
+
     return (
         <nav className="navbar">
             <Link to="/home" className="navbar-brand">
                 Talk Space
             </Link>
             <div className="navbar-items-container">
-                {navItems.map((item) => {
+                {itemsToRender.map((item) => {
                     const to = item.to === '/chat' && userName
                         ? `/chat/${userName}`
                         : item.to;
