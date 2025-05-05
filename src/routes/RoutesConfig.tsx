@@ -19,6 +19,7 @@ import Chat from "../components/Chat";
 import NetworkPage from "../components/NetworkPage";
 import SearchByHobbies from "../components/SearchByHobbies";
 import SearchBySpecialities from "../components/SearchBySpecialities";
+import AdminDashboard from "../pages/basic/AdminDashboard";
 
 
 const RoutesConfig: React.FC = () => (
@@ -31,6 +32,7 @@ const RoutesConfig: React.FC = () => (
 
         {/* Main App Routes */}
         <Route path="/home" element={<ProtectedRoute element={<Dashboard/>}/>}/>
+        <Route path="/admin" element={<ProtectedRoute element={<AdminDashboard/>}/>}/>
 
         {/* Profile Management Routes */}
         <Route path="/profile" element={<ProtectedRoute element={<Profile/>}/>}/>
