@@ -3,6 +3,8 @@ import './Dashboard.css';
 import { useNavigate } from 'react-router-dom';
 import sendIcon from './send.svg';
 import backIcon from './back.svg';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -13,17 +15,51 @@ const Dashboard: React.FC = () => {
     const [showFeedback, setShowFeedback] = useState(false);
     const [feedback, setFeedback] = useState('');
     const [charCount, setCharCount] = useState(0);
+    const [userName, setUserName] = useState<string | null>(null);
+    const [notification, setNotification] = useState<{message: string, type: 'info' | 'error'} | null>(null);
+    const token = localStorage.getItem('token');
 
     useEffect(() => {
         const timer = setTimeout(() => {
             setMounted(true);
         }, 100);
 
+        const fetchUserName = async () => {
+            try {
+                if (!token) {
+                    return;
+                }
+
+                const decodedToken = jwtDecode<{ sub: string }>(token);
+                const email = decodedToken.sub;
+
+                const response = await axios.get(`http://localhost:8080/api/public/user/get/userName/${email}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                setUserName(response.data);
+            } catch (err) {
+                console.error('Error fetching userName:', err);
+            }
+        };
+
+        fetchUserName();
+
         return () => {
             clearTimeout(timer);
             setMounted(false);
         };
-    }, []);
+    }, [token]);
+
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                setNotification(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
 
     const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const input = e.target.value;
@@ -33,13 +69,44 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    const handleSubmitFeedback = () => {
-        // Here you would typically send the feedback to your backend
-        console.log('Feedback submitted:', feedback);
-        setShowFeedback(false);
-        setFeedback('');
-        setCharCount(0);
-        alert('Thank you for your feedback!');
+    const handleSubmitFeedback = async () => {
+        if (!feedback.trim()) {
+            setNotification({message: 'Please enter your feedback', type: 'error'});
+            return;
+        }
+
+        if (!userName) {
+            setNotification({message: 'Please log in to submit feedback', type: 'error'});
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8080/api/public/user/review/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: new URLSearchParams({
+                    userName: userName,
+                    message: feedback
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit feedback');
+            }
+
+            await response.json();
+
+            setShowFeedback(false);
+            setFeedback('');
+            setCharCount(0);
+            setNotification({message: 'Thank you for your feedback', type: 'info'});
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            setNotification({message: 'Failed to submit feedback. Please try again later.', type: 'error'});
+        }
     };
 
     return (
@@ -47,6 +114,12 @@ const Dashboard: React.FC = () => {
             <div className="dashboard-background" style={backgroundStyle}></div>
             <div className="dashboard-overlay"></div>
             <div className="dashboard-content">
+                {notification && (
+                    <div className={`notification ${notification.type}`}>
+                        {notification.message}
+                    </div>
+                )}
+
                 <h1 className="dashboard-title">
                     <span className={`title-m ${mounted ? 'animate-m' : ''}`}>
                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M
@@ -91,7 +164,7 @@ const Dashboard: React.FC = () => {
                 {showFeedback && (
                     <div className="feedback-form">
                         <div className="feedback-header">
-                            <h3>Your suggestions are very important to us.</h3>
+                            <h3>Your feedback is very important to us.</h3>
                         </div>
                         <textarea
                             className="feedback-textarea"

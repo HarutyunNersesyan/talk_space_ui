@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
+import {jwtDecode} from 'jwt-decode';
+import {useNavigate} from 'react-router-dom';
 import './Specialities.css';
 import SpecialitiesIcon from '../assets/search/specialties-icon.svg';
 
@@ -36,7 +36,7 @@ const Specialities: React.FC = () => {
     const token = localStorage.getItem('token');
 
     const showNotification = (message: string, type: 'success' | 'error') => {
-        setNotification({ message, type });
+        setNotification({message, type});
         setTimeout(() => setNotification(null), 3000);
     };
 
@@ -138,7 +138,7 @@ const Specialities: React.FC = () => {
     };
 
     const handleSelectSpeciality = (speciality: Speciality) => {
-        const selectedSpeciality = { id: speciality.id, name: speciality.name };
+        const selectedSpeciality = {id: speciality.id, name: speciality.name};
         if (selectedSpecialities.some((selected) => selected.id === speciality.id)) {
             setSelectedSpecialities(selectedSpecialities.filter((selected) => selected.id !== speciality.id));
         } else if (selectedSpecialities.length < 5) {
@@ -202,11 +202,10 @@ const Specialities: React.FC = () => {
         <div className="specialities-container">
             <h1 className="specialities-title">
                 Specialities
-                <img src={SpecialitiesIcon} alt="Specialities Icon" className="specialities-icon" />
-
+                <img src={SpecialitiesIcon} alt="Specialities Icon" className="specialities-icon"/>
             </h1>
             <div className="selected-specialities-section">
-                <h2>Selected Specialities</h2>
+                <h2>Selected specialities</h2>
                 {selectedSpecialities.length > 0 ? (
                     <ul className="selected-specialities-list">
                         {selectedSpecialities.map((speciality) => (

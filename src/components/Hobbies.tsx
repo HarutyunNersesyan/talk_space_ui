@@ -209,7 +209,7 @@ const Hobbies: React.FC = () => {
 
             </h1>
             <div className="selected-hobbies-section">
-                <h2>Selected Hobbies</h2>
+                <h2>Selected hobbies</h2>
                 {selectedHobbies.length > 0 ? (
                     <ul className="selected-hobbies-list">
                         {selectedHobbies.map((hobby) => (
