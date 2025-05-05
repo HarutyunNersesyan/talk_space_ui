@@ -34,6 +34,7 @@ const RoutesConfig: React.FC = () => (
         <Route path="/home" element={<ProtectedRoute element={<Dashboard/>}/>}/>
         <Route path="/admin" element={<ProtectedRoute element={<AdminDashboard/>}/>}/>
 
+
         {/* Profile Management Routes */}
         <Route path="/profile" element={<ProtectedRoute element={<Profile/>}/>}/>
         <Route path="/edit" element={<ProtectedRoute element={<Edit/>}/>}/>

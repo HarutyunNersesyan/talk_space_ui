@@ -1,7 +1,7 @@
 import React, { useState, FormEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { AuthContext, AuthContextType } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 import {
     TextField,
     Button,
@@ -22,7 +22,7 @@ const LoginForm: React.FC = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
-    const authContext = useContext(AuthContext) as AuthContextType;
+    const authContext = useContext(AuthContext);
 
     const handleLogin = async (e: FormEvent) => {
         e.preventDefault();
@@ -33,10 +33,18 @@ const LoginForm: React.FC = () => {
             });
 
             if (response.status === 200) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('userName', response.data.userName);
-                authContext.setUser(response.data.userName);
-                navigate('/home');
+                const token = response.data.token;
+                localStorage.setItem('token', token);
+
+                // Decode token to get user info
+                const [, payload] = token.split('.');
+                const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+                const userName = decodedPayload.sub;
+                const userRole = decodedPayload.roles && decodedPayload.roles.length > 0 ? decodedPayload.roles[0] : 'USER';
+
+                if (authContext) {
+                    authContext.setUser(userName, userRole);
+                }
             }
         } catch (err: any) {
             if (err.response && err.response.status === 403) {
@@ -260,7 +268,7 @@ const LoginForm: React.FC = () => {
                     >
                         Don't have an account?{' '}
                         <span
-                            onClick={authContext.redirectToSignUp}
+                            onClick={authContext?.redirectToSignUp}
                             style={{
                                 fontWeight: 500,
                                 cursor: 'pointer',
