@@ -1,12 +1,13 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 export interface AuthContextType {
     isAuthenticated: boolean;
     userName: string | null;
     userRole: string | null;
     checkAuth: () => void;
-    setUser: (userName: string | null, userRole: string | null) => void;
+    setUser: (userName: string | null, userRole?: string | null) => void;
     redirectToSignUp: () => void;
     redirectToForgotPassword: () => void;
     logout: () => void;
@@ -14,7 +15,14 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const publicRoutes = ['/login', '/signup', '/verify', '/forgotPassword'];
+const publicRoutes = ['/', '/login', '/signup', '/verify', '/forgot-password'];
+
+interface DecodedToken {
+    roles: string[];
+    sub: string;
+    iat: number;
+    exp: number;
+}
 
 const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -25,12 +33,11 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     const decodeToken = (token: string): { userName: string; userRole: string } | null => {
         try {
-            const [, payload] = token.split('.');
-            const decodedPayload = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-            const { sub, roles } = JSON.parse(decodedPayload);
+            const decodedToken = jwtDecode<DecodedToken>(token);
+            const role = decodedToken.roles.includes('ADMIN') ? 'ADMIN' : 'USER';
             return {
-                userName: sub,
-                userRole: roles && roles.length > 0 ? roles[0] : 'USER'
+                userName: decodedToken.sub,
+                userRole: role
             };
         } catch (error) {
             console.error('Error decoding token:', error);
@@ -50,22 +57,19 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                     throw new Error('Invalid token');
                 }
 
-                const [, payload] = token.split('.');
-                const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+                const decodedPayload = jwtDecode<DecodedToken>(token);
                 const currentTime = Date.now() / 1000;
 
                 if (decodedPayload.exp > currentTime) {
                     setIsAuthenticated(true);
-                    setUserName(decodedToken.userName);
-                    setUserRole(decodedToken.userRole);
-                    localStorage.setItem('userName', decodedToken.userName);
-                    localStorage.setItem('userRole', decodedToken.userRole);
+                    setUserName(decodedToken.userName || storedUserName);
+                    setUserRole(decodedToken.userRole || storedUserRole);
                 } else {
-                    logout(); // Clear token and user data on token expiration
+                    logout();
                 }
             } catch (error) {
                 console.error('Error decoding token:', error);
-                logout(); // Clear token and user data on error
+                logout();
             }
         } else {
             setIsAuthenticated(false);
@@ -74,16 +78,22 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         }
     };
 
-    const setUser = (userName: string | null, userRole: string | null) => {
-        if (userName && userRole) {
+    const setUser = (userName: string | null, userRole?: string | null) => {
+        if (userName) {
             localStorage.setItem('userName', userName);
-            localStorage.setItem('userRole', userRole);
+            setUserName(userName);
         } else {
             localStorage.removeItem('userName');
-            localStorage.removeItem('userRole');
+            setUserName(null);
         }
-        setUserName(userName);
-        setUserRole(userRole);
+
+        if (userRole) {
+            localStorage.setItem('userRole', userRole);
+            setUserRole(userRole);
+        } else {
+            localStorage.removeItem('userRole');
+            setUserRole(null);
+        }
     };
 
     const redirectToSignUp = () => {
@@ -91,7 +101,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     };
 
     const redirectToForgotPassword = () => {
-        navigate('/forgotPassword');
+        navigate('/forgot-password');
     };
 
     const logout = () => {
@@ -109,16 +119,10 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        if (isAuthenticated) {
-            if (userRole === 'ADMIN' && !location.pathname.startsWith('/admin')) {
-                navigate('/admin');
-            } else if (userRole === 'USER' && !location.pathname.startsWith('/home')) {
-                navigate('/home');
-            }
-        } else if (!publicRoutes.includes(location.pathname)) {
+        if (!isAuthenticated && !publicRoutes.includes(location.pathname)) {
             navigate('/login');
         }
-    }, [isAuthenticated, userRole, navigate, location.pathname]);
+    }, [isAuthenticated, navigate, location.pathname]);
 
     return (
         <AuthContext.Provider

@@ -10,6 +10,8 @@ import axios from 'axios';
 interface DecodedToken {
     sub: string;
     roles?: string[];
+    iat: number;
+    exp: number;
 }
 
 interface UserChatDto {
@@ -41,6 +43,33 @@ const Navbar: React.FC = () => {
             setUnreadCount(totalUnread);
         } catch (error) {
             console.error('Error fetching unread messages:', error);
+        }
+    };
+
+    const handleBrandClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+
+        // If no token, go to home page
+        if (!token) {
+            navigate('/');
+            return;
+        }
+
+        try {
+            const decodedToken = jwtDecode<DecodedToken>(token);
+            const userRoles = decodedToken.roles || [];
+
+            // Redirect based on role
+            if (userRoles.includes('ADMIN')) {
+                navigate('/admin');
+            } else {
+                // Default to home for regular users
+                navigate('/home');
+            }
+        } catch (error) {
+            console.error('Error decoding token:', error);
+            navigate('/');
         }
     };
 
@@ -99,9 +128,9 @@ const Navbar: React.FC = () => {
 
     return (
         <nav className="navbar">
-            <Link to="/home" className="navbar-brand">
+            <a href="/" className="navbar-brand" onClick={handleBrandClick}>
                 Talk Space
-            </Link>
+            </a>
             <div className="navbar-items-container">
                 {itemsToRender.map((item) => {
                     // Handle chat route with username
