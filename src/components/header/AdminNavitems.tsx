@@ -10,7 +10,6 @@ export interface NavItem {
 }
 
 const adminNavItems: NavItem[] = [
-    { to: '/settings', icon: <SettingsIcon />, label: 'Settings' },
     { to: '/users', icon: <PeopleIcon />, label: 'Users' },
     { to: '/feedbacks', icon: <FeedbackIcon />, label: 'Feedbacks' },
 ];
