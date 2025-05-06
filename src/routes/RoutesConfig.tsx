@@ -21,6 +21,8 @@ import SearchByHobbies from "../components/SearchByHobbies";
 import SearchBySpecialities from "../components/SearchBySpecialities";
 import AdminDashboard from "../pages/basic/AdminDashboard";
 import FeedBacks from "../components/Feedbacks";
+// import Settings from "../components/Settings";
+import Users from "../components/Users";
 
 
 const RoutesConfig: React.FC = () => (
@@ -49,8 +51,8 @@ const RoutesConfig: React.FC = () => (
         <Route path="/choose" element={<ProtectedRoute element={<NetworkPage/>}/>}/>
 
         <Route path="/feedbacks" element={<ProtectedRoute element={<FeedBacks/>}/>}/>
-        {/*<Route path="/settings" element={<ProtectedRoute element={<NetworkPage/>}/>}/>*/}
-        {/*<Route path="/users" element={<ProtectedRoute element={<NetworkPage/>}/>}/>*/}
+        {/*<Route path="/settings" element={<ProtectedRoute element={<Settings/>}/>}/>*/}
+        <Route path="/users" element={<ProtectedRoute element={<Users/>}/>}/>
 
 
 

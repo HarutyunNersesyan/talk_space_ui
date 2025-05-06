@@ -31,7 +31,7 @@ const Feedbacks: React.FC = () => {
                 }
 
                 const reviewsResponse = await axios.get(
-                    'http://localhost:8080/api/private/admin/review/',
+                    'http://localhost:8080/api/private/admin/review',
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
