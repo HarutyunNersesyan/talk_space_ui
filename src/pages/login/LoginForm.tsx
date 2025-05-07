@@ -44,6 +44,12 @@ const LoginForm: React.FC = () => {
 
                 if (authContext) {
                     authContext.setUser(userName, userRole);
+                    // Redirect based on role
+                    if (userRole === 'ADMIN') {
+                        navigate('/admin');
+                    } else {
+                        navigate('/home');
+                    }
                 }
             }
         } catch (err: any) {
