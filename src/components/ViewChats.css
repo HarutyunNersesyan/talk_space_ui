@@ -12,6 +12,7 @@
 .chat-container {
     top: 40px;
     right: 10px;
+    bottom: 20px;
     width: 100vw;
     height: 100vh;
     background: white;
