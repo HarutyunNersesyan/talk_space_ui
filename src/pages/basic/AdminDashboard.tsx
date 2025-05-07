@@ -1,14 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import './AdminDashboard.css';
-import { useNavigate } from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
+import chatImage from '../../assets/admin/chat.svg';
+import blockImage from '../../assets/admin/block.svg';
+import specialityImage from '../../assets/admin/speciality.svg';
+import hobbyImage from '../../assets/admin/hobby.svg';
+import backgroundImage from '../../assets/admin/admin.jpg';
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
     const [mounted, setMounted] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
     const token = localStorage.getItem('token');
+
+    const handleViewChats = () => {
+        // Implement navigation to view chats page
+        console.log('View Chats clicked');
+    };
+
+    const handleBlockUser = () => {
+        // Implement navigation to block user page
+        console.log('Block User clicked');
+    };
+
+    const handleUpdateSpecialities = () => {
+        // Implement navigation to update specialities page
+        console.log('Update Specialities clicked');
+    };
+
+    const handleUpdateHobbies = () => {
+        // Implement navigation to update hobbies page
+        console.log('Update Hobbies clicked');
+    };
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -45,36 +70,25 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="dashboard-container">
+            <div className="background-banner" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
             <div className="dashboard-content">
-                <h1 className="dashboard-title">
-                    Admin Dashboard
-                </h1>
-
-                <div className="admin-stats-container">
-                    <div className="stat-card">
-                        <h3>Total Users</h3>
-                        <p>1,234</p>
+                <div className="admin-actions-grid">
+                    <div className="action-card" onClick={handleViewChats}>
+                        <img src={chatImage} alt="View Chats" className="action-image" />
+                        <button className="action-button">View Chats</button>
                     </div>
-                    <div className="stat-card">
-                        <h3>Active Today</h3>
-                        <p>567</p>
+                    <div className="action-card" onClick={handleBlockUser}>
+                        <img src={blockImage} alt="Block User" className="action-image" />
+                        <button className="action-button">Block User</button>
                     </div>
-                    <div className="stat-card">
-                        <h3>New Matches</h3>
-                        <p>89</p>
+                    <div className="action-card" onClick={handleUpdateSpecialities}>
+                        <img src={specialityImage} alt="Update Specialities" className="action-image" />
+                        <button className="action-button">Update Specialities</button>
                     </div>
-                </div>
-
-                <div className="admin-actions">
-                    <button className="admin-button" onClick={() => navigate('/admin/users')}>
-                        Manage Users
-                    </button>
-                    <button className="admin-button" onClick={() => navigate('/admin/reports')}>
-                        View Reports
-                    </button>
-                    <button className="admin-button" onClick={() => navigate('/admin/analytics')}>
-                        View Analytics
-                    </button>
+                    <div className="action-card" onClick={handleUpdateHobbies}>
+                        <img src={hobbyImage} alt="Update Hobbies" className="action-image" />
+                        <button className="action-button">Update Hobbies</button>
+                    </div>
                 </div>
             </div>
         </div>
