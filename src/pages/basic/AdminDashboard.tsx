@@ -71,7 +71,7 @@ const AdminDashboard: React.FC = () => {
     return (
         <div className="dashboard-container">
             <div className="background-banner" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
-            <div className="dashboard-content">
+            <div className="adminDashboard-content">
                 <div className="admin-actions-grid">
                     <div className="action-card" onClick={handleViewChats}>
                         <img src={chatImage} alt="View Chats" className="action-image" />
