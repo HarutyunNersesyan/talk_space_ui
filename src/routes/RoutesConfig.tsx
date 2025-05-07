@@ -22,6 +22,7 @@ import SearchBySpecialities from "../components/SearchBySpecialities";
 import AdminDashboard from "../pages/basic/AdminDashboard";
 import FeedBacks from "../components/Feedbacks";
 import Users from "../components/Users";
+import ViewChats from "../components/ViewChats";
 
 
 const RoutesConfig: React.FC = () => (
@@ -51,6 +52,8 @@ const RoutesConfig: React.FC = () => (
 
         <Route path="/feedbacks" element={<ProtectedRoute element={<FeedBacks/>}/>}/>
         <Route path="/users" element={<ProtectedRoute element={<Users/>}/>}/>
+
+        <Route path="/view" element={<ProtectedRoute element={<ViewChats/>}/>}/>
 
 
         {/* Discovery Routes */}
