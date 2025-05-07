@@ -1,5 +1,3 @@
-/* NetworkPage.css */
-
 body, html {
     margin: 0;
     padding: 0;
@@ -15,25 +13,25 @@ body, html {
 }
 
 .network-header {
-    height: 40vh;
+    height: 30vh;
     position: relative;
     width: 100%;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .header-content {
+    bottom: 20px;
     position: relative;
     z-index: 2;
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 40px 20px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    transform: translateY(50px); /* Added to raise the content by 50px */
 }
 
 .network-header::before {
@@ -97,25 +95,42 @@ body, html {
     transform: translateY(-5px);
 }
 
-.icon-wrapper {
-    padding: 20px;
-    margin-bottom: 20px;
+.hobbies-option {
+    align-items: flex-start;
 }
 
-.highlighted-icon {
-    height: 80px;
-    filter: drop-shadow(0 0 8px rgba(100, 200, 255, 0.6));
+.specialties-option {
+    align-items: flex-end;
 }
 
-.option p {
-    font-size: 1.1em;
-    color: #333;
-    margin-bottom: 25px;
-    max-width: 300px;
-    line-height: 1.5;
+.hobbies-image-container,
+.specialties-image-container {
+    position: relative;
+    display: inline-block;
 }
 
-.option button {
+.hobbies-image,
+.specialties-image {
+    width: 500px;
+    height: auto;
+    border-radius: 8px;
+}
+
+.hobbies-image {
+    top: -42px;
+    position: relative;
+    left: -200px;
+}
+
+.specialties-image {
+    top: -35px;
+    position: relative;
+    right: -100px;
+}
+
+.hobbies-button,
+.specialties-button {
+    position: absolute;
     background-color: transparent;
     border: 2px solid #b3f0ff;
     border-radius: 25px;
@@ -125,25 +140,49 @@ body, html {
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 500;
+    z-index: 2;
 }
 
-.option button:hover:not(:disabled) {
+.hobbies-button {
+    right: 140px;
+    top: 30px;
+}
+
+.specialties-button {
+    left: 520px;
+    top: 50px;
+}
+
+.hobbies-button:hover:not(:disabled),
+.specialties-button:hover:not(:disabled) {
     background-color: #b3f0ff;
     transform: scale(1.05);
 }
 
-.option button:disabled {
+.hobbies-button:disabled,
+.specialties-button:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
 
-.search-error {
-    color: #ff6b6b;
-    margin-top: 15px;
-    font-size: 0.9em;
+.hobbies-error {
     position: absolute;
-    bottom: -30px;
-    width: 100%;
+    bottom: 0px;
+    left: -120px;
+    width: 400px;
+    color: #ff6b6b;
+    font-size: 1.1em;
+    text-align: center;
+}
+
+.specialties-error {
+    position: absolute;
+    bottom: 0px;
+    right: -160px;
+    width: 400px;
+    color: #ff6b6b;
+    font-size: 1.1em;
+    text-align: center;
 }
 
 @media (max-width: 768px) {
@@ -159,8 +198,29 @@ body, html {
         min-height: 40vh;
     }
 
+    .header-content {
+        transform: translateY(30px); /* Adjusted for mobile */
+    }
+
     .option {
         padding: 10px;
+    }
+
+    .hobbies-image,
+    .specialties-image {
+        width: 250px;
+        left: 0;
+        right: 0;
+    }
+
+    .hobbies-button,
+    .specialties-button {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 20px;
+        padding: 8px 15px;
+        font-size: 1em;
     }
 
     .divider {
@@ -175,9 +235,13 @@ body, html {
         font-size: 1em;
     }
 
-    .search-error {
+    .hobbies-error,
+    .specialties-error {
         position: relative;
         bottom: auto;
+        left: auto;
+        right: auto;
+        width: 100%;
         margin-top: 10px;
     }
 }

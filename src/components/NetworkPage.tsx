@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import './NetworkPage.css';
 import { useNavigate } from 'react-router-dom';
-import hobbiesIcon from '../assets/search/hobbies-icon.svg';
-import specialtiesIcon from '../assets/search/specialties-icon.svg';
+import hobbiesImage from '../assets/network/Hobbies.jpg';
+import specialtiesImage from '../assets/network/Specialities.jpg';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
@@ -60,17 +60,19 @@ const NetworkPage: React.FC = () => {
             if (response.data) {
                 navigate('/SearchByHobbies', { state: { initialProfile: response.data } });
             } else {
-                setHobbiesError('No matching profiles found. Please try different criteria.');
+                setHobbiesError('No matching profiles found based on your hobbies. Please try different criteria.');
             }
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 404) {
-                    setHobbiesError('No matching profiles found. Please try different criteria.');
+                    setHobbiesError('No matching profiles found based on your hobbies. Please try different criteria.');
+                } else if (error.response?.status === 400) {
+                    setHobbiesError('You have no hobbies selected. Please add at least one hobby and try again.');
                 } else {
-                    setHobbiesError('You have no hobbies selected. Please add at least one and try again.');
+                    setHobbiesError('Failed to search by hobbies. Please try again later.');
                 }
             } else {
-                setHobbiesError('An unexpected error occurred');
+                setHobbiesError('An unexpected error occurred while searching by hobbies.');
             }
         } finally {
             setIsSearchingHobbies(false);
@@ -100,17 +102,19 @@ const NetworkPage: React.FC = () => {
             if (response.data) {
                 navigate('/SearchBySpecialities', { state: { initialProfile: response.data } });
             } else {
-                setSpecialtiesError('No matching profiles found. Please try different criteria.');
+                setSpecialtiesError('No matching profiles found based on your specialties. Please try different criteria.');
             }
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 404) {
-                    setSpecialtiesError('No matching profiles found. Please try different criteria.');
+                    setSpecialtiesError('No matching profiles found based on your specialties. Please try different criteria.');
+                } else if (error.response?.status === 400) {
+                    setSpecialtiesError('You have no specialties selected. Please add at least one specialty and try again.');
                 } else {
-                    setSpecialtiesError('You have no specialties selected. Please add at least one and try again.');
+                    setSpecialtiesError('Failed to search by specialties. Please try again later.');
                 }
             } else {
-                setSpecialtiesError('An unexpected error occurred');
+                setSpecialtiesError('An unexpected error occurred while searching by specialties.');
             }
         } finally {
             setIsSearchingSpecialties(false);
@@ -128,35 +132,41 @@ const NetworkPage: React.FC = () => {
                 <div className="header-content">
                     <h1>Network with Purpose</h1>
                     <p>
-                        Connect with like-minded individuals based on your field or personal interests. <br />
-                        Grow friendships, collaborations, or more.
+                        Forge meaningful connections with individuals who share your passions, whether professional or personal.
+                        Nurture friendships, spark collaborations, and discover relationships that inspire growth and possibility.
                     </p>
                 </div>
             </div>
 
             <div className="network-options">
-                <div className="option" onClick={handleHobbiesSearch}>
-                    <div className="icon-wrapper">
-                        <img src={hobbiesIcon} alt="Hobbies" className="highlighted-icon" />
+                <div className="option hobbies-option">
+                    <div className="hobbies-image-container">
+                        <img src={hobbiesImage} alt="Hobbies" className="hobbies-image" />
+                        <button
+                            className="hobbies-button"
+                            disabled={isSearchingHobbies}
+                            onClick={handleHobbiesSearch}
+                        >
+                            {isSearchingHobbies ? 'Searching...' : 'Search by Hobbies'}
+                        </button>
+                        {hobbiesError && <div className="hobbies-error">{hobbiesError}</div>}
                     </div>
-                    <p>Want to connect with people who share your interests?</p>
-                    <button disabled={isSearchingHobbies}>
-                        {isSearchingHobbies ? 'Searching...' : 'Search by Hobbies'}
-                    </button>
-                    {hobbiesError && <div className="search-error">{hobbiesError}</div>}
                 </div>
 
                 <div className="divider"></div>
 
-                <div className="option" onClick={handleSpecialtiesSearch}>
-                    <div className="icon-wrapper">
-                        <img src={specialtiesIcon} alt="Specialties" className="highlighted-icon" />
+                <div className="option specialties-option">
+                    <div className="specialties-image-container">
+                        <img src={specialtiesImage} alt="Specialties" className="specialties-image" />
+                        <button
+                            className="specialties-button"
+                            disabled={isSearchingSpecialties}
+                            onClick={handleSpecialtiesSearch}
+                        >
+                            {isSearchingSpecialties ? 'Searching...' : 'Search by Specialties'}
+                        </button>
+                        {specialtiesError && <div className="specialties-error">{specialtiesError}</div>}
                     </div>
-                    <p>Want to connect with people who share your professional skills?</p>
-                    <button disabled={isSearchingSpecialties}>
-                        {isSearchingSpecialties ? 'Searching...' : 'Search by Specialties'}
-                    </button>
-                    {specialtiesError && <div className="search-error">{specialtiesError}</div>}
                 </div>
             </div>
         </div>
