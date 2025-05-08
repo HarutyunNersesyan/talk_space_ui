@@ -5,8 +5,8 @@ import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
 import chatImage from '../../assets/admin/chat.svg';
 import blockImage from '../../assets/admin/block.svg';
-import specialityImage from '../../assets/admin/speciality.svg';
-import hobbyImage from '../../assets/admin/hobby.svg';
+import userImage from '../../assets/admin/users.svg';
+import feedBacksImage from '../../assets/admin/feedbacks.svg';
 import backgroundImage from '../../assets/admin/admin.jpg';
 import checkIcon from '../../assets/search/check.svg';
 import backIcon from '../../assets/search/back.svg';
@@ -30,12 +30,12 @@ const AdminDashboard: React.FC = () => {
         console.log('Block User clicked');
     };
 
-    const handleUpdateSpecialities = () => {
-        console.log('Update Specialities clicked');
+    const handleViewUsers = () => {
+        navigate('/users');
     };
 
-    const handleUpdateHobbies = () => {
-        console.log('Update Hobbies clicked');
+    const handleViewFeedbacks = () => {
+        navigate('/feedbacks');
     };
 
     const handleCheckChats = async () => {
@@ -122,13 +122,13 @@ const AdminDashboard: React.FC = () => {
                         <img src={blockImage} alt="Block User" className="action-image" />
                         <button className="action-button">Block User</button>
                     </div>
-                    <div className="action-card" onClick={handleUpdateSpecialities}>
-                        <img src={specialityImage} alt="Update Specialities" className="action-image" />
-                        <button className="action-button">Update Specialities</button>
+                    <div className="action-card" onClick={handleViewUsers}>
+                        <img src={userImage} alt="Users" className="action-image" />
+                        <button className="action-button">Users</button>
                     </div>
-                    <div className="action-card" onClick={handleUpdateHobbies}>
-                        <img src={hobbyImage} alt="Update Hobbies" className="action-image" />
-                        <button className="action-button">Update Hobbies</button>
+                    <div className="action-card" onClick={handleViewFeedbacks}>
+                        <img src={feedBacksImage} alt="Feedbacks" className="action-image" />
+                        <button className="action-button">Feedbacks</button>
                     </div>
                 </div>
 
