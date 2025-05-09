@@ -1,5 +1,5 @@
 import React from 'react';
-import ForgotPasswordForm from './ForgotPasswrodForm';
+import ForgotPasswordForm from './ForgotPasswordForm';
 
 const ForgotPasswordPage: React.FC = () => (
     <div>

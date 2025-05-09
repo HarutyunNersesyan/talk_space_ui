@@ -31,7 +31,7 @@ const RoutesConfig: React.FC = () => (
         <Route path="/login" element={<PublicRoute element={<Login/>}/>}/>
         <Route path="/signUp" element={<PublicRoute element={<SignUp/>}/>}/>
         <Route path="/verify" element={<PublicRoute element={<Verify/>}/>}/>
-        <Route path="/forgotPassword" element={<PublicRoute element={<Forgot/>}/>}/>
+        <Route path="/forgot-password" element={<PublicRoute element={<Forgot/>}/>}/>
 
         {/* Main App Routes */}
         <Route path="/home" element={<ProtectedRoute element={<Dashboard/>}/>}/>
