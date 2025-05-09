@@ -7,10 +7,11 @@ interface Review {
     id: number;
     message: string;
     senderUserName: string;
+    rating: number | null;
     reviewDate: number[];
 }
 
-type SortField = 'senderUserName' | 'reviewDate';
+type SortField = 'senderUserName' | 'reviewDate' | 'rating';
 type SortDirection = 'asc' | 'desc';
 
 const Feedbacks: React.FC = () => {
@@ -70,6 +71,10 @@ const Feedbacks: React.FC = () => {
             return sortDirection === 'asc'
                 ? a.senderUserName.localeCompare(b.senderUserName)
                 : b.senderUserName.localeCompare(a.senderUserName);
+        } else if (sortField === 'rating') {
+            const ratingA = a.rating || 0;
+            const ratingB = b.rating || 0;
+            return sortDirection === 'asc' ? ratingA - ratingB : ratingB - ratingA;
         } else {
             const dateA = new Date(a.reviewDate[0], a.reviewDate[1] - 1, a.reviewDate[2]);
             const dateB = new Date(b.reviewDate[0], b.reviewDate[1] - 1, b.reviewDate[2]);
@@ -91,6 +96,19 @@ const Feedbacks: React.FC = () => {
         return message.match(regex)?.join('\n') || message;
     };
 
+    const renderRating = (rating: number | null) => {
+        if (rating === null) return 'No rating';
+        return (
+            <div className="rating-stars">
+                {[...Array(5)].map((_, i) => (
+                    <span key={i} className={i < rating ? 'star-filled' : 'star-empty'}>
+                        {i < rating ? '★' : '☆'}
+                    </span>
+                ))}
+            </div>
+        );
+    };
+
     return (
         <div className="feedbacks-container">
             <div className="reviews-section">
@@ -108,6 +126,9 @@ const Feedbacks: React.FC = () => {
                                 Sender {getSortIndicator('senderUserName')}
                             </th>
                             <th className="message-column">Message</th>
+                            <th className="rating-column sortable-header" onClick={() => handleSort('rating')}>
+                                Rating {getSortIndicator('rating')}
+                            </th>
                             <th className="date-column sortable-header" onClick={() => handleSort('reviewDate')}>
                                 Date {getSortIndicator('reviewDate')}
                             </th>
@@ -118,6 +139,7 @@ const Feedbacks: React.FC = () => {
                             <tr key={review.id}>
                                 <td className="sender-column">{review.senderUserName}</td>
                                 <td className="message-column">{formatMessage(review.message)}</td>
+                                <td className="rating-column">{renderRating(review.rating)}</td>
                                 <td className="date-column">{formatDate(review.reviewDate)}</td>
                             </tr>
                         ))}

@@ -16,7 +16,9 @@ const Dashboard: React.FC = () => {
     const [feedback, setFeedback] = useState('');
     const [charCount, setCharCount] = useState(0);
     const [userName, setUserName] = useState<string | null>(null);
-    const [notification, setNotification] = useState<{message: string, type: 'info' | 'error'} | null>(null);
+    const [rating, setRating] = useState<number>(0);
+    const [hoverRating, setHoverRating] = useState<number>(0);
+    const [formMessage, setFormMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
     const token = localStorage.getItem('token');
 
     useEffect(() => {
@@ -52,15 +54,6 @@ const Dashboard: React.FC = () => {
         };
     }, [token]);
 
-    useEffect(() => {
-        if (notification) {
-            const timer = setTimeout(() => {
-                setNotification(null);
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [notification]);
-
     const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const input = e.target.value;
         if (input.length <= 200) {
@@ -69,14 +62,26 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    const handleRatingClick = (selectedRating: number) => {
+        setRating(selectedRating === rating ? 0 : selectedRating);
+    };
+
+    const handleRatingHover = (hoveredRating: number) => {
+        setHoverRating(hoveredRating);
+    };
+
+    const handleRatingLeave = () => {
+        setHoverRating(0);
+    };
+
     const handleSubmitFeedback = async () => {
         if (!feedback.trim()) {
-            setNotification({message: 'Please enter your feedback', type: 'error'});
+            setFormMessage({text: 'Please enter your feedback', type: 'error'});
             return;
         }
 
         if (!userName) {
-            setNotification({message: 'Please log in to submit feedback', type: 'error'});
+            setFormMessage({text: 'Please log in to submit feedback', type: 'error'});
             return;
         }
 
@@ -84,28 +89,44 @@ const Dashboard: React.FC = () => {
             const response = await fetch('http://localhost:8080/api/public/user/review/add', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: new URLSearchParams({
+                body: JSON.stringify({
                     userName: userName,
-                    message: feedback
+                    message: feedback,
+                    rating: rating
                 })
             });
 
             if (!response.ok) {
-                throw new Error('Failed to submit feedback');
+                const errorData = await response.json();
+                if (response.status === 425) {
+                    setFormMessage({
+                        text: errorData.message || 'You can leave your next review in 2 days',
+                        type: 'error'
+                    });
+                } else {
+                    throw new Error(errorData.message || 'Failed to submit feedback');
+                }
+                return;
             }
 
-            await response.json();
-
-            setShowFeedback(false);
-            setFeedback('');
-            setCharCount(0);
-            setNotification({message: 'Thank you for your feedback', type: 'info'});
+            const data = await response.json();
+            setFormMessage({text: 'Thank you for your feedback!', type: 'success'});
+            setTimeout(() => {
+                setShowFeedback(false);
+                setFeedback('');
+                setCharCount(0);
+                setRating(0);
+                setFormMessage(null);
+            }, 1500);
         } catch (error) {
             console.error('Error submitting feedback:', error);
-            setNotification({message: 'Failed to submit feedback. Please try again later.', type: 'error'});
+            setFormMessage({
+                text: error instanceof Error ? error.message : 'Failed to submit feedback. Please try again later.',
+                type: 'error'
+            });
         }
     };
 
@@ -114,12 +135,6 @@ const Dashboard: React.FC = () => {
             <div className="dashboard-background" style={backgroundStyle}></div>
             <div className="dashboard-overlay"></div>
             <div className="dashboard-content">
-                {notification && (
-                    <div className={`notification ${notification.type}`}>
-                        {notification.message}
-                    </div>
-                )}
-
                 <h1 className="dashboard-title">
                     <span className={`title-m ${mounted ? 'animate-m' : ''}`}>
                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M
@@ -165,7 +180,28 @@ const Dashboard: React.FC = () => {
                     <div className="feedback-form">
                         <div className="feedback-header">
                             <h3>Your feedback is very important to us.</h3>
+                            <div className="star-rating">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <span
+                                        key={star}
+                                        className={`star ${(hoverRating || rating || 0) >= star ? 'filled' : ''}`}
+                                        onClick={() => handleRatingClick(star)}
+                                        onMouseEnter={() => handleRatingHover(star)}
+                                        onMouseLeave={handleRatingLeave}
+                                    >
+                                        ★
+                                    </span>
+                                ))}
+                                <span className="rating-text">
+                                    {rating ? `${rating} star${rating !== 1 ? 's' : ''}` : 'No rating'}
+                                </span>
+                            </div>
                         </div>
+                        {formMessage && (
+                            <div className={`feedback-message ${formMessage.type}`}>
+                                {formMessage.text}
+                            </div>
+                        )}
                         <textarea
                             className="feedback-textarea"
                             placeholder="Write your feedback here (max 200 characters)..."
@@ -176,7 +212,13 @@ const Dashboard: React.FC = () => {
                         <div className="feedback-footer">
                             <span className="char-count">{charCount}/200</span>
                             <div className="feedback-buttons">
-                                <button className="cancel-button" onClick={() => setShowFeedback(false)}>
+                                <button className="cancel-button" onClick={() => {
+                                    setShowFeedback(false);
+                                    setRating(0);
+                                    setFeedback('');
+                                    setCharCount(0);
+                                    setFormMessage(null);
+                                }}>
                                     <img src={backIcon} alt="Cancel" />
                                 </button>
                                 <button className="send-button" onClick={handleSubmitFeedback}>

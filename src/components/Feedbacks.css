@@ -83,8 +83,15 @@
     font-size: 0.9rem;
 }
 
+.rating-column {
+    width: 15%;
+    max-width: 150px;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
 .message-column {
-    width: 70%;
+    width: 55%;
     color: #475569;
     line-height: 1.5;
     font-size: 0.95rem;
@@ -121,6 +128,19 @@
 
 .error-message {
     color: #ef4444;
+}
+
+.rating-stars {
+    display: flex;
+    gap: 2px;
+}
+
+.star-filled {
+    color: #f59e0b;
+}
+
+.star-empty {
+    color: #cbd5e1;
 }
 
 ::-webkit-scrollbar {
