@@ -79,14 +79,14 @@
     width: 100%;
 }
 
-.chat-form-container {
+.form-container {
     position: fixed;
     bottom: 20px;
     left: 20px;
     z-index: 100;
 }
 
-.chat-form {
+.form {
     background-color: white;
     padding: 20px;
     border-radius: 8px;
@@ -94,7 +94,7 @@
     width: 300px;
 }
 
-.chat-form h3 {
+.form h3 {
     margin-top: 0;
     margin-bottom: 20px;
     text-align: center;
@@ -110,12 +110,18 @@
     font-weight: 500;
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea {
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
     box-sizing: border-box;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 60px;
 }
 
 .form-buttons {
@@ -212,13 +218,13 @@
         height: 140px;
     }
 
-    .chat-form-container {
+    .form-container {
         left: 50%;
         transform: translateX(-50%);
         width: 90%;
     }
 
-    .chat-form {
+    .form {
         width: 100%;
     }
 

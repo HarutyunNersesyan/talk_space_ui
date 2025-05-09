@@ -16,18 +16,33 @@ const AdminDashboard: React.FC = () => {
     const [mounted, setMounted] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
     const [showChatForm, setShowChatForm] = useState(false);
+    const [showBlockForm, setShowBlockForm] = useState(false);
     const [senderUsername, setSenderUsername] = useState('');
     const [receiverUsername, setReceiverUsername] = useState('');
+    const [blockUsername, setBlockUsername] = useState('');
+    const [blockMessage, setBlockMessage] = useState('');
+    const [blockUntil, setBlockUntil] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const token = localStorage.getItem('token');
 
+    useEffect(() => {
+        // Set default block until date to current date + 1 day
+        const now = new Date();
+        now.setDate(now.getDate() + 1);
+        const formattedDate = now.toISOString().split('T')[0];
+        setBlockUntil(formattedDate);
+    }, []);
+
     const handleViewChats = () => {
         setShowChatForm(true);
+        setShowBlockForm(false);
         setErrorMessage('');
     };
 
     const handleBlockUser = () => {
-        console.log('Block User clicked');
+        setShowBlockForm(true);
+        setShowChatForm(false);
+        setErrorMessage('');
     };
 
     const handleViewUsers = () => {
@@ -69,10 +84,63 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    const handleBlockSubmit = async () => {
+        if (!blockUsername.trim()) {
+            setErrorMessage('Please enter username to block');
+            return;
+        }
+        if (!blockMessage.trim()) {
+            setErrorMessage('Please enter block reason');
+            return;
+        }
+        if (!blockUntil) {
+            setErrorMessage('Please select block until date');
+            return;
+        }
+
+        try {
+            const response = await axios.put(
+                'http://localhost:8080/api/private/admin/block',
+                {
+                    userName: blockUsername,
+                    blockMessage: blockMessage,
+                    blockUntil: blockUntil
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setErrorMessage(`User ${blockUsername} has been blocked successfully until ${new Date(blockUntil).toLocaleDateString()}. Reason: ${blockMessage}`);
+            setBlockUsername('');
+            setBlockMessage('');
+            // Reset to default date (current date + 1 day)
+            const now = new Date();
+            now.setDate(now.getDate() + 1);
+            setBlockUntil(now.toISOString().split('T')[0]);
+        } catch (error) {
+            console.error('Error blocking user:', error);
+            if (axios.isAxiosError(error) && error.response) {
+                setErrorMessage(error.response.data);
+            } else {
+                setErrorMessage('Error blocking user. Please try again.');
+            }
+        }
+    };
+
     const handleCancelChatForm = () => {
         setShowChatForm(false);
         setSenderUsername('');
         setReceiverUsername('');
+        setErrorMessage('');
+    };
+
+    const handleCancelBlockForm = () => {
+        setShowBlockForm(false);
+        setBlockUsername('');
+        setBlockMessage('');
         setErrorMessage('');
     };
 
@@ -133,8 +201,8 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {showChatForm && (
-                    <div className="chat-form-container">
-                        <div className="chat-form">
+                    <div className="form-container">
+                        <div className="form">
                             <h3>View Chats Between Users</h3>
                             <div className="form-group">
                                 <label htmlFor="senderUsername">Sender Username:</label>
@@ -163,6 +231,53 @@ const AdminDashboard: React.FC = () => {
                                 </button>
                                 <button className="icon-button" onClick={handleCheckChats}>
                                     <img src={checkIcon} alt="Check" className="button-icon" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {showBlockForm && (
+                    <div className="form-container">
+                        <div className="form">
+                            <h3>Block User</h3>
+                            <div className="form-group">
+                                <label htmlFor="blockUsername">Username:</label>
+                                <input
+                                    type="text"
+                                    id="blockUsername"
+                                    value={blockUsername}
+                                    onChange={(e) => setBlockUsername(e.target.value)}
+                                    placeholder="Enter username to block"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="blockMessage">Block :</label>
+                                <textarea
+                                    id="blockMessage"
+                                    value={blockMessage}
+                                    onChange={(e) => setBlockMessage(e.target.value)}
+                                    placeholder="Enter block reason"
+                                    rows={3}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="blockUntil">Block until:</label>
+                                <input
+                                    type="date"
+                                    id="blockUntil"
+                                    value={blockUntil}
+                                    onChange={(e) => setBlockUntil(e.target.value)}
+                                    min={new Date().toISOString().split('T')[0]}
+                                />
+                            </div>
+                            {errorMessage && <div className="error-message">{errorMessage}</div>}
+                            <div className="form-buttons">
+                                <button className="icon-button" onClick={handleCancelBlockForm}>
+                                    <img src={backIcon} alt="Cancel" className="button-icon" />
+                                </button>
+                                <button className="icon-button" onClick={handleBlockSubmit}>
+                                    <img src={checkIcon} alt="Submit" className="button-icon" />
                                 </button>
                             </div>
                         </div>
