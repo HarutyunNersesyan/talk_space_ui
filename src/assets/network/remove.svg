@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+    <!-- Colorful List Items -->
+    <rect x="12" y="14" width="24" height="6" rx="2" fill="#FF9E7D" stroke="#333" stroke-width="1.5"/>
+    <rect x="12" y="24" width="24" height="6" rx="2" fill="#A5DEE4" stroke="#333" stroke-width="1.5"/>
+    <rect x="12" y="34" width="24" height="6" rx="2" fill="#D4A5E3" stroke="#333" stroke-width="1.5"/>
+
+    <!-- Remove Icons -->
+    <circle cx="38" cy="17" r="8" fill="#FF5F6D" stroke="#333" stroke-width="1.5"/>
+    <line x1="34" y1="14" x2="42" y2="20" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="34" y1="20" x2="42" y2="14" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+</svg>
