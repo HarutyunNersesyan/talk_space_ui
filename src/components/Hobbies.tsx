@@ -4,6 +4,9 @@ import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import './Hobbies.css';
 import HobbiesIcon from '../assets/search/hobbies-icon.svg';
+import BackIcon from '../assets/search/back.svg';
+import RemoveIcon from '../assets/network/remove.svg';
+import SaveIcon from '../assets/network/save.svg';
 
 interface Hobby {
     id: number;
@@ -215,7 +218,7 @@ const Hobbies: React.FC = () => {
                             <li key={hobby.id} className="selected-hobby-item">
                                 {hobby.name}
                                 <button
-                                    className="delete-hobby-btn"
+                                    className="hobbies-delete-hobby-btn"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteHobby(hobby.id);
@@ -258,26 +261,26 @@ const Hobbies: React.FC = () => {
                     </div>
                 ))}
             </div>
-            <div className="buttons-container">
-                <div className="button-wrapper">
-                    <button className="action-button back-button" onClick={handleBack}>
-                        Cancel
+            <div className="hobbies-buttons-container">
+                <div className="hobbies-button-wrapper">
+                    <button className="hobbies-action-button hobbies-back-button" onClick={handleBack}>
+                        <img src={BackIcon} alt="Back" className="hobbies-button-icon" />
                     </button>
                 </div>
-                <div className="button-wrapper">
-                    <button className="action-button cancel-button" onClick={handleCancelSelections}>
-                       Deselect
+                <div className="hobbies-button-wrapper">
+                    <button className="hobbies-action-button hobbies-cancel-button" onClick={handleCancelSelections}>
+                        <img src={RemoveIcon} alt="Deselect" className="hobbies-button-icon" />
                     </button>
                 </div>
-                <div className="button-wrapper">
-                    <button className="action-button save-button" onClick={handleSave}>
-                        Save
+                <div className="hobbies-button-wrapper">
+                    <button className="hobbies-action-button hobbies-save-button" onClick={handleSave}>
+                        <img src={SaveIcon} alt="Save" className="hobbies-button-icon" />
                     </button>
                 </div>
             </div>
 
             {notification && (
-                <div className={`notification ${notification.type}`}>
+                <div className={`hobbies-notification ${notification.type}`}>
                     {notification.message}
                 </div>
             )}

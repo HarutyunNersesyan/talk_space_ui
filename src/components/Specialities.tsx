@@ -4,6 +4,9 @@ import {jwtDecode} from 'jwt-decode';
 import {useNavigate} from 'react-router-dom';
 import './Specialities.css';
 import SpecialitiesIcon from '../assets/search/specialties-icon.svg';
+import BackIcon from '../assets/search/back.svg';
+import RemoveIcon from '../assets/network/remove.svg';
+import SaveIcon from '../assets/network/save.svg';
 
 interface Speciality {
     id: number;
@@ -187,11 +190,11 @@ const Specialities: React.FC = () => {
     };
 
     if (loading) {
-        return <div className="loading-spinner">Loading...</div>;
+        return <div className="specialities-loading-spinner">Loading...</div>;
     }
 
     if (error) {
-        return <div className="error-message">{error}</div>;
+        return <div className="specialities-error-message">{error}</div>;
     }
 
     if (specialities.length === 0) {
@@ -204,15 +207,15 @@ const Specialities: React.FC = () => {
                 Specialities
                 <img src={SpecialitiesIcon} alt="Specialities Icon" className="specialities-icon"/>
             </h1>
-            <div className="selected-specialities-section">
+            <div className="specialities-selected-section">
                 <h2>Selected specialities</h2>
                 {selectedSpecialities.length > 0 ? (
-                    <ul className="selected-specialities-list">
+                    <ul className="specialities-selected-list">
                         {selectedSpecialities.map((speciality) => (
-                            <li key={speciality.id} className="selected-speciality-item">
+                            <li key={speciality.id} className="specialities-selected-item">
                                 {speciality.name}
                                 <button
-                                    className="delete-speciality-btn"
+                                    className="specialities-delete-btn"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteSpeciality(speciality.id);
@@ -231,20 +234,20 @@ const Specialities: React.FC = () => {
                 {specialities.map((speciality) => (
                     <div
                         key={speciality.id}
-                        className={`speciality-item ${expandedSpecialityId === speciality.id ? 'expanded' : ''}`}
+                        className={`specialities-item ${expandedSpecialityId === speciality.id ? 'expanded' : ''}`}
                     >
                         <div
-                            className="speciality-name"
+                            className="specialities-name"
                             onClick={() => handleSpecialityClick(speciality.id)}
                         >
                             {speciality.name}
                         </div>
                         {expandedSpecialityId === speciality.id && speciality.children && speciality.children.length > 0 && (
-                            <div className="sub-specialities-list">
+                            <div className="specialities-sub-list">
                                 {speciality.children.map((child) => (
                                     <div
                                         key={child.id}
-                                        className={`sub-speciality-item ${selectedSpecialities.some(selected => selected.id === child.id) ? 'selected' : ''} ${selectedSpecialities.length >= 5 && !selectedSpecialities.some(selected => selected.id === child.id) ? 'disabled' : ''}`}
+                                        className={`specialities-sub-item ${selectedSpecialities.some(selected => selected.id === child.id) ? 'selected' : ''} ${selectedSpecialities.length >= 5 && !selectedSpecialities.some(selected => selected.id === child.id) ? 'disabled' : ''}`}
                                         onClick={() => handleSelectSpeciality(child)}
                                     >
                                         {child.name}
@@ -255,26 +258,26 @@ const Specialities: React.FC = () => {
                     </div>
                 ))}
             </div>
-            <div className="buttons-container">
-                <div className="button-wrapper">
-                    <button className="action-button back-button" onClick={handleBack}>
-                        Cancel
+            <div className="specialities-buttons-container">
+                <div className="specialities-button-wrapper">
+                    <button className="specialities-action-button specialities-back-button" onClick={handleBack}>
+                        <img src={BackIcon} alt="Back" className="specialities-button-icon"/>
                     </button>
                 </div>
-                <div className="button-wrapper">
-                    <button className="action-button cancel-button" onClick={handleCancelSelections}>
-                        Deselect
+                <div className="specialities-button-wrapper">
+                    <button className="specialities-action-button specialities-cancel-button" onClick={handleCancelSelections}>
+                        <img src={RemoveIcon} alt="Deselect" className="specialities-button-icon"/>
                     </button>
                 </div>
-                <div className="button-wrapper">
-                    <button className="action-button save-button" onClick={handleSave}>
-                        Save
+                <div className="specialities-button-wrapper">
+                    <button className="specialities-action-button specialities-save-button" onClick={handleSave}>
+                        <img src={SaveIcon} alt="Save" className="specialities-button-icon"/>
                     </button>
                 </div>
             </div>
 
             {notification && (
-                <div className={`notification ${notification.type}`}>
+                <div className={`specialities-notification ${notification.type}`}>
                     {notification.message}
                 </div>
             )}

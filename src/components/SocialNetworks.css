@@ -100,7 +100,7 @@
     font-style: italic;
 }
 
-.update-form {
+.social-networks-update-form {
     margin-top: 2.5rem;
     background: #f8f9fa;
     padding: 1.5rem 2rem;
@@ -108,11 +108,11 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
-.form-group {
+.social-networks-form-group {
     margin-bottom: 1.5rem;
 }
 
-.form-group label {
+.social-networks-form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
@@ -120,7 +120,7 @@
     font-size: 0.95rem;
 }
 
-.form-group input {
+.social-networks-form-group input {
     width: 100%;
     padding: 0.8rem 1rem;
     border: 2px solid #e0e0e0;
@@ -129,21 +129,23 @@
     transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.form-group input:focus {
+.social-networks-form-group input:focus {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
-.form-buttons {
+.social-networks-form-buttons {
     display: flex;
     gap: 1rem;
     margin-top: 1.5rem;
+    justify-content: space-between;
 }
 
-.update-button, .cancel-button {
+.social-networks-update-button, .social-networks-cancel-button {
     flex: 1;
-    padding: 0.8rem;
+    min-width: 0;
+    padding: 1rem;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
@@ -152,34 +154,101 @@
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
 }
 
-.update-button {
+.social-networks-update-button {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
     box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
 }
 
-.update-button:hover {
+.social-networks-update-button:hover {
     background: linear-gradient(135deg, #2980b9, #3498db);
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
 }
 
-.cancel-button {
-    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+.social-networks-update-button:active {
+    transform: translateY(0);
+}
+
+.social-networks-cancel-button {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
     color: white;
-    box-shadow: 0 4px 6px rgba(149, 165, 166, 0.2);
+    box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
 }
 
-.cancel-button:hover {
-    background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+.social-networks-cancel-button:hover {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(149, 165, 166, 0.3);
+    box-shadow: 0 6px 12px rgba(231, 76, 60, 0.3);
 }
 
-.loading-spinner {
+.social-networks-cancel-button:active {
+    transform: translateY(0);
+}
+
+.social-networks-button-text {
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.social-networks-button-icon {
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.social-networks-update-button:hover .social-networks-button-text {
+    transform: translateX(-5px);
+}
+
+.social-networks-update-button:hover .social-networks-button-icon {
+    transform: translateX(5px);
+}
+
+.social-networks-cancel-button:hover .social-networks-button-text {
+    transform: translateX(-5px);
+}
+
+.social-networks-cancel-button:hover .social-networks-button-icon {
+    transform: translateX(5px);
+}
+
+/* Ripple effect */
+.social-networks-update-button::after, .social-networks-cancel-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.social-networks-update-button:hover::after, .social-networks-cancel-button:hover::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
+
+.social-networks-loading-spinner {
     text-align: center;
     font-size: 1.2rem;
     margin-top: 2rem;
@@ -190,7 +259,7 @@
     gap: 0.8rem;
 }
 
-.error-message {
+.social-networks-error-message {
     color: #e74c3c;
     text-align: center;
     font-size: 1.2rem;
@@ -202,7 +271,7 @@
 }
 
 /* Notification Styles */
-.notification {
+.social-networks-notification {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
@@ -220,7 +289,7 @@
     backdrop-filter: blur(5px);
 }
 
-.notification::before {
+.social-networks-notification::before {
     content: '';
     position: absolute;
     top: 0;
@@ -230,21 +299,21 @@
     border-radius: 10px 0 0 10px;
 }
 
-.notification.success {
+.social-networks-notification.success {
     background: rgba(39, 174, 96, 0.9);
     border-left: 6px solid #27ae60;
 }
 
-.notification.error {
+.social-networks-notification.error {
     background: rgba(231, 76, 60, 0.9);
     border-left: 6px solid #e74c3c;
 }
 
-.notification.success::before {
+.social-networks-notification.success::before {
     background: #2ecc71;
 }
 
-.notification.error::before {
+.social-networks-notification.error::before {
     background: #c0392b;
 }
 
@@ -263,14 +332,15 @@
 @media (max-width: 768px) {
     .social-networks-container {
         padding: 1.5rem;
-        margin: 1rem;
+        margin: 3rem;
     }
 
-    .form-buttons {
+    .social-networks-form-buttons {
         flex-direction: column;
+        width: auto;
     }
 
-    .notification {
+    .social-networks-notification {
         max-width: calc(100% - 2rem);
         left: 1rem;
         right: 1rem;

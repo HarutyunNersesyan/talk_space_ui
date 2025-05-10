@@ -17,7 +17,7 @@ html, body {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     scrollbar-width: thin;
-    padding-right: 20px; /* Added 10px more to account for scrollbar width */
+    padding-right: 20px;
 }
 
 .specialities-container::-webkit-scrollbar {
@@ -26,14 +26,14 @@ html, body {
 
 .specialities-container::-webkit-scrollbar-track {
     background: #f1f1f1;
-    margin-right: 10px; /* Added 10px margin to the right */
+    margin-right: 10px;
     border-radius: 4px;
 }
 
 .specialities-container::-webkit-scrollbar-thumb {
     background-color: #a777e3;
     border-radius: 4px;
-    margin-right: 10px; /* Added 10px margin to the right */
+    margin-right: 10px;
 }
 
 .specialities-container::-webkit-scrollbar-thumb:hover {
@@ -55,7 +55,7 @@ html, body {
     vertical-align: middle;
 }
 
-.selected-specialities-section {
+.specialities-selected-section {
     margin-bottom: 20px;
     padding: 15px;
     background: #f9f9f9;
@@ -64,7 +64,7 @@ html, body {
     border: 1px solid #eee;
 }
 
-.selected-specialities-section h2 {
+.specialities-selected-section h2 {
     font-size: 1.2em;
     color: #333;
     margin-bottom: 10px;
@@ -73,7 +73,7 @@ html, body {
     padding-bottom: 8px;
 }
 
-.selected-specialities-list {
+.specialities-selected-list {
     list-style-type: none;
     padding: 0;
     display: flex;
@@ -81,7 +81,7 @@ html, body {
     gap: 12px;
 }
 
-.selected-speciality-item {
+.specialities-selected-item {
     position: relative;
     padding: 10px 30px 10px 15px;
     background: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%);
@@ -93,11 +93,11 @@ html, body {
     transition: transform 0.2s ease;
 }
 
-.selected-speciality-item:hover {
+.specialities-selected-item:hover {
     transform: translateY(-2px);
 }
 
-.delete-speciality-btn {
+.specialities-delete-btn {
     position: absolute;
     right: 8px;
     top: 50%;
@@ -118,7 +118,7 @@ html, body {
     transition: all 0.2s ease;
 }
 
-.delete-speciality-btn:hover {
+.specialities-delete-btn:hover {
     background: rgba(255, 255, 255, 0.5);
     transform: translateY(-50%) scale(1.1);
 }
@@ -131,7 +131,7 @@ html, body {
     gap: 20px;
 }
 
-.speciality-item {
+.specialities-item {
     padding: 20px;
     background: white;
     border-radius: 12px;
@@ -145,7 +145,7 @@ html, body {
     overflow: hidden;
 }
 
-.speciality-item:before {
+.specialities-item:before {
     content: '';
     position: absolute;
     top: 0;
@@ -158,21 +158,21 @@ html, body {
     transition: transform 0.3s ease;
 }
 
-.speciality-item:hover {
+.specialities-item:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
-.speciality-item:hover:before {
+.specialities-item:hover:before {
     transform: scaleX(1);
 }
 
-.speciality-item.expanded {
+.specialities-item.expanded {
     background: #f8fafc;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
-.speciality-name {
+.specialities-name {
     font-weight: 600;
     font-size: 1.2em;
     color: #2c3e50;
@@ -184,19 +184,19 @@ html, body {
     z-index: 1;
 }
 
-.speciality-name::after {
+.specialities-name::after {
     content: '▼';
     font-size: 0.8em;
     color: #6e8efb;
     transition: all 0.3s ease;
 }
 
-.speciality-item.expanded .speciality-name::after {
+.specialities-item.expanded .specialities-name::after {
     transform: rotate(180deg);
     color: #a777e3;
 }
 
-.sub-specialities-list {
+.specialities-sub-list {
     list-style-type: none;
     padding: 0;
     margin-top: 15px;
@@ -208,12 +208,12 @@ html, body {
     transition: max-height 0.5s ease, opacity 0.4s ease;
 }
 
-.speciality-item.expanded .sub-specialities-list {
+.specialities-item.expanded .specialities-sub-list {
     max-height: 500px;
     opacity: 1;
 }
 
-.sub-speciality-item {
+.specialities-sub-item {
     padding: 10px 15px;
     background: white;
     border: 1px solid #e0e6ed;
@@ -228,27 +228,27 @@ html, body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.sub-speciality-item:hover:not(.disabled) {
+.specialities-sub-item:hover:not(.disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-color: #c3dafe;
 }
 
-.sub-speciality-item.selected {
+.specialities-sub-item.selected {
     background: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%);
     color: white;
     border-color: transparent;
     box-shadow: 0 4px 12px rgba(110, 142, 251, 0.3);
 }
 
-.sub-speciality-item.disabled {
+.specialities-sub-item.disabled {
     opacity: 0.5;
     cursor: not-allowed;
     background: #f8fafc;
     color: #a0aec0;
 }
 
-.buttons-container {
+.specialities-buttons-container {
     margin-top: 30px;
     display: flex;
     gap: 15px;
@@ -256,15 +256,14 @@ html, body {
     flex-wrap: wrap;
 }
 
-.button-wrapper {
+.specialities-button-wrapper {
     display: flex;
     flex: 0 0 auto;
 }
 
-.action-button {
+.specialities-action-button {
     padding: 12px 24px;
     border: none;
-    border-radius: 30px;
     cursor: pointer;
     font-size: 1em;
     font-weight: 400;
@@ -272,44 +271,49 @@ html, body {
     text-transform: uppercase;
     letter-spacing: 2px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
-.save-button {
-    background: linear-gradient(135deg, #4fd1c5 0%, #38b2ac 100%);
-    color: white;
+.specialities-button-icon {
+    width: 50px;
+    height: 50px;
+
 }
 
-.save-button:hover {
+.specialities-back-button .specialities-button-icon {
+    filter: none;
+}
+
+.specialities-save-button {
+    background: none;
+}
+
+.specialities-save-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(79, 209, 197, 0.4);
+
 }
 
-.back-button {
-    background: white;
-    color: #4a5568;
-    border: 1px solid #e0e6ed;
+.specialities-back-button {
+    background: none;
 }
 
-.back-button:hover {
+.specialities-back-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    background: #f8fafc;
 }
 
-.cancel-button {
-    background: #6e8efb;
-    color: white;
-    border: 1px solid #6e8efb;
+.specialities-cancel-button {
+    background: none;
 }
 
-.cancel-button:hover {
+.specialities-cancel-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(110, 142, 251, 0.4);
-    background: #a777e3;
-    border-color: #a777e3;
+
 }
 
-.loading-spinner {
+.specialities-loading-spinner {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -318,7 +322,7 @@ html, body {
     color: #4fd1c5;
 }
 
-.error-message {
+.specialities-error-message {
     color: #e53e3e;
     margin-top: 10px;
     background-color: #fff5f5;
@@ -328,7 +332,7 @@ html, body {
     font-weight: 500;
 }
 
-.notification {
+.specialities-notification {
     position: fixed;
     bottom: 30px;
     right: 30px;
@@ -345,20 +349,20 @@ html, body {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.notification * {
+.specialities-notification * {
     color: white !important;
 }
 
-.notification a {
+.specialities-notification a {
     text-decoration: underline;
     color: white !important;
 }
 
-.notification.success {
+.specialities-notification.success {
     background: linear-gradient(135deg, rgba(72, 187, 120, 0.9) 0%, rgba(56, 161, 105, 0.9) 100%);
 }
 
-.notification.error {
+.specialities-notification.error {
     background: linear-gradient(135deg, rgba(245, 101, 101, 0.9) 0%, rgba(229, 62, 62, 0.9) 100%);
 }
 
@@ -379,28 +383,28 @@ html, body {
         height: calc(100vh - 30px);
     }
 
-    .speciality-item {
+    .specialities-item {
         min-width: 100%;
     }
 
-    .sub-speciality-item {
+    .specialities-sub-item {
         min-width: calc(50% - 12px);
     }
 
-    .buttons-container {
+    .specialities-buttons-container {
         flex-direction: column;
         gap: 12px;
     }
 
-    .button-wrapper {
+    .specialities-button-wrapper {
         width: 100%;
     }
 
-    .action-button {
+    .specialities-action-button {
         width: 100%;
     }
 
-    .notification {
+    .specialities-notification {
         max-width: 90%;
         right: 5%;
         left: 5%;
@@ -409,15 +413,15 @@ html, body {
 }
 
 @media (max-width: 480px) {
-    .sub-speciality-item {
+    .specialities-sub-item {
         min-width: 100%;
     }
 
-    .speciality-name {
+    .specialities-name {
         font-size: 1.1em;
     }
 
-    .action-button {
+    .specialities-action-button {
         padding: 12px 16px;
         font-size: 0.9em;
     }

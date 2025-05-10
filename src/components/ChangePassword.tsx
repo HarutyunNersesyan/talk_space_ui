@@ -114,9 +114,9 @@ const ChangePassword: React.FC = () => {
     return (
         <div className="change-password-container">
             <h1>Change Password</h1>
-            <div className="form-group">
+            <div className="change-password-form-group">
                 <label htmlFor="oldPassword">Old Password</label>
-                <div className="password-input-container">
+                <div className="change-password-input-container">
                     <input
                         id="oldPassword"
                         type={showOldPassword ? "text" : "password"}
@@ -124,15 +124,15 @@ const ChangePassword: React.FC = () => {
                         onChange={(e) => setOldPassword(e.target.value)}
                         placeholder="Enter your old password"
                     />
-                    <span className="eye-icon" onClick={() => setShowOldPassword(!showOldPassword)}>
+                    <span className="change-password-eye-icon" onClick={() => setShowOldPassword(!showOldPassword)}>
                         {showOldPassword ? <FaEyeSlash /> : <FaEye />}
                     </span>
                 </div>
-                {validationErrors.oldPassword && <div className="validation-error">{validationErrors.oldPassword}</div>}
+                {validationErrors.oldPassword && <div className="change-password-validation-error">{validationErrors.oldPassword}</div>}
             </div>
-            <div className="form-group">
+            <div className="change-password-form-group">
                 <label htmlFor="newPassword">New Password</label>
-                <div className="password-input-container">
+                <div className="change-password-input-container">
                     <input
                         id="newPassword"
                         type={showNewPassword ? "text" : "password"}
@@ -140,15 +140,15 @@ const ChangePassword: React.FC = () => {
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Enter your new password"
                     />
-                    <span className="eye-icon" onClick={() => setShowNewPassword(!showNewPassword)}>
+                    <span className="change-password-eye-icon" onClick={() => setShowNewPassword(!showNewPassword)}>
                         {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                     </span>
                 </div>
-                {validationErrors.newPassword && <div className="validation-error">{validationErrors.newPassword}</div>}
+                {validationErrors.newPassword && <div className="change-password-validation-error">{validationErrors.newPassword}</div>}
             </div>
-            <div className="form-group">
+            <div className="change-password-form-group">
                 <label htmlFor="newPasswordRepeat">Repeat New Password</label>
-                <div className="password-input-container">
+                <div className="change-password-input-container">
                     <input
                         id="newPasswordRepeat"
                         type={showNewPasswordRepeat ? "text" : "password"}
@@ -156,24 +156,23 @@ const ChangePassword: React.FC = () => {
                         onChange={(e) => setNewPasswordRepeat(e.target.value)}
                         placeholder="Repeat your new password"
                     />
-                    <span className="eye-icon" onClick={() => setShowNewPasswordRepeat(!showNewPasswordRepeat)}>
+                    <span className="change-password-eye-icon" onClick={() => setShowNewPasswordRepeat(!showNewPasswordRepeat)}>
                         {showNewPasswordRepeat ? <FaEyeSlash /> : <FaEye />}
                     </span>
                 </div>
-                {validationErrors.newPasswordRepeat && <div className="validation-error">{validationErrors.newPasswordRepeat}</div>}
+                {validationErrors.newPasswordRepeat && <div className="change-password-validation-error">{validationErrors.newPasswordRepeat}</div>}
             </div>
-            <div className="buttons-container">
-                <button onClick={handleBackClick} className="back-button">
+            <div className="change-password-buttons-container">
+                <button onClick={handleBackClick} className="change-password-back-button">
                     <FaArrowLeft /> Cancel
                 </button>
-                <button onClick={handleUpdatePassword} className="update-button" disabled={loading}>
+                <button onClick={handleUpdatePassword} className="change-password-update-button" disabled={loading}>
                     {loading ? 'Updating...' : 'Update Password'}
                 </button>
             </div>
 
-            {/* Notification */}
             {notification && (
-                <div className={`notification ${notification.type}`}>
+                <div className={`change-password-notification ${notification.type}`}>
                     {notification.message}
                 </div>
             )}

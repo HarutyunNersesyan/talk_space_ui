@@ -155,11 +155,11 @@ const SocialNetworks: React.FC = () => {
     };
 
     if (loading) {
-        return <div className="loading-spinner">Loading...</div>;
+        return <div className="social-networks-loading-spinner">Loading...</div>;
     }
 
     if (error) {
-        return <div className="error-message">{error}</div>;
+        return <div className="social-networks-error-message">{error}</div>;
     }
 
     return (
@@ -188,11 +188,11 @@ const SocialNetworks: React.FC = () => {
                     );
                 })}
             </div>
-            <form onSubmit={handleUpdateSocialNetworks} className="update-form">
-                <div className="form-group">
+            <form onSubmit={handleUpdateSocialNetworks} className="social-networks-update-form">
+                <div className="social-networks-form-group">
                     <label>Selected Platform: {selectedPlatform || 'None'}</label>
                 </div>
-                <div className="form-group">
+                <div className="social-networks-form-group">
                     <label>New URL</label>
                     <input
                         type="text"
@@ -202,18 +202,20 @@ const SocialNetworks: React.FC = () => {
                         required
                     />
                 </div>
-                <div className="form-buttons">
-                    <button type="button" className="cancel-button" onClick={handleCancel}>
-                        Cancel
+                <div className="social-networks-form-buttons">
+                    <button type="button" className="social-networks-cancel-button" onClick={handleCancel}>
+                        <span className="social-networks-button-text">Cancel</span>
+                        <span className="social-networks-button-icon">×</span>
                     </button>
-                    <button type="submit" className="update-button">
-                        Update
+                    <button type="submit" className="social-networks-update-button">
+                        <span className="social-networks-button-text">Update</span>
+                        <span className="social-networks-button-icon">✓</span>
                     </button>
                 </div>
             </form>
 
             {notification && (
-                <div className={`notification ${notification.type}`}>
+                <div className={`social-networks-notification ${notification.type}`}>
                     {notification.message}
                 </div>
             )}
