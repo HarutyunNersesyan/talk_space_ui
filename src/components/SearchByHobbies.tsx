@@ -278,79 +278,79 @@ const SearchByHobbies: React.FC = () => {
     };
 
     return (
-        <div className="parent-container">
-            <div className="search-container">
+        <div className="hobbies-parent-container">
+            <div className="hobbies-search-container">
                 {userProfile ? (
                     <>
-                        <div className="image-container">
-                            <div className="image-placeholder">
+                        <div className="hobbies-image-container">
+                            <div className="hobbies-image-placeholder">
                                 <img
                                     src={imageUrls[userProfile.userName] || defaultProfileImage}
                                     alt="Profile"
-                                    className="profile-image"
+                                    className="hobbies-profile-image"
                                     onError={(e) => {
                                         e.currentTarget.src = defaultProfileImage;
                                     }}
                                 />
                             </div>
                         </div>
-                        <div className="search-info">
-                            <div className="user-name">
+                        <div className="hobbies-search-info">
+                            <div className="hobbies-user-name">
                                 {userProfile.firstName} {userProfile.lastName} ({userProfile.userName})
                             </div>
-                            <div className="user-details">
-                                <span className="age-text">Age: {userProfile.age}</span>
-                                <span className="gender-icon-container">
+                            <div className="hobbies-user-details">
+                                <span className="hobbies-age-text">Age: {userProfile.age}</span>
+                                <span className="hobbies-gender-icon-container">
                                     {['FEMALE', 'MALE'].includes(userProfile.gender.toUpperCase()) && (
                                         <img
                                             src={genderIcons[userProfile.gender.toUpperCase()]}
                                             alt={userProfile.gender}
-                                            className={`gender-icon ${
+                                            className={`hobbies-gender-icon ${
                                                 userProfile.gender.toUpperCase() === 'FEMALE'
-                                                    ? 'female-icon'
-                                                    : 'male-icon'
+                                                    ? 'hobbies-female-icon'
+                                                    : 'hobbies-male-icon'
                                             }`}
                                             title={userProfile.gender}
                                         />
                                     )}
                                 </span>
-                                <span className="zodiac-container">
+                                <span className="hobbies-zodiac-container">
                                     {formatZodiac(userProfile.zodiac)}
                                     <img
                                         src={zodiacIcons[userProfile.zodiac.toUpperCase()]}
                                         alt={userProfile.zodiac}
-                                        className="zodiac-icon"
+                                        className="hobbies-zodiac-icon"
                                     />
                                 </span>
                             </div>
-                            <div className="user-about">
+                            <div className="hobbies-user-about">
                                 <strong>About:</strong> {userProfile.about || 'No information available'}
                             </div>
-                            <div className="user-hobbies">
+                            <div className="hobbies-user-hobbies">
                                 <strong>Hobbies:</strong> {userProfile.hobbies.length > 0 ? userProfile.hobbies.join(', ') : 'No hobbies listed'}
                             </div>
-                            <div className="user-specialities">
+                            <div className="hobbies-user-specialities">
                                 <strong>Specialities:</strong> {userProfile.specialities.length > 0 ? userProfile.specialities.join(', ') : 'No specialities listed'}
                             </div>
-                            <div className="user-social-networks">
-                                <div className="social-networks-header">
+                            <div className="hobbies-user-social-networks">
+                                <div className="hobbies-social-networks-header">
                                     <strong>Social Networks:</strong>
                                     {userProfile.socialNetworks.length > 0 ? (
-                                        <div className="social-icons">
+                                        <div className="hobbies-social-icons">
                                             {userProfile.socialNetworks.map((url, index) => {
                                                 const platform = getPlatformFromUrl(url);
                                                 const icon = socialIcons[platform];
                                                 return (
-                                                    <div key={index} className="social-icon-container">
+                                                    <div key={index} className="hobbies-social-icon-container">
                                                         <a
                                                             href={url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="social-icon-link"
+                                                            className="hobbies-social-icon-link"
                                                         >
                                                             <FontAwesomeIcon
                                                                 icon={icon}
-                                                                className="social-icon"
+                                                                className="hobbies-social-icon"
                                                             />
                                                         </a>
                                                     </div>
@@ -358,37 +358,37 @@ const SearchByHobbies: React.FC = () => {
                                             })}
                                         </div>
                                     ) : (
-                                        <span className="no-social">No social networks listed</span>
+                                        <span className="hobbies-no-social">No social networks listed</span>
                                     )}
                                 </div>
                             </div>
                         </div>
                     </>
                 ) : (
-                    <div className="no-profile">
+                    <div className="hobbies-no-profile">
                         {isSearching ? 'Searching for matching profiles...' : 'No profile data available'}
                     </div>
                 )}
-                {error && <div className="error-message">{error}</div>}
-                <div className="search-buttons">
-                    <button className="back-button" onClick={handleNavigateToNetwork}>
-                        <img src={backIcon} alt="Back" className="back-icon"/>
+                {error && <div className="hobbies-error-message">{error}</div>}
+                <div className="hobbies-search-buttons">
+                    <button className="hobbies-back-button" onClick={handleNavigateToNetwork}>
+                        <img src={backIcon} alt="Back" className="hobbies-back-icon"/>
                     </button>
 
                     <button
-                        className="like-button"
+                        className="hobbies-like-button"
                         onClick={handleLike}
                         disabled={isLiking || !userProfile || hasLiked}
                     >
-                        <img src={likeIcon} alt="Like" className="like-icon"/>
+                        <img src={likeIcon} alt="Like" className="hobbies-like-icon"/>
                         {hasLiked ? 'Liked' : isLiking ? 'Liking...' : 'Like'}
                     </button>
                     <button
-                        className="search-button"
+                        className="hobbies-search-button"
                         onClick={handleSearchByHobbies}
                         disabled={isSearching}
                     >
-                        <img src={searchIcon} alt="Search" className="search-icon"/>
+                        <img src={searchIcon} alt="Search" className="hobbies-search-icon"/>
                         {isSearching ? 'Searching...' : ''}
                     </button>
                 </div>

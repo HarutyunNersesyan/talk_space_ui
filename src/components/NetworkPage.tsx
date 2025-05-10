@@ -130,7 +130,7 @@ const NetworkPage: React.FC = () => {
                 }}
             >
                 <div className="header-content">
-                    <h1>Network with Purpose</h1>
+                    <h1>Network with purpose</h1>
                     <p>
                         Forge meaningful connections with individuals who share your passions, whether professional or personal.
                         Nurture friendships, spark collaborations, and discover relationships that inspire growth and possibility.

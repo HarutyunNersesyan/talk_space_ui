@@ -290,79 +290,79 @@ const SearchBySpecialities: React.FC = () => {
     };
 
     return (
-        <div className="parent-container">
-            <div className="search-container">
+        <div className="specialities-parent-container">
+            <div className="specialities-search-container">
                 {userProfile ? (
                     <>
-                        <div className="image-container">
-                            <div className="image-placeholder">
+                        <div className="specialities-image-container">
+                            <div className="specialities-image-placeholder">
                                 <img
                                     src={imageUrls[userProfile.userName] || defaultProfileImage}
                                     alt="Profile"
-                                    className="profile-image"
+                                    className="specialities-profile-image"
                                     onError={(e) => {
                                         e.currentTarget.src = defaultProfileImage;
                                     }}
                                 />
                             </div>
                         </div>
-                        <div className="search-info">
-                            <div className="user-name">
+                        <div className="specialities-search-info">
+                            <div className="specialities-user-name">
                                 {userProfile.firstName} {userProfile.lastName} ({userProfile.userName})
                             </div>
-                            <div className="user-details">
-                                <span className="age-text">Age: {userProfile.age}</span>
-                                <span className="gender-icon-container">
+                            <div className="specialities-user-details">
+                                <span className="specialities-age-text">Age: {userProfile.age}</span>
+                                <span className="specialities-gender-icon-container">
                                     {['FEMALE', 'MALE'].includes(userProfile.gender.toUpperCase()) && (
                                         <img
                                             src={genderIcons[userProfile.gender.toUpperCase()]}
                                             alt={userProfile.gender}
-                                            className={`gender-icon ${
+                                            className={`specialities-gender-icon ${
                                                 userProfile.gender.toUpperCase() === 'FEMALE'
-                                                    ? 'female-icon'
-                                                    : 'male-icon'
+                                                    ? 'specialities-female-icon'
+                                                    : 'specialities-male-icon'
                                             }`}
                                             title={userProfile.gender}
                                         />
                                     )}
                                 </span>
-                                <span className="zodiac-container">
+                                <span className="specialities-zodiac-container">
                                     {formatZodiac(userProfile.zodiac)}
                                     <img
                                         src={zodiacIcons[userProfile.zodiac.toUpperCase()]}
                                         alt={userProfile.zodiac}
-                                        className="zodiac-icon"
+                                        className="specialities-zodiac-icon"
                                     />
                                 </span>
                             </div>
-                            <div className="user-about">
+                            <div className="specialities-user-about">
                                 <strong>About:</strong> {userProfile.about || 'No information available'}
                             </div>
-                            <div className="user-hobbies">
+                            <div className="specialities-user-hobbies">
                                 <strong>Hobbies:</strong> {userProfile.hobbies.length > 0 ? userProfile.hobbies.join(', ') : 'No hobbies listed'}
                             </div>
-                            <div className="user-specialities">
+                            <div className="specialities-user-specialities">
                                 <strong>Specialities:</strong> {userProfile.specialities.length > 0 ? userProfile.specialities.join(', ') : 'No specialities listed'}
                             </div>
-                            <div className="user-social-networks">
-                                <div className="social-networks-header">
+                            <div className="specialities-user-social-networks">
+                                <div className="specialities-social-networks-header">
                                     <strong>Social Networks:</strong>
                                     {userProfile.socialNetworks.length > 0 ? (
-                                        <div className="social-icons">
+                                        <div className="specialities-social-icons">
                                             {userProfile.socialNetworks.map((url, index) => {
                                                 const platform = getPlatformFromUrl(url);
                                                 const icon = socialIcons[platform];
                                                 return (
-                                                    <div key={index} className="social-icon-container">
+                                                    <div key={index} className="specialities-social-icon-container">
                                                         <a
                                                             href={url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="social-icon-link"
+                                                            className="specialities-social-icon-link"
                                                         >
                                                             <FontAwesomeIcon
                                                                 icon={icon}
-                                                                className="social-icon"
+                                                                className="specialities-social-icon"
                                                             />
                                                         </a>
                                                     </div>
@@ -370,40 +370,39 @@ const SearchBySpecialities: React.FC = () => {
                                             })}
                                         </div>
                                     ) : (
-                                        <span className="no-social">No social networks listed</span>
+                                        <span className="specialities-no-social">No social networks listed</span>
                                     )}
                                 </div>
                             </div>
                         </div>
                     </>
                 ) : (
-                    <div className="no-profile">
+                    <div className="specialities-no-profile">
                         {isSearching ? 'Searching for matching profiles...' : 'No matching profiles found, please try again later.'}
                     </div>
                 )}
-                {error && <div className="error-message">{error}</div>}
-                <div className="action-buttons">
-                    <button className="back-button" onClick={handleBack}>
-                        <img src={backIcon} alt="back" className="back-icon" />
+                {error && <div className="specialities-error-message">{error}</div>}
+                <div className="specialities-search-buttons">
+                    <button className="specialities-back-button" onClick={handleBack}>
+                        <img src={backIcon} alt="Back" className="specialities-back-icon"/>
                     </button>
-                    <div className="search-like-buttons">
-                        <button
-                            className="like-button"
-                            onClick={handleLike}
-                            disabled={isLiking || !userProfile || hasLiked}
-                        >
-                            <img src={likeIcon} alt="Like" className="like-icon" />
-                            {hasLiked ? 'Liked' : isLiking ? 'Liking...' : 'Like'}
-                        </button>
-                        <button
-                            className="search-icon-button"
-                            onClick={handleSearchBySpecialities}
-                            disabled={isSearching}
-                        >
-                            <img src={searchIcon} alt="Search" className="search-icon" />
-                            {isSearching ? 'Searching...' : ''}
-                        </button>
-                    </div>
+
+                    <button
+                        className="specialities-like-button"
+                        onClick={handleLike}
+                        disabled={isLiking || !userProfile || hasLiked}
+                    >
+                        <img src={likeIcon} alt="Like" className="specialities-like-icon"/>
+                        {hasLiked ? 'Liked' : isLiking ? 'Liking...' : 'Like'}
+                    </button>
+                    <button
+                        className="specialities-search-button"
+                        onClick={handleSearchBySpecialities}
+                        disabled={isSearching}
+                    >
+                        <img src={searchIcon} alt="Search" className="specialities-search-icon"/>
+                        {isSearching ? 'Searching...' : ''}
+                    </button>
                 </div>
             </div>
         </div>

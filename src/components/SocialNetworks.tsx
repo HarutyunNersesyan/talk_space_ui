@@ -11,6 +11,8 @@ import {
 } from '@fortawesome/free-brands-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import './SocialNetworks.css';
+import BackIcon from '../assets/search/back.svg';
+import SaveIcon from '../assets/network/save.svg';
 
 interface SocialNetwork {
     platform: string;
@@ -204,12 +206,10 @@ const SocialNetworks: React.FC = () => {
                 </div>
                 <div className="social-networks-form-buttons">
                     <button type="button" className="social-networks-cancel-button" onClick={handleCancel}>
-                        <span className="social-networks-button-text">Cancel</span>
-                        <span className="social-networks-button-icon">×</span>
+                        <img src={BackIcon} alt="Cancel" className="social-networks-button-icon" />
                     </button>
                     <button type="submit" className="social-networks-update-button">
-                        <span className="social-networks-button-text">Update</span>
-                        <span className="social-networks-button-icon">✓</span>
+                        <img src={SaveIcon} alt="Update" className="social-networks-button-icon" />
                     </button>
                 </div>
             </form>

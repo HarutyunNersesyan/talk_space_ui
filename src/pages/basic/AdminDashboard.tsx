@@ -26,7 +26,6 @@ const AdminDashboard: React.FC = () => {
     const token = localStorage.getItem('token');
 
     useEffect(() => {
-        // Set default block until date to current date + 1 day
         const now = new Date();
         now.setDate(now.getDate() + 1);
         const formattedDate = now.toISOString().split('T')[0];
@@ -116,7 +115,6 @@ const AdminDashboard: React.FC = () => {
             setErrorMessage(`User ${blockUsername} has been blocked successfully until ${new Date(blockUntil).toLocaleDateString()}. Reason: ${blockMessage}`);
             setBlockUsername('');
             setBlockMessage('');
-            // Reset to default date (current date + 1 day)
             const now = new Date();
             now.setDate(now.getDate() + 1);
             setBlockUntil(now.toISOString().split('T')[0]);
@@ -178,33 +176,33 @@ const AdminDashboard: React.FC = () => {
     }, [token]);
 
     return (
-        <div className="dashboard-container">
-            <div className="background-banner" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
-            <div className="adminDashboard-content">
+        <div className="admin-dashboard-container">
+            <div className="admin-background-banner" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
+            <div className="admin-dashboard-content">
                 <div className="admin-actions-grid">
-                    <div className="action-card" onClick={handleViewChats}>
-                        <img src={chatImage} alt="View Chats" className="action-image" />
-                        <button className="action-button">View Chats</button>
+                    <div className="admin-action-card" onClick={handleViewChats}>
+                        <img src={chatImage} alt="View Chats" className="admin-action-image" />
+                        <button className="admin-action-button">View Chats</button>
                     </div>
-                    <div className="action-card" onClick={handleBlockUser}>
-                        <img src={blockImage} alt="Block User" className="action-image" />
-                        <button className="action-button">Block User</button>
+                    <div className="admin-action-card" onClick={handleBlockUser}>
+                        <img src={blockImage} alt="Block User" className="admin-action-image" />
+                        <button className="admin-action-button">Block User</button>
                     </div>
-                    <div className="action-card" onClick={handleViewUsers}>
-                        <img src={userImage} alt="Users" className="action-image" />
-                        <button className="action-button">Users</button>
+                    <div className="admin-action-card" onClick={handleViewUsers}>
+                        <img src={userImage} alt="Users" className="admin-action-image" />
+                        <button className="admin-action-button">Users</button>
                     </div>
-                    <div className="action-card" onClick={handleViewFeedbacks}>
-                        <img src={feedBacksImage} alt="Feedbacks" className="action-image" />
-                        <button className="action-button">Feedbacks</button>
+                    <div className="admin-action-card" onClick={handleViewFeedbacks}>
+                        <img src={feedBacksImage} alt="Feedbacks" className="admin-action-image" />
+                        <button className="admin-action-button">Feedbacks</button>
                     </div>
                 </div>
 
                 {showChatForm && (
-                    <div className="form-container">
-                        <div className="form">
+                    <div className="admin-form-container">
+                        <div className="admin-form">
                             <h3>View Chats Between Users</h3>
-                            <div className="form-group">
+                            <div className="admin-form-group">
                                 <label htmlFor="senderUsername">Sender Username:</label>
                                 <input
                                     type="text"
@@ -214,7 +212,7 @@ const AdminDashboard: React.FC = () => {
                                     placeholder="Enter sender username"
                                 />
                             </div>
-                            <div className="form-group">
+                            <div className="admin-form-group">
                                 <label htmlFor="receiverUsername">Receiver Username:</label>
                                 <input
                                     type="text"
@@ -224,13 +222,13 @@ const AdminDashboard: React.FC = () => {
                                     placeholder="Enter receiver username"
                                 />
                             </div>
-                            {errorMessage && <div className="error-message">{errorMessage}</div>}
-                            <div className="form-buttons">
-                                <button className="icon-button" onClick={handleCancelChatForm}>
-                                    <img src={backIcon} alt="Cancel" className="button-icon" />
+                            {errorMessage && <div className="admin-error-message">{errorMessage}</div>}
+                            <div className="admin-form-buttons">
+                                <button className="admin-icon-button" onClick={handleCancelChatForm}>
+                                    <img src={backIcon} alt="Cancel" className="admin-button-icon" />
                                 </button>
-                                <button className="icon-button" onClick={handleCheckChats}>
-                                    <img src={checkIcon} alt="Check" className="button-icon" />
+                                <button className="admin-icon-button" onClick={handleCheckChats}>
+                                    <img src={checkIcon} alt="Check" className="admin-button-icon" />
                                 </button>
                             </div>
                         </div>
@@ -238,10 +236,10 @@ const AdminDashboard: React.FC = () => {
                 )}
 
                 {showBlockForm && (
-                    <div className="form-container">
-                        <div className="form">
+                    <div className="admin-form-container">
+                        <div className="admin-form">
                             <h3>Block User</h3>
-                            <div className="form-group">
+                            <div className="admin-form-group">
                                 <label htmlFor="blockUsername">Username:</label>
                                 <input
                                     type="text"
@@ -251,7 +249,7 @@ const AdminDashboard: React.FC = () => {
                                     placeholder="Enter username to block"
                                 />
                             </div>
-                            <div className="form-group">
+                            <div className="admin-form-group">
                                 <label htmlFor="blockMessage">Block :</label>
                                 <textarea
                                     id="blockMessage"
@@ -261,7 +259,7 @@ const AdminDashboard: React.FC = () => {
                                     rows={3}
                                 />
                             </div>
-                            <div className="form-group">
+                            <div className="admin-form-group">
                                 <label htmlFor="blockUntil">Block until:</label>
                                 <input
                                     type="date"
@@ -271,13 +269,13 @@ const AdminDashboard: React.FC = () => {
                                     min={new Date().toISOString().split('T')[0]}
                                 />
                             </div>
-                            {errorMessage && <div className="error-message">{errorMessage}</div>}
-                            <div className="form-buttons">
-                                <button className="icon-button" onClick={handleCancelBlockForm}>
-                                    <img src={backIcon} alt="Cancel" className="button-icon" />
+                            {errorMessage && <div className="admin-error-message">{errorMessage}</div>}
+                            <div className="admin-form-buttons">
+                                <button className="admin-icon-button" onClick={handleCancelBlockForm}>
+                                    <img src={backIcon} alt="Cancel" className="admin-button-icon" />
                                 </button>
-                                <button className="icon-button" onClick={handleBlockSubmit}>
-                                    <img src={checkIcon} alt="Submit" className="button-icon" />
+                                <button className="admin-icon-button" onClick={handleBlockSubmit}>
+                                    <img src={checkIcon} alt="Submit" className="admin-button-icon" />
                                 </button>
                             </div>
                         </div>

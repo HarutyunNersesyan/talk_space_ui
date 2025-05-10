@@ -1,35 +1,23 @@
 <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <!-- Colorful floppy disk body -->
-    <rect x="20" y="30" width="60" height="50" rx="3" fill="url(#gradient)"/>
+    <!-- Disk body -->
+    <rect x="20" y="30" width="60" height="50" rx="3" fill="#4a6bff"/>
 
-    <!-- Disk metal slider -->
-    <rect x="25" y="35" width="50" height="5" rx="2" fill="#ccc"/>
+    <!-- Metal slider -->
+    <rect x="25" y="35" width="50" height="5" rx="2" fill="#d9e1ff"/>
 
-    <!-- Disk hole -->
-    <circle cx="45" cy="37.5" r="3" fill="#666"/>
+    <!-- Hub hole -->
+    <circle cx="45" cy="37.5" r="3" fill="#2a4bcc"/>
 
     <!-- Label area -->
-    <rect x="30" y="45" width="40" height="30" fill="#fff" stroke="#999" stroke-width="0.5"/>
+    <rect x="30" y="45" width="40" height="30" fill="#fff" stroke="#2a4bcc" stroke-width="0.5"/>
 
-    <!-- Label lines -->
-    <rect x="35" y="50" width="30" height="3" fill="#ddd"/>
-    <rect x="35" y="55" width="25" height="3" fill="#ddd"/>
-    <rect x="35" y="60" width="20" height="3" fill="#ddd"/>
-
-    <!-- Disk label -->
-    <text x="50" y="70" font-family="Arial" font-size="5" text-anchor="middle" fill="#666">SAVE</text>
+    <!-- Label lines (simulating write protection notches) -->
+    <rect x="35" y="50" width="30" height="2" fill="#e0e7ff"/>
+    <rect x="35" y="55" width="25" height="2" fill="#e0e7ff"/>
 
     <!-- Tab corner -->
-    <rect x="70" y="30" width="10" height="10" fill="#999"/>
+    <rect x="70" y="30" width="10" height="10" fill="#2a4bcc"/>
 
-    <!-- Gradient definition -->
-    <defs>
-        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#FF5252"/>
-            <stop offset="25%" stop-color="#FFD740"/>
-            <stop offset="50%" stop-color="#69F0AE"/>
-            <stop offset="75%" stop-color="#40C4FF"/>
-            <stop offset="100%" stop-color="#E040FB"/>
-        </linearGradient>
-    </defs>
+    <!-- Optional shadow for depth -->
+    <rect x="20" y="78" width="60" height="2" fill="#00000020"/>
 </svg>
