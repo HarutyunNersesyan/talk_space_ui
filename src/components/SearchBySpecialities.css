@@ -230,102 +230,86 @@
     width: 100%;
 }
 
-.specialities-search-button {
-    padding: 12px;
-    background-color: #214875;
-    color: white;
+.specialities-search-back-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: none;
     border: none;
-    border-radius: 50%;
     cursor: pointer;
     font-size: 16px;
     font-weight: 500;
+    color: #333;
     transition: all 0.3s ease;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.specialities-search-button:hover {
-    background-color: #1a365d;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+.specialities-search-back-button:hover {
+    color: #214875;
 }
 
-.specialities-search-button:active {
-    transform: translateY(0);
-}
-
-.specialities-search-icon {
-    width: 24px;
-    height: 24px;
-    filter: brightness(0) invert(1);
+.specialities-back-icon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0);
 }
 
 .specialities-like-button {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
-    background-color: #ff4d6d;
-    color: white;
+    padding: 8px 16px;
+    background: none;
     border: none;
-    border-radius: 25px;
     cursor: pointer;
     font-size: 16px;
     font-weight: 500;
+    color: #333;
     transition: all 0.3s ease;
-
 }
 
 .specialities-like-button:hover:not(:disabled) {
-    background-color: #ff758f;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.specialities-like-button:active:not(:disabled) {
-    transform: translateY(0);
+    color: #e91e63;
 }
 
 .specialities-like-button:disabled {
-    background-color: #ccc;
+    color: #ccc;
     cursor: not-allowed;
 }
 
 .specialities-like-icon {
     width: 18px;
     height: 18px;
-    filter: brightness(0) invert(1);
+    filter: brightness(0);
 }
 
-.specialities-search-back-button {
-    padding: 12px 24px;
-    background-color: #6c757d;
-    color: white;
+.specialities-search-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: none;
     border: none;
-    border-radius: 25px;
     cursor: pointer;
     font-size: 16px;
     font-weight: 500;
+    color: #333;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.specialities-search-back-button:hover {
-    transform: translateY(-2px);
+.specialities-search-button:hover:not(:disabled) {
+    color: #2196f3;
 }
 
-.specialities-back-button:active {
-    transform: translateY(0);
+.specialities-search-button:disabled {
+    color: #ccc;
+    cursor: not-allowed;
 }
 
-.specialities-back-icon {
+.specialities-search-icon {
     width: 18px;
     height: 18px;
-    filter: brightness(0) invert(1);
+    filter: brightness(0);
 }
 
 @media (max-width: 600px) {

@@ -373,6 +373,7 @@ const SearchByHobbies: React.FC = () => {
                 <div className="hobbies-search-buttons">
                     <button className="hobbies-search-back-button" onClick={handleNavigateToNetwork}>
                         <img src={backIcon} alt="Back" className="hobbies-back-icon"/>
+                        Back
                     </button>
 
                     <button
@@ -389,7 +390,7 @@ const SearchByHobbies: React.FC = () => {
                         disabled={isSearching}
                     >
                         <img src={searchIcon} alt="Search" className="hobbies-search-icon"/>
-                        {isSearching ? 'Searching...' : ''}
+                        {isSearching ? 'Searching...' : 'Search'}
                     </button>
                 </div>
             </div>

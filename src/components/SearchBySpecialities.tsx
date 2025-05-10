@@ -385,6 +385,7 @@ const SearchBySpecialities: React.FC = () => {
                 <div className="specialities-search-buttons">
                     <button className="specialities-search-back-button" onClick={handleBack}>
                         <img src={backIcon} alt="Back" className="specialities-back-icon"/>
+                        Back
                     </button>
 
                     <button
@@ -401,7 +402,7 @@ const SearchBySpecialities: React.FC = () => {
                         disabled={isSearching}
                     >
                         <img src={searchIcon} alt="Search" className="specialities-search-icon"/>
-                        {isSearching ? 'Searching...' : ''}
+                        {isSearching ? 'Searching...' : 'Search'}
                     </button>
                 </div>
             </div>
