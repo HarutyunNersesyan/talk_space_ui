@@ -124,7 +124,7 @@ body, html {
 }
 
 .hobbies-image {
-    top: -175px;
+    top: -150px;
     position: relative;
     left: -200px;
 }
@@ -153,7 +153,7 @@ body, html {
 
 .hobbies-button {
     right: 30px;
-    top: -110px;
+    top: -90px;
 }
 
 .specialties-button {
