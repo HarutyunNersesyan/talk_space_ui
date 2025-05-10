@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M
                     </span>
                     <span className={`title-connect ${mounted ? 'animate-connect' : ''}`}>
-                        &nbsp;C&nbsp;o&nbsp;n&nbsp;n&nbsp;e&nbsp;c&nbsp;t
+                        C&nbsp;o&nbsp;n&nbsp;n&nbsp;e&nbsp;c&nbsp;t
                     </span>
                     <span className={`title-e ${mounted ? 'animate-e' : ''}`}>
                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e
