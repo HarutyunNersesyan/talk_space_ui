@@ -371,7 +371,7 @@ const SearchByHobbies: React.FC = () => {
                 )}
                 {error && <div className="hobbies-error-message">{error}</div>}
                 <div className="hobbies-search-buttons">
-                    <button className="hobbies-back-button" onClick={handleNavigateToNetwork}>
+                    <button className="hobbies-search-back-button" onClick={handleNavigateToNetwork}>
                         <img src={backIcon} alt="Back" className="hobbies-back-icon"/>
                     </button>
 

@@ -26,7 +26,7 @@
 .specialities-image-container {
     position: relative;
     width: 300px;
-    height: 300px;
+    height: 350px;
     margin-bottom: 10px;
     margin-left: -25px;
     margin-right: -25px;
@@ -301,7 +301,7 @@
     filter: brightness(0) invert(1);
 }
 
-.specialities-back-button {
+.specialities-search-back-button {
     padding: 12px 24px;
     background-color: #6c757d;
     color: white;
@@ -314,10 +314,8 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.specialities-back-button:hover {
-    background-color: #5a6268;
+.specialities-search-back-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .specialities-back-button:active {

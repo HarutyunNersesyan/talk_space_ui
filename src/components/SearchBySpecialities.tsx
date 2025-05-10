@@ -383,7 +383,7 @@ const SearchBySpecialities: React.FC = () => {
                 )}
                 {error && <div className="specialities-error-message">{error}</div>}
                 <div className="specialities-search-buttons">
-                    <button className="specialities-back-button" onClick={handleBack}>
+                    <button className="specialities-search-back-button" onClick={handleBack}>
                         <img src={backIcon} alt="Back" className="specialities-back-icon"/>
                     </button>
 

@@ -26,7 +26,7 @@
 .hobbies-image-container {
     position: relative;
     width: 300px;
-    height: 300px;
+    height: 350px;
     margin-bottom: 10px;
     margin-left: -25px;
     margin-right: -25px;
@@ -301,9 +301,8 @@
     filter: brightness(0) invert(1);
 }
 
-.hobbies-back-button {
+.hobbies-search-back-button {
     padding: 12px 24px;
-    background-color: #6c757d;
     color: white;
     border: none;
     border-radius: 25px;
@@ -314,13 +313,13 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.hobbies-back-button:hover {
+.hobbies-search-back-button:hover {
     background-color: #5a6268;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-.hobbies-back-button:active {
+.hobbies-search-back-button:active {
     transform: translateY(0);
 }
 
