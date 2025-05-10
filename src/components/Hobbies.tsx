@@ -4,9 +4,6 @@ import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import './Hobbies.css';
 import HobbiesIcon from '../assets/search/hobbies-icon.svg';
-import BackIcon from '../assets/search/back.svg';
-import SaveIcon from '../assets/network/save.svg';
-import RemoveIcon from '../assets/network/remove.svg';
 
 interface Hobby {
     id: number;
@@ -261,16 +258,22 @@ const Hobbies: React.FC = () => {
                     </div>
                 ))}
             </div>
-            <div className="button-group">
-                <button className="action-button back-button" onClick={handleBack}>
-                    <img src={BackIcon} alt="Back" className="button-icon" />
-                </button>
-                <button className="action-button cancel-button" onClick={handleCancelSelections}>
-                    <img src={RemoveIcon} alt="Remove Selections" className="button-icon" />
-                </button>
-                <button className="action-button save-button" onClick={handleSave}>
-                    <img src={SaveIcon} alt="Save" className="button-icon" />
-                </button>
+            <div className="buttons-container">
+                <div className="button-wrapper">
+                    <button className="action-button back-button" onClick={handleBack}>
+                        Cancel
+                    </button>
+                </div>
+                <div className="button-wrapper">
+                    <button className="action-button cancel-button" onClick={handleCancelSelections}>
+                        Remove selected list
+                    </button>
+                </div>
+                <div className="button-wrapper">
+                    <button className="action-button save-button" onClick={handleSave}>
+                        Save
+                    </button>
+                </div>
             </div>
 
             {notification && (
