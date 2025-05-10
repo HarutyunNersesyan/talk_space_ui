@@ -227,9 +227,9 @@ const Specialities: React.FC = () => {
                     <p>No specialities selected yet.</p>
                 )}
             </div>
-            <ul className="specialities-list">
+            <div className="specialities-list">
                 {specialities.map((speciality) => (
-                    <li
+                    <div
                         key={speciality.id}
                         className={`speciality-item ${expandedSpecialityId === speciality.id ? 'expanded' : ''}`}
                     >
@@ -240,31 +240,37 @@ const Specialities: React.FC = () => {
                             {speciality.name}
                         </div>
                         {expandedSpecialityId === speciality.id && speciality.children && speciality.children.length > 0 && (
-                            <ul className="sub-specialities-list">
+                            <div className="sub-specialities-list">
                                 {speciality.children.map((child) => (
-                                    <li
+                                    <div
                                         key={child.id}
                                         className={`sub-speciality-item ${selectedSpecialities.some(selected => selected.id === child.id) ? 'selected' : ''} ${selectedSpecialities.length >= 5 && !selectedSpecialities.some(selected => selected.id === child.id) ? 'disabled' : ''}`}
                                         onClick={() => handleSelectSpeciality(child)}
                                     >
                                         {child.name}
-                                    </li>
+                                    </div>
                                 ))}
-                            </ul>
+                            </div>
                         )}
-                    </li>
+                    </div>
                 ))}
-            </ul>
-            <div className="button-group">
-                <button className="action-button back-button" onClick={handleBack}>
-                    Cancel
-                </button>
-                <button className="action-button cancel-button" onClick={handleCancelSelections}>
-                    Remove selected list
-                </button>
-                <button className="action-button save-button" onClick={handleSave}>
-                    Save
-                </button>
+            </div>
+            <div className="buttons-container">
+                <div className="button-wrapper">
+                    <button className="action-button back-button" onClick={handleBack}>
+                        Cancel
+                    </button>
+                </div>
+                <div className="button-wrapper">
+                    <button className="action-button cancel-button" onClick={handleCancelSelections}>
+                        Deselect
+                    </button>
+                </div>
+                <div className="button-wrapper">
+                    <button className="action-button save-button" onClick={handleSave}>
+                        Save
+                    </button>
+                </div>
             </div>
 
             {notification && (

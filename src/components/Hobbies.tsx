@@ -266,7 +266,7 @@ const Hobbies: React.FC = () => {
                 </div>
                 <div className="button-wrapper">
                     <button className="action-button cancel-button" onClick={handleCancelSelections}>
-                        Remove selected list
+                       Deselect
                     </button>
                 </div>
                 <div className="button-wrapper">
