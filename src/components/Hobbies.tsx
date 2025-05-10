@@ -206,7 +206,6 @@ const Hobbies: React.FC = () => {
             <h1 className="hobbies-title">
                 Hobbies
                 <img src={HobbiesIcon} alt="Hobbies Icon" className="hobbies-icon" />
-
             </h1>
             <div className="selected-hobbies-section">
                 <h2>Selected hobbies</h2>
@@ -259,16 +258,22 @@ const Hobbies: React.FC = () => {
                     </div>
                 ))}
             </div>
-            <div className="button-group">
-                <button className="action-button back-button" onClick={handleBack}>
-                    Cancel
-                </button>
-                <button className="action-button cancel-button" onClick={handleCancelSelections}>
-                    Remove selected list
-                </button>
-                <button className="action-button save-button" onClick={handleSave}>
-                    Save
-                </button>
+            <div className="buttons-container">
+                <div className="button-wrapper">
+                    <button className="action-button back-button" onClick={handleBack}>
+                        Cancel
+                    </button>
+                </div>
+                <div className="button-wrapper">
+                    <button className="action-button cancel-button" onClick={handleCancelSelections}>
+                        Remove selected list
+                    </button>
+                </div>
+                <div className="button-wrapper">
+                    <button className="action-button save-button" onClick={handleSave}>
+                        Save
+                    </button>
+                </div>
             </div>
 
             {notification && (
