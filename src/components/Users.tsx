@@ -62,10 +62,13 @@ const genderIcons: Record<string, string> = {
 
 const Users: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
+    const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [sortField, setSortField] = useState<SortField>('firstName');
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [expandedMessages, setExpandedMessages] = useState<Record<number, boolean>>({});
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -98,6 +101,7 @@ const Users: React.FC = () => {
 
                 const data = await response.json();
                 setUsers(data);
+                setFilteredUsers(data);
                 setLoading(false);
             } catch (err) {
                 let errorMessage = 'Failed to fetch user data';
@@ -114,6 +118,20 @@ const Users: React.FC = () => {
         fetchUsers();
     }, []);
 
+    useEffect(() => {
+        if (searchTerm.trim() === '') {
+            setFilteredUsers(users);
+        } else {
+            const filtered = users.filter(user =>
+                user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user.email.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFilteredUsers(filtered);
+        }
+    }, [searchTerm, users]);
+
     const formatDate = (dateArray: number[] | null) => {
         if (!dateArray || dateArray.length !== 3) return 'N/A';
         return `${dateArray[0]}-${dateArray[1].toString().padStart(2, '0')}-${dateArray[2].toString().padStart(2, '0')}`;
@@ -128,7 +146,14 @@ const Users: React.FC = () => {
         }
     };
 
-    const sortedUsers = [...users].sort((a, b) => {
+    const toggleMessageExpansion = (userId: number) => {
+        setExpandedMessages(prev => ({
+            ...prev,
+            [userId]: !prev[userId]
+        }));
+    };
+
+    const sortedUsers = [...filteredUsers].sort((a, b) => {
         let compareValue = 0;
 
         if (sortField === 'createdDate') {
@@ -189,6 +214,18 @@ const Users: React.FC = () => {
 
     return (
         <div className="users-container">
+            <div className="search-container">
+                <div className="search-box">
+                    <label htmlFor="user-search">Where</label>
+                    <input
+                        id="user-search"
+                        type="text"
+                        placeholder="Find user by name, username or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </div>
             <div className="users-section">
                 <table className="users-table">
                     <thead>
@@ -221,6 +258,9 @@ const Users: React.FC = () => {
                     {sortedUsers.map((user) => {
                         const genderIcon = getGenderIcon(user.gender);
                         const zodiacIcon = getZodiacIcon(user.zodiacSign);
+                        const isExpanded = expandedMessages[user.userId] || false;
+                        const message = user.blockedMessage || 'N/A';
+                        const isLongMessage = message.length > 100;
 
                         return (
                             <tr key={user.userId}>
@@ -265,8 +305,17 @@ const Users: React.FC = () => {
                                     </span>
                                 </td>
                                 <td className="message-column">
-                                    <div className="message-content">
-                                        {user.blockedMessage || 'N/A'}
+                                    <div
+                                        className={`message-content ${isExpanded ? 'expanded' : ''} ${isLongMessage ? 'long-message' : ''}`}
+                                        onClick={() => isLongMessage && toggleMessageExpansion(user.userId)}
+                                        title={isLongMessage && !isExpanded ? message : undefined}
+                                    >
+                                        {isExpanded || !isLongMessage ? message : `${message.substring(0, 100)}...`}
+                                        {isLongMessage && (
+                                            <span className="expand-indicator">
+                                                {isExpanded ? ' (Show less)' : ' (Show more)'}
+                                            </span>
+                                        )}
                                     </div>
                                 </td>
                                 <td className="date-column">
@@ -277,8 +326,10 @@ const Users: React.FC = () => {
                     })}
                     </tbody>
                 </table>
-                {users.length === 0 && (
-                    <div className="no-users-message">No user data available</div>
+                {filteredUsers.length === 0 && (
+                    <div className="no-users-message">
+                        {searchTerm.trim() ? 'No users match your search' : 'No user data available'}
+                    </div>
                 )}
             </div>
         </div>

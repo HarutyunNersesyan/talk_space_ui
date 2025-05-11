@@ -209,10 +209,13 @@ const LoginForm: React.FC = () => {
                         {/* Error Message */}
                         {error && (
                             <Typography color="error" sx={{
-                                fontSize: '14px',
-                                textAlign: 'left',
+
+                                fontSize: '17px',
+                                textAlign: 'justify',
+                                textJustify: 'inter-word',
                                 whiteSpace: 'pre-line',
                                 marginBottom: '16px'
+
                             }}>
                                 {error}
                             </Typography>

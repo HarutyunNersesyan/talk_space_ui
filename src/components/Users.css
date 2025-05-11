@@ -10,6 +10,42 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+.search-container {
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 8px;
+    padding: 8px 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    max-width: 600px;
+}
+
+.search-box label {
+    font-weight: 500;
+    color: #475569;
+    margin-right: 10px;
+    font-size: 0.95rem;
+}
+
+.search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 8px 0;
+    font-size: 0.95rem;
+    color: #334155;
+    background: transparent;
+}
+
+.search-box input::placeholder {
+    color: #94a3b8;
+}
+
 .users-section {
     width: 100%;
     height: 100%;
@@ -165,6 +201,34 @@
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    cursor: default;
+    transition: max-height 0.3s ease;
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+}
+
+.message-content.long-message {
+    cursor: pointer;
+}
+
+.message-content.expanded {
+    max-height: none;
+    -webkit-line-clamp: unset;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+}
+
+.expand-indicator {
+    color: #3b82f6;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-left: 5px;
+    white-space: nowrap;
 }
 
 .status-badge {
@@ -318,5 +382,19 @@
     .error-message,
     .no-users-message {
         height: 50vh;
+    }
+
+    .search-box {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-box label {
+        margin-bottom: 5px;
+        margin-right: 0;
+    }
+
+    .search-box input {
+        width: 100%;
     }
 }
