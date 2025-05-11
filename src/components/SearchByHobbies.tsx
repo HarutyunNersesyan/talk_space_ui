@@ -210,15 +210,8 @@ const SearchByHobbies: React.FC = () => {
             } else {
                 setError('No matching profiles found, please try again later.');
             }
-        } catch (error: any) {
-            if (axios.isAxiosError(error)) {
-                const errorMessage = error.response?.data?.message ||
-                    error.response?.data?.error ||
-                    'Failed to fetch by hobbies';
-                setError(errorMessage);
-            } else {
-                setError('An unexpected error occurred');
-            }
+        } catch (error) {
+            setError('No matching profiles found, please try again later.');
         } finally {
             setIsSearching(false);
         }
@@ -243,17 +236,10 @@ const SearchByHobbies: React.FC = () => {
                 }
             );
             setHasLiked(true);
-        } catch (error: any) {
-            if (axios.isAxiosError(error)) {
-                const errorMessage = error.response?.data?.message ||
-                    error.response?.data?.error ||
-                    'Failed to send like';
-                setError(errorMessage);
-                if (error.response?.status === 409) {
-                    setHasLiked(true);
-                }
-            } else {
-                setError('An unexpected error occurred');
+        } catch (error) {
+            setError('Failed to send like');
+            if (axios.isAxiosError(error) && error.response?.status === 409) {
+                setHasLiked(true);
             }
         } finally {
             setIsLiking(false);

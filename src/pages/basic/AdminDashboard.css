@@ -94,14 +94,22 @@
     width: 300px;
 }
 
-.admin-form h3 {
+.admin-block-form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 500px;
+}
+
+.admin-form h3, .admin-block-form h3 {
     margin-top: 0;
     margin-bottom: 20px;
     text-align: center;
 }
 
 .admin-form-group {
-    margin-bottom: 15px;
+    margin-bottom: 25px;
 }
 
 .admin-form-group label {
@@ -120,8 +128,10 @@
 }
 
 .admin-form-group textarea {
+    text-align: justify;
+    text-justify: inter-word;
     resize: vertical;
-    min-height: 60px;
+    min-height: 120px;
 }
 
 .admin-form-buttons {
@@ -151,8 +161,10 @@
 .admin-error-message {
     color: #f44336;
     margin-bottom: 15px;
-    text-align: center;
+    text-align: justify;
+    text-justify: inter-word;
     font-size: 0.9rem;
+    padding: 0 10px;
 }
 
 .admin-chat-history-container {
@@ -224,7 +236,7 @@
         width: 90%;
     }
 
-    .admin-form {
+    .admin-form, .admin-block-form {
         width: 100%;
     }
 

@@ -237,9 +237,9 @@ const AdminDashboard: React.FC = () => {
 
                 {showBlockForm && (
                     <div className="admin-form-container">
-                        <div className="admin-form">
+                        <div className="admin-block-form">
                             <h3>Block User</h3>
-                            <div className="admin-form-group">
+                            <div className="admin-form-group compact">
                                 <label htmlFor="blockUsername">Username:</label>
                                 <input
                                     type="text"
@@ -249,8 +249,8 @@ const AdminDashboard: React.FC = () => {
                                     placeholder="Enter username to block"
                                 />
                             </div>
-                            <div className="admin-form-group">
-                                <label htmlFor="blockMessage">Block :</label>
+                            <div className="admin-form-group compact">
+                                <label htmlFor="blockMessage">Block Reason:</label>
                                 <textarea
                                     id="blockMessage"
                                     value={blockMessage}
@@ -259,7 +259,7 @@ const AdminDashboard: React.FC = () => {
                                     rows={3}
                                 />
                             </div>
-                            <div className="admin-form-group">
+                            <div className="admin-form-group compact">
                                 <label htmlFor="blockUntil">Block until:</label>
                                 <input
                                     type="date"

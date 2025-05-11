@@ -19,39 +19,40 @@ const ViewChats: React.FC = () => {
         if (!timestampArray || timestampArray.length < 6) return '';
 
         const [year, month, day, hours, minutes] = timestampArray;
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const date = new Date(year, month - 1, day, hours, minutes);
-
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     };
 
     const getMessageAlignment = (sender: string) => {
-        return sender.includes('David') ? 'left' : 'right';
+        // Assuming the first sender in the chat history is "you"
+        if (chatHistory.length > 0) {
+            return sender === chatHistory[0].sender ? 'right' : 'left';
+        }
+        return 'left';
     };
 
     return (
-        <div className="chat-view">
-            <div className="chat-container">
+        <div className="view-chats-container">
+            <div className="view-chats-inner">
                 {chatHistory.length > 0 ? (
-                    <div className="message-list-container">
-                        <div className="message-list">
+                    <div className="view-chats-message-container">
+                        <div className="view-chats-message-list">
                             {chatHistory.map((message: ChatMessage) => (
                                 <div
                                     key={message.id}
-                                    className={`message-bubble ${getMessageAlignment(message.sender)}`}
+                                    className={`view-chats-message-bubble ${getMessageAlignment(message.sender)}`}
                                 >
-                                    <div className="message-meta">
-                                        <span className="message-sender">{message.sender}</span>
+                                    <div className="view-chats-message-meta">
+                                        <span className="view-chats-message-sender">{message.sender}</span>
                                     </div>
-                                    <div className="message-text">{message.content}</div>
-                                    <div className="message-time">{formatTimestamp(message.timestamp)}</div>
+                                    <div className="view-chats-message-text">{message.content}</div>
+                                    <div className="view-chats-message-time">{formatTimestamp(message.timestamp)}</div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 ) : (
-                    <div className="empty-state">
-                        <div className="empty-icon">💬</div>
+                    <div className="view-chats-empty">
+                        <div className="view-chats-empty-icon">💬</div>
                         <p>No messages found</p>
                     </div>
                 )}
