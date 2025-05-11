@@ -373,16 +373,14 @@ const SearchByHobbies: React.FC = () => {
                 <div className="hobbies-search-buttons">
                     <button className="hobbies-search-back-button" onClick={handleNavigateToNetwork}>
                         <img src={backIcon} alt="Back" className="hobbies-back-icon"/>
-                        Back
                     </button>
 
                     <button
-                        className="hobbies-like-button"
+                        className={`hobbies-like-button ${hasLiked ? 'hobbies-liked' : ''}`}
                         onClick={handleLike}
                         disabled={isLiking || !userProfile || hasLiked}
                     >
                         <img src={likeIcon} alt="Like" className="hobbies-like-icon"/>
-                        {hasLiked ? 'Liked' : isLiking ? 'Liking...' : 'Like'}
                     </button>
                     <button
                         className="hobbies-search-button"
@@ -390,7 +388,6 @@ const SearchByHobbies: React.FC = () => {
                         disabled={isSearching}
                     >
                         <img src={searchIcon} alt="Search" className="hobbies-search-icon"/>
-                        {isSearching ? 'Searching...' : 'Search'}
                     </button>
                 </div>
             </div>

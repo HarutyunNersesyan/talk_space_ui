@@ -28,7 +28,7 @@ interface ChatMessageDto {
     receiverDisplayName: string;
     receiverImage?: string;
     content: string;
-    timestamp: string;
+    timestamp: number[] | string;
     isRead: boolean;
 }
 
@@ -65,25 +65,38 @@ const Chat: React.FC = () => {
     const { partnerUsername } = useParams();
     const token = localStorage.getItem('token');
 
-    const parseTimestamp = (timestamp: string): Date => {
+    const parseTimestamp = (timestamp: number[] | string): Date => {
         if (!timestamp) return new Date();
 
-        try {
-            const date = new Date(timestamp);
-            if (!isNaN(date.getTime())) return date;
-
-            if (/^\d+$/.test(timestamp)) {
-                const epochDate = new Date(parseInt(timestamp));
-                if (!isNaN(epochDate.getTime())) return epochDate;
-            }
-
-            return new Date();
-        } catch {
-            return new Date();
+        if (Array.isArray(timestamp) && timestamp.length >= 6) {
+            return new Date(
+                timestamp[0],
+                timestamp[1] - 1,
+                timestamp[2],
+                timestamp[3],
+                timestamp[4],
+                timestamp[5]
+            );
         }
+
+        if (typeof timestamp === 'string') {
+            try {
+                const date = new Date(timestamp);
+                if (!isNaN(date.getTime())) return date;
+
+                if (/^\d+$/.test(timestamp)) {
+                    const epochDate = new Date(parseInt(timestamp));
+                    if (!isNaN(epochDate.getTime())) return epochDate;
+                }
+            } catch {
+                return new Date();
+            }
+        }
+
+        return new Date();
     };
 
-    const formatTime = (timestamp: string): string => {
+    const formatTime = (timestamp: number[] | string): string => {
         const date = parseTimestamp(timestamp);
         return date.toLocaleTimeString([], {
             hour: '2-digit',
@@ -92,7 +105,7 @@ const Chat: React.FC = () => {
         });
     };
 
-    const formatDate = (timestamp: string): string => {
+    const formatDate = (timestamp: number[] | string): string => {
         const date = parseTimestamp(timestamp);
         const today = new Date();
         const yesterday = new Date(today);
@@ -124,7 +137,16 @@ const Chat: React.FC = () => {
                 ? {
                     ...chat,
                     lastMessage: receivedMessage.content,
-                    lastMessageTime: receivedMessage.timestamp,
+                    lastMessageTime: Array.isArray(receivedMessage.timestamp)
+                        ? new Date(
+                            receivedMessage.timestamp[0],
+                            receivedMessage.timestamp[1] - 1,
+                            receivedMessage.timestamp[2],
+                            receivedMessage.timestamp[3],
+                            receivedMessage.timestamp[4],
+                            receivedMessage.timestamp[5]
+                        ).toISOString()
+                        : receivedMessage.timestamp,
                     unreadCount: chat.partnerUsername !== selectedPartner
                         ? chat.unreadCount + 1
                         : 0
@@ -278,7 +300,6 @@ const Chat: React.FC = () => {
             await markMessagesAsRead(partner);
             scrollToBottom();
 
-            // Notify Navbar that chat is opened
             window.dispatchEvent(new CustomEvent('chatOpened'));
         } catch (err) {
             console.error('Error loading chat history:', err);
@@ -539,6 +560,9 @@ const Chat: React.FC = () => {
                                             )}
                                             <div
                                                 className={`message ${message.sender === userName ? 'sent' : 'received'}`}>
+                                                <div className="message-sender">
+                                                    {message.sender === userName ? 'You' : message.senderDisplayName}
+                                                </div>
                                                 <div className="message-content">
                                                     <p>{message.content}</p>
                                                     <span className="message-time">

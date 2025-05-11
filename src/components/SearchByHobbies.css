@@ -233,83 +233,79 @@
 .hobbies-search-back-button {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    color: #333;
     transition: all 0.3s ease;
 }
 
 .hobbies-search-back-button:hover {
-    color: #214875;
+    opacity: 0.8;
 }
 
 .hobbies-back-icon {
-    width: 18px;
-    height: 18px;
-    filter: brightness(0);
+    width: 100%;
+    height: 100%;
 }
 
 .hobbies-like-button {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    color: #333;
     transition: all 0.3s ease;
 }
 
 .hobbies-like-button:hover:not(:disabled) {
-    color: #e91e63;
+    opacity: 0.8;
 }
 
 .hobbies-like-button:disabled {
-    color: #ccc;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
 .hobbies-like-icon {
-    width: 18px;
-    height: 18px;
-    filter: brightness(0);
+    width: 100%;
+    height: 100%;
+}
+
+.hobbies-liked .hobbies-like-icon {
+    filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(300deg) brightness(100%) contrast(93%);
 }
 
 .hobbies-search-button {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    color: #333;
     transition: all 0.3s ease;
 }
 
 .hobbies-search-button:hover:not(:disabled) {
-    color: #2196f3;
+    opacity: 0.8;
 }
 
 .hobbies-search-button:disabled {
-    color: #ccc;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
 .hobbies-search-icon {
-    width: 18px;
-    height: 18px;
-    filter: brightness(0);
+    width: 100%;
+    height: 100%;
+    filter: invert(56%) sepia(74%) saturate(385%) hue-rotate(156deg) brightness(91%) contrast(91%);
 }
 
 @media (max-width: 600px) {
