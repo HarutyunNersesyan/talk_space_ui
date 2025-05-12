@@ -1,7 +1,7 @@
 /* Navbar */
 .navbar {
     position: fixed;
-    top: 0;
+    top: 10px;
     right: 0;
     width: 100%;
     display: flex;

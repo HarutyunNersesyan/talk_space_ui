@@ -13,8 +13,8 @@ import {
     faYoutube
 } from '@fortawesome/free-brands-svg-icons';
 import likeIcon from '../assets/search/like.svg';
-import searchIcon from '../assets/search/loop.svg';
 import backIcon from '../assets/search/back.svg';
+import searchIcon from '../assets/search/loop.svg';
 import femaleIcon from '../assets/gender/female-symbol.svg';
 import maleIcon from '../assets/gender/male-symbol.svg';
 import ariesIcon from '../assets/zodiac/aries.svg';
@@ -81,15 +81,15 @@ const genderIcons: { [key: string]: string } = {
 };
 
 const SearchByHobbies: React.FC = () => {
-    const location = useLocation();
-    const [userProfile, setUserProfile] = useState<SearchUser | null>(location.state?.initialProfile || null);
+    const [userProfile, setUserProfile] = useState<SearchUser | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [currentUserName, setCurrentUserName] = useState<string | null>(null);
     const [isLiking, setIsLiking] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
-    const [imageUrls, setImageUrls] = useState<{ [key: string]: string }>({});
+    const [imageUrls, setImageUrls] = useState<{[key: string]: string}>({});
     const [hasLiked, setHasLiked] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const fetchUserName = async () => {
@@ -122,6 +122,19 @@ const SearchByHobbies: React.FC = () => {
 
         fetchUserName();
     }, []);
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            const locationState = location.state as { initialProfile?: SearchUser };
+            if (locationState?.initialProfile) {
+                setUserProfile(locationState.initialProfile);
+            } else {
+                await handleSearchByHobbies();
+            }
+        };
+
+        fetchInitialData();
+    }, [currentUserName]);
 
     useEffect(() => {
         if (userProfile && currentUserName) {
@@ -206,12 +219,20 @@ const SearchByHobbies: React.FC = () => {
                     socialNetworks: Array.isArray(response.data.socialNetworks) ? response.data.socialNetworks : []
                 };
                 setUserProfile(userData);
-                setHasLiked(false);
             } else {
                 setError('No matching profiles found, please try again later.');
             }
-        } catch (error) {
-            setError('No matching profiles found, please try again later.');
+        } catch (error: any) {
+            setIsSearching(false);
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 404) {
+                    setError('No matching profiles found, please try again later.');
+                } else {
+                    setError(error.response?.data || 'Failed to fetch by hobbies');
+                }
+            } else {
+                setError('An unexpected error occurred');
+            }
         } finally {
             setIsSearching(false);
         }
@@ -236,17 +257,22 @@ const SearchByHobbies: React.FC = () => {
                 }
             );
             setHasLiked(true);
-        } catch (error) {
-            setError('Failed to send like');
-            if (axios.isAxiosError(error) && error.response?.status === 409) {
-                setHasLiked(true);
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 409) {
+                    setHasLiked(true);
+                } else {
+                    setError('Failed to send like');
+                }
+            } else {
+                setError('An unexpected error occurred');
             }
         } finally {
             setIsLiking(false);
         }
     };
 
-    const handleNavigateToNetwork = () => {
+    const handleBack = () => {
         navigate('/choose');
     };
 
@@ -267,8 +293,8 @@ const SearchByHobbies: React.FC = () => {
         <div className="hobbies-parent-container">
             <div className="hobbies-search-container">
                 {userProfile ? (
-                    <>
-                        <div className="hobbies-image-container">
+                    <div className="profile-content-container">
+                        <div className="profile-image-section">
                             <div className="hobbies-image-placeholder">
                                 <img
                                     src={imageUrls[userProfile.userName] || defaultProfileImage}
@@ -280,102 +306,105 @@ const SearchByHobbies: React.FC = () => {
                                 />
                             </div>
                         </div>
-                        <div className="hobbies-search-info">
-                            <div className="hobbies-user-name">
-                                {userProfile.firstName} {userProfile.lastName} ({userProfile.userName})
-                            </div>
-                            <div className="hobbies-user-details">
-                                <span className="hobbies-age-text">Age: {userProfile.age}</span>
-                                <span className="hobbies-gender-icon-container">
-                                    {['FEMALE', 'MALE'].includes(userProfile.gender.toUpperCase()) && (
+                        <div className="profile-info-section">
+                            <div className="hobbies-search-info">
+                                <div className="hobbies-user-name">
+                                    {userProfile.firstName} {userProfile.lastName} ({userProfile.userName})
+                                </div>
+                                <div className="hobbies-user-details">
+                                    <span className="hobbies-age-text">Age: {userProfile.age}</span>
+                                    <span className="hobbies-gender-icon-container">
+                                        {['FEMALE', 'MALE'].includes(userProfile.gender.toUpperCase()) && (
+                                            <img
+                                                src={genderIcons[userProfile.gender.toUpperCase()]}
+                                                alt={userProfile.gender}
+                                                className={`hobbies-gender-icon ${
+                                                    userProfile.gender.toUpperCase() === 'FEMALE'
+                                                        ? 'hobbies-female-icon'
+                                                        : 'hobbies-male-icon'
+                                                }`}
+                                                title={userProfile.gender}
+                                            />
+                                        )}
+                                    </span>
+                                    <span className="hobbies-zodiac-container">
+                                        {formatZodiac(userProfile.zodiac)}
                                         <img
-                                            src={genderIcons[userProfile.gender.toUpperCase()]}
-                                            alt={userProfile.gender}
-                                            className={`hobbies-gender-icon ${
-                                                userProfile.gender.toUpperCase() === 'FEMALE'
-                                                    ? 'hobbies-female-icon'
-                                                    : 'hobbies-male-icon'
-                                            }`}
-                                            title={userProfile.gender}
+                                            src={zodiacIcons[userProfile.zodiac.toUpperCase()]}
+                                            alt={userProfile.zodiac}
+                                            className="hobbies-zodiac-icon"
                                         />
-                                    )}
-                                </span>
-                                <span className="hobbies-zodiac-container">
-                                    {formatZodiac(userProfile.zodiac)}
-                                    <img
-                                        src={zodiacIcons[userProfile.zodiac.toUpperCase()]}
-                                        alt={userProfile.zodiac}
-                                        className="hobbies-zodiac-icon"
-                                    />
-                                </span>
+                                    </span>
+                                </div>
+                                <div className="hobbies-user-about">
+                                    <strong>About:</strong> {userProfile.about || 'No information available'}
+                                </div>
+                                <div className="hobbies-user-hobbies">
+                                    <strong>Hobbies:</strong> {userProfile.hobbies.length > 0 ? userProfile.hobbies.join(', ') : 'No hobbies listed'}
+                                </div>
+                                <div className="hobbies-user-specialities">
+                                    <strong>Specialities:</strong> {userProfile.specialities.length > 0 ? userProfile.specialities.join(', ') : 'No specialities listed'}
+                                </div>
+                                <div className="hobbies-user-social-networks">
+                                    <div className="hobbies-social-networks-header">
+                                        <strong>Social Networks:</strong>
+                                        {userProfile.socialNetworks.length > 0 ? (
+                                            <div className="hobbies-social-icons">
+                                                {userProfile.socialNetworks.map((url, index) => {
+                                                    const platform = getPlatformFromUrl(url);
+                                                    const icon = socialIcons[platform];
+                                                    return (
+                                                        <div key={index} className="hobbies-social-icon-container">
+                                                            <a
+                                                                href={url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="hobbies-social-icon-link"
+                                                            >
+                                                                <FontAwesomeIcon
+                                                                    icon={icon}
+                                                                    className="hobbies-social-icon"
+                                                                />
+                                                            </a>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <span className="hobbies-no-social">No social networks listed</span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="hobbies-user-about">
-                                <strong>About:</strong> {userProfile.about || 'No information available'}
-                            </div>
-                            <div className="hobbies-user-hobbies">
-                                <strong>Hobbies:</strong> {userProfile.hobbies.length > 0 ? userProfile.hobbies.join(', ') : 'No hobbies listed'}
-                            </div>
-                            <div className="hobbies-user-specialities">
-                                <strong>Specialities:</strong> {userProfile.specialities.length > 0 ? userProfile.specialities.join(', ') : 'No specialities listed'}
-                            </div>
-                            <div className="hobbies-user-social-networks">
-                                <div className="hobbies-social-networks-header">
-                                    <strong>Social Networks:</strong>
-                                    {userProfile.socialNetworks.length > 0 ? (
-                                        <div className="hobbies-social-icons">
-                                            {userProfile.socialNetworks.map((url, index) => {
-                                                const platform = getPlatformFromUrl(url);
-                                                const icon = socialIcons[platform];
-                                                return (
-                                                    <div key={index} className="hobbies-social-icon-container">
-                                                        <a
-                                                            href={url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="hobbies-social-icon-link"
-                                                        >
-                                                            <FontAwesomeIcon
-                                                                icon={icon}
-                                                                className="hobbies-social-icon"
-                                                            />
-                                                        </a>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <span className="hobbies-no-social">No social networks listed</span>
-                                    )}
+                            <div className="hobbies-search-buttons">
+                                <button className="hobbies-search-back-button" onClick={handleBack}>
+                                    <img src={backIcon} alt="Back" className="hobbies-back-icon"/>
+                                </button>
+                                <div className="hobbies-action-buttons">
+                                    <button
+                                        className={`hobbies-like-button ${hasLiked ? 'hobbies-liked' : ''}`}
+                                        onClick={handleLike}
+                                        disabled={isLiking || !userProfile || hasLiked}
+                                    >
+                                        <img src={likeIcon} alt="Like" className="hobbies-like-icon"/>
+                                    </button>
+                                    <button
+                                        className="hobbies-search-button"
+                                        onClick={handleSearchByHobbies}
+                                        disabled={isSearching}
+                                    >
+                                        <img src={searchIcon} alt="Search" className="hobbies-search-icon"/>
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </>
+                    </div>
                 ) : (
                     <div className="hobbies-no-profile">
-                        {isSearching ? 'Searching for matching profiles...' : 'No profile data available'}
+                        {isSearching ? 'Searching for matching profiles...' : 'No matching profiles found, please try again later.'}
                     </div>
                 )}
                 {error && <div className="hobbies-error-message">{error}</div>}
-                <div className="hobbies-search-buttons">
-                    <button className="hobbies-search-back-button" onClick={handleNavigateToNetwork}>
-                        <img src={backIcon} alt="Back" className="hobbies-back-icon"/>
-                    </button>
-
-                    <button
-                        className={`hobbies-like-button ${hasLiked ? 'hobbies-liked' : ''}`}
-                        onClick={handleLike}
-                        disabled={isLiking || !userProfile || hasLiked}
-                    >
-                        <img src={likeIcon} alt="Like" className="hobbies-like-icon"/>
-                    </button>
-                    <button
-                        className="hobbies-search-button"
-                        onClick={handleSearchByHobbies}
-                        disabled={isSearching}
-                    >
-                        <img src={searchIcon} alt="Search" className="hobbies-search-icon"/>
-                    </button>
-                </div>
             </div>
         </div>
     );

@@ -119,6 +119,21 @@
     filter: brightness(0) invert(0.5);
 }
 
+/* Gender Icons */
+.gender-icon {
+    width: 20px;
+    height: 20px;
+    cursor: help;
+}
+
+.female-icon {
+    filter: invert(48%) sepia(13%) saturate(3207%) hue-rotate(300deg) brightness(95%) contrast(85%);
+}
+
+.male-icon {
+    filter: invert(39%) sepia(99%) saturate(1583%) hue-rotate(193deg) brightness(93%) contrast(89%);
+}
+
 /* About Me Section */
 .about-me-section {
     white-space: pre-wrap;
@@ -266,12 +281,6 @@
     display: flex;
     align-items: center;
     gap: 5px;
-}
-
-.gender-icon {
-    width: 20px;
-    height: 20px;
-    cursor: help;
 }
 
 .zodiac-container {

@@ -1,5 +1,5 @@
 .social-networks-container {
-    max-width: 700px;
+    max-width: 600px;
     margin: 2rem auto;
     padding: 0.5rem;
     background: #ffffff;
@@ -55,8 +55,8 @@
 .platform-icon {
     font-size: 2rem;
     margin-right: 1.5rem;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -188,8 +188,8 @@
 }
 
 .social-networks-button-icon {
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
     transition: transform 0.3s ease;
 }
 

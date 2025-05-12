@@ -14,7 +14,6 @@ import SocialNetworks from '../components/SocialNetworks';
 import Image from '../components/Image';
 import Edit from "../components/Edit";
 import ChangePassword from "../components/ChangePassword";
-// import Search from "../components/Search";
 import Chat from "../components/Chat";
 import NetworkPage from "../components/NetworkPage";
 import SearchByHobbies from "../components/SearchByHobbies";
