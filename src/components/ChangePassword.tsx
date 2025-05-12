@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import './ChangePassword.css';
+import BackIcon from '../assets/search/back.svg';
+import SaveIcon from '../assets/network/save.svg';
 
 const ChangePassword: React.FC = () => {
     const [oldPassword, setOldPassword] = useState<string>("");
@@ -164,10 +166,10 @@ const ChangePassword: React.FC = () => {
             </div>
             <div className="change-password-buttons-container">
                 <button onClick={handleBackClick} className="change-password-back-button">
-                    <FaArrowLeft /> Cancel
+                    <img src={BackIcon} alt="Back" className="change-password-button-icon" />
                 </button>
                 <button onClick={handleUpdatePassword} className="change-password-update-button" disabled={loading}>
-                    {loading ? 'Updating...' : 'Update Password'}
+                    {loading ? 'Updating...' : <img src={SaveIcon} alt="Save" className="change-password-button-icon" />}
                 </button>
             </div>
 

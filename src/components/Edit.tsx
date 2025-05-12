@@ -4,6 +4,11 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import './Edit.css';
 
+// Import the SVG files
+import BackIcon from '../assets/search/back.svg';
+import SaveIcon from '../assets/network/save.svg';
+import ChangeIcon from '../assets/network/change.svg';
+
 const Edit: React.FC = () => {
     const [firstName, setFirstName] = useState<string>("");
     const [lastName, setLastName] = useState<string>("");
@@ -184,13 +189,13 @@ const Edit: React.FC = () => {
             </div>
             <div className="buttons-container">
                 <button onClick={handleBackClick} className="back-button">
-                    Cancel
+                    <img src={BackIcon} alt="Back" className="button-icon" />
                 </button>
                 <button onClick={handleSave} className="save-button" disabled={loading}>
-                    {loading ? 'Saving...' : 'Save Changes'}
+                    {loading ? 'Saving...' : <img src={SaveIcon} alt="Save" className="button-icon" />}
                 </button>
                 <button onClick={handleChangePasswordClick} className="change-password-button">
-                    Change Password
+                    <img src={ChangeIcon} alt="Change Password" className="button-icon" />
                 </button>
             </div>
 

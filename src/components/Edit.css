@@ -68,40 +68,47 @@
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    /*transition: background-color 0.3s ease;*/
     min-width: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.button-icon {
+    width: 40px;
+    height: 40px;
 }
 
 .save-button {
-    background-color: #28a745;
+    background: none;
     color: white;
 }
 
 .save-button:disabled {
-    background-color: #ccc;
     cursor: not-allowed;
 }
 
 .save-button:hover:not(:disabled) {
-    background-color: #218838;
+    background-color: white;
 }
 
 .change-password-button {
-    background-color: #007bff;
+    background: none;
     color: white;
 }
 
 .change-password-button:hover {
-    background-color: #0056b3;
+    /*background-color: white;*/
 }
 
 .back-button {
-    background-color: #6c757d;
+    background: none;
     color: white;
 }
 
 .back-button:hover {
-    background-color: #5a6268;
+    /*background-color: white;*/
 }
 
 .notification {
