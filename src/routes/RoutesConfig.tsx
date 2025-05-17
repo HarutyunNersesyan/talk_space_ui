@@ -22,6 +22,7 @@ import AdminDashboard from "../pages/basic/AdminDashboard";
 import FeedBacks from "../components/Feedbacks";
 import Users from "../components/Users";
 import ViewChats from "../components/ViewChats";
+import Delete from "../components/Delete";
 
 
 const RoutesConfig: React.FC = () => (
@@ -42,6 +43,8 @@ const RoutesConfig: React.FC = () => (
         <Route path="/edit" element={<ProtectedRoute element={<Edit/>}/>}/>
         <Route path="/image" element={<ProtectedRoute element={<Image/>}/>}/>
         <Route path="/changePassword" element={<ProtectedRoute element={<ChangePassword/>}/>}/>
+        <Route path="/delete" element={<ProtectedRoute element={<Delete/>}/>}/>
+
 
         {/* Interest Routes */}
         <Route path="/hobbies" element={<ProtectedRoute element={<Hobbies/>}/>}/>

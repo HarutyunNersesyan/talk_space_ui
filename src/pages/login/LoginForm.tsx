@@ -1,6 +1,6 @@
 import React, { useState, FormEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import {
     TextField,
@@ -15,6 +15,12 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const blue = '#1abc9c';
+
+const handleRateLimitExceeded = (navigate: ReturnType<typeof useNavigate>) => {
+    localStorage.removeItem('token');
+    alert("Too many requests detected. You have been logged out for security reasons.");
+    navigate('/login');
+};
 
 const LoginForm: React.FC = () => {
     const [email, setEmail] = useState<string>('');
@@ -31,6 +37,11 @@ const LoginForm: React.FC = () => {
                 email,
                 password,
             });
+
+            if (response.status === 429) {
+                handleRateLimitExceeded(navigate);
+                return;
+            }
 
             if (response.status === 200) {
                 const token = response.data.token;
@@ -52,9 +63,15 @@ const LoginForm: React.FC = () => {
                     }
                 }
             }
-        } catch (err: any) {
-            if (err.response && err.response.status === 403) {
-                setError(err.response.data);
+        } catch (err: unknown) {
+            const error = err as AxiosError;
+            if (error.response?.status === 429) {
+                handleRateLimitExceeded(navigate);
+                return;
+            }
+
+            if (error.response?.status === 403) {
+                setError(error.response.data as string || 'Wrong email or password');
             } else {
                 setError('Wrong email or password');
             }
@@ -209,13 +226,11 @@ const LoginForm: React.FC = () => {
                         {/* Error Message */}
                         {error && (
                             <Typography color="error" sx={{
-
                                 fontSize: '17px',
                                 textAlign: 'justify',
                                 textJustify: 'inter-word',
                                 whiteSpace: 'pre-line',
                                 marginBottom: '16px'
-
                             }}>
                                 {error}
                             </Typography>

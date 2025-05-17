@@ -14,37 +14,12 @@ interface DecodedToken {
     exp: number;
 }
 
-interface UserChatDto {
-    partnerUsername: string;
-    unreadCount: number;
-}
-
 const Navbar: React.FC = () => {
     const [userName, setUserName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [unreadCount, setUnreadCount] = useState(0);
     const [isAdmin, setIsAdmin] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-
-    const fetchUnreadMessages = async (username: string) => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            const response = await axios.get(
-                `http://localhost:8080/api/public/chat/conversations/${username}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            const totalUnread = response.data.reduce(
-                (sum: number, chat: UserChatDto) => sum + chat.unreadCount, 0
-            );
-            setUnreadCount(totalUnread);
-        } catch (error) {
-            console.error('Error fetching unread messages:', error);
-        }
-    };
 
     const handleBrandClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -88,6 +63,8 @@ const Navbar: React.FC = () => {
 
                     if (decoded.roles?.includes('ADMIN')) {
                         setIsAdmin(true);
+                        setLoading(false);
+                        return; // Skip further processing for admin
                     }
 
                     const response = await axios.get(
@@ -95,10 +72,6 @@ const Navbar: React.FC = () => {
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
                     setUserName(response.data);
-
-                    if (!location.pathname.includes('/chat')) {
-                        await fetchUnreadMessages(response.data);
-                    }
                 } catch (error) {
                     console.error('Error fetching user data:', error);
                 } finally {
@@ -110,15 +83,7 @@ const Navbar: React.FC = () => {
         };
 
         fetchUserData();
-
-        const interval = setInterval(() => {
-            if (userName && !location.pathname.includes('/chat')) {
-                fetchUnreadMessages(userName);
-            }
-        }, 10000);
-
-        return () => clearInterval(interval);
-    }, [location.pathname, userName]);
+    }, [location.pathname, userName, isAdmin]);
 
     if (loading) {
         return <div className="navbar-loading">Loading...</div>;
@@ -138,24 +103,15 @@ const Navbar: React.FC = () => {
                         ? `/chat/${userName}`
                         : item.to;
 
-                    const showBadge = item.to === '/chat' &&
-                        unreadCount > 0 &&
-                        !location.pathname.includes('/chat');
-
                     return (
                         <a
                             key={item.to}
                             href={path}
                             onClick={(e) => handleNavigation(e, path)}
-                            className={`navbar-item ${item.to === '/chat' ? 'chat' : ''} ${showBadge ? 'has-unread' : ''}`}
+                            className={`navbar-item ${item.to === '/chat' ? 'chat' : ''}`}
                         >
                             {item.icon && (
-                                <>
-                                    <span className="navbar-icon">{item.icon}</span>
-                                    {showBadge && (
-                                        <span className="chat-badge">{unreadCount}</span>
-                                    )}
-                                </>
+                                <span className="navbar-icon">{item.icon}</span>
                             )}
                             {item.label}
                         </a>

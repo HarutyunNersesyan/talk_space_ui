@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios, { AxiosError } from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import './AdminDashboard.css';
-import {useNavigate} from 'react-router-dom';
-import axios from 'axios';
-import {jwtDecode} from 'jwt-decode';
 import chatImage from '../../assets/admin/chat.svg';
 import blockImage from '../../assets/admin/block.svg';
 import userImage from '../../assets/admin/users.svg';
@@ -11,18 +11,30 @@ import backgroundImage from '../../assets/admin/admin.jpg';
 import checkIcon from '../../assets/search/check.svg';
 import backIcon from '../../assets/search/back.svg';
 
+interface JwtPayload {
+    sub: string;
+}
+
+interface ChatMessage {
+    id: string;
+    sender: string;
+    receiver: string;
+    content: string;
+    timestamp: string;
+}
+
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
-    const [mounted, setMounted] = useState(false);
+    const [mounted, setMounted] = useState<boolean>(false);
     const [userName, setUserName] = useState<string | null>(null);
-    const [showChatForm, setShowChatForm] = useState(false);
-    const [showBlockForm, setShowBlockForm] = useState(false);
-    const [senderUsername, setSenderUsername] = useState('');
-    const [receiverUsername, setReceiverUsername] = useState('');
-    const [blockUsername, setBlockUsername] = useState('');
-    const [blockMessage, setBlockMessage] = useState('');
-    const [blockUntil, setBlockUntil] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
+    const [showChatForm, setShowChatForm] = useState<boolean>(false);
+    const [showBlockForm, setShowBlockForm] = useState<boolean>(false);
+    const [senderUsername, setSenderUsername] = useState<string>('');
+    const [receiverUsername, setReceiverUsername] = useState<string>('');
+    const [blockUsername, setBlockUsername] = useState<string>('');
+    const [blockMessage, setBlockMessage] = useState<string>('');
+    const [blockUntil, setBlockUntil] = useState<string>('');
+    const [errorMessage, setErrorMessage] = useState<string>('');
     const token = localStorage.getItem('token');
 
     useEffect(() => {
@@ -32,27 +44,33 @@ const AdminDashboard: React.FC = () => {
         setBlockUntil(formattedDate);
     }, []);
 
-    const handleViewChats = () => {
+    const handleRateLimitExceeded = () => {
+        localStorage.removeItem('token');
+        alert("Too many requests detected. You have been logged out for security reasons.");
+        navigate('/login');
+    };
+
+    const handleViewChats = (): void => {
         setShowChatForm(true);
         setShowBlockForm(false);
         setErrorMessage('');
     };
 
-    const handleBlockUser = () => {
+    const handleBlockUser = (): void => {
         setShowBlockForm(true);
         setShowChatForm(false);
         setErrorMessage('');
     };
 
-    const handleViewUsers = () => {
+    const handleViewUsers = (): void => {
         navigate('/users');
     };
 
-    const handleViewFeedbacks = () => {
+    const handleViewFeedbacks = (): void => {
         navigate('/feedbacks');
     };
 
-    const handleCheckChats = async () => {
+    const handleCheckChats = async (): Promise<void> => {
         if (!senderUsername.trim()) {
             setErrorMessage('Please enter sender username');
             return;
@@ -63,7 +81,7 @@ const AdminDashboard: React.FC = () => {
         }
 
         try {
-            const response = await axios.get(
+            const response = await axios.get<ChatMessage[]>(
                 `http://localhost:8080/api/private/admin/history/${senderUsername}/${receiverUsername}`,
                 {
                     headers: {
@@ -72,18 +90,33 @@ const AdminDashboard: React.FC = () => {
                 }
             );
 
+            if (response.status === 429) {
+                handleRateLimitExceeded();
+                return;
+            }
+
             if (response.data.length === 0) {
                 setErrorMessage('No chat history found between these users');
             } else {
                 navigate('/view', { state: { chatHistory: response.data } });
             }
         } catch (error) {
+            const err = error as AxiosError;
+            if (err.response?.status === 429) {
+                handleRateLimitExceeded();
+                return;
+            }
+
             console.error('Error fetching chat history:', error);
-            setErrorMessage('Error fetching chat history. Please try again.');
+            if (err.response) {
+                setErrorMessage(err.response.data as string || 'Error fetching chat history');
+            } else {
+                setErrorMessage('Error fetching chat history. Please try again.');
+            }
         }
     };
 
-    const handleBlockSubmit = async () => {
+    const handleBlockSubmit = async (): Promise<void> => {
         if (!blockUsername.trim()) {
             setErrorMessage('Please enter username to block');
             return;
@@ -112,6 +145,11 @@ const AdminDashboard: React.FC = () => {
                 }
             );
 
+            if (response.status === 429) {
+                handleRateLimitExceeded();
+                return;
+            }
+
             setErrorMessage(`User ${blockUsername} has been blocked successfully until ${new Date(blockUntil).toLocaleDateString()}. Reason: ${blockMessage}`);
             setBlockUsername('');
             setBlockMessage('');
@@ -119,23 +157,29 @@ const AdminDashboard: React.FC = () => {
             now.setDate(now.getDate() + 1);
             setBlockUntil(now.toISOString().split('T')[0]);
         } catch (error) {
+            const err = error as AxiosError;
+            if (err.response?.status === 429) {
+                handleRateLimitExceeded();
+                return;
+            }
+
             console.error('Error blocking user:', error);
-            if (axios.isAxiosError(error) && error.response) {
-                setErrorMessage(error.response.data);
+            if (err.response) {
+                setErrorMessage(err.response.data as string || 'Error blocking user');
             } else {
                 setErrorMessage('Error blocking user. Please try again.');
             }
         }
     };
 
-    const handleCancelChatForm = () => {
+    const handleCancelChatForm = (): void => {
         setShowChatForm(false);
         setSenderUsername('');
         setReceiverUsername('');
         setErrorMessage('');
     };
 
-    const handleCancelBlockForm = () => {
+    const handleCancelBlockForm = (): void => {
         setShowBlockForm(false);
         setBlockUsername('');
         setBlockMessage('');
@@ -147,22 +191,37 @@ const AdminDashboard: React.FC = () => {
             setMounted(true);
         }, 100);
 
-        const fetchUserName = async () => {
+        const fetchUserName = async (): Promise<void> => {
             try {
                 if (!token) {
                     return;
                 }
 
-                const decodedToken = jwtDecode<{ sub: string }>(token);
+                const decodedToken = jwtDecode<JwtPayload>(token);
                 const email = decodedToken.sub;
 
-                const response = await axios.get(`http://localhost:8080/api/public/user/get/userName/${email}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                const response = await axios.get<string>(
+                    `http://localhost:8080/api/public/user/get/userName/${email}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                if (response.status === 429) {
+                    handleRateLimitExceeded();
+                    return;
+                }
+
                 setUserName(response.data);
-            } catch (err) {
+            } catch (error) {
+                const err = error as AxiosError;
+                if (err.response?.status === 429) {
+                    handleRateLimitExceeded();
+                    return;
+                }
+
                 console.error('Error fetching userName:', err);
             }
         };
@@ -176,7 +235,7 @@ const AdminDashboard: React.FC = () => {
     }, [token]);
 
     return (
-        <div className="admin-dashboard-container">
+        <div className={`admin-dashboard-container ${mounted ? 'mounted' : ''}`}>
             <div className="admin-background-banner" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
             <div className="admin-dashboard-content">
                 <div className="admin-actions-grid">

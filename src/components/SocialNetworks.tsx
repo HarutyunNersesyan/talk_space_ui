@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faFacebook,
     faInstagram,
-    faTwitter,
+    faXTwitter,
     faLinkedin,
     faYoutube,
 } from '@fortawesome/free-brands-svg-icons';
@@ -27,7 +27,7 @@ interface SocialNetworksDto {
 const validPlatforms = [
     { platform: 'FACEBOOK', icon: faFacebook },
     { platform: 'INSTAGRAM', icon: faInstagram },
-    { platform: 'TWITTER', icon: faTwitter },
+    { platform: 'X', icon: faXTwitter },
     { platform: 'LINKEDIN', icon: faLinkedin },
     { platform: 'YOUTUBE', icon: faYoutube },
 ];

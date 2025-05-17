@@ -333,9 +333,9 @@ const Chat: React.FC = () => {
         const tempMessage: ChatMessageDto = {
             id: tempId,
             sender: userName,
-            senderDisplayName: userName,
+            senderDisplayName: userName, // Changed from display name to username
             receiver: selectedPartner,
-            receiverDisplayName: selectedPartner,
+            receiverDisplayName: selectedPartner, // Changed from display name to username
             content: newMessage,
             timestamp: new Date().toISOString(),
             isRead: false
@@ -561,7 +561,7 @@ const Chat: React.FC = () => {
                                             <div
                                                 className={`message ${message.sender === userName ? 'sent' : 'received'}`}>
                                                 <div className="message-sender">
-                                                    {message.sender === userName ? 'You' : message.senderDisplayName}
+                                                    {message.sender === userName ? 'You' : message.sender}
                                                 </div>
                                                 <div className="message-content">
                                                     <p>{message.content}</p>

@@ -7,6 +7,8 @@ interface VerifyResponse {
     message: string;
 }
 
+const MAX_ATTEMPTS = 3;
+
 const VerifyPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -15,6 +17,7 @@ const VerifyPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
+    const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
 
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -75,7 +78,16 @@ const VerifyPage = () => {
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 if (error.response) {
-                    setError(error.response.data.message || 'Verification failed');
+                    const newAttemptsLeft = attemptsLeft - 1;
+                    setAttemptsLeft(newAttemptsLeft);
+
+                    if (newAttemptsLeft > 0) {
+                        setError(`Incorrect PIN code (${newAttemptsLeft} attempt${newAttemptsLeft > 1 ? 's' : ''} left)`);
+                    } else {
+                        // Auto trigger cancel when attempts are exhausted
+                        setError('Maximum attempts reached. Cancelling verification...');
+                        await handleCancel();
+                    }
                 } else {
                     setError('Network error. Please check your connection.');
                 }
@@ -195,7 +207,7 @@ const VerifyPage = () => {
                         fullWidth
                         variant="outlined"
                         onClick={handleCancel}
-                        disabled={isCancelling}
+                        disabled={isCancelling || attemptsLeft <= 0}
                         sx={{ py: 1.5, fontWeight: 'bold' }}
                     >
                         {isCancelling ? <CircularProgress size={24} color="inherit" /> : 'Cancel'}
@@ -204,7 +216,7 @@ const VerifyPage = () => {
                         fullWidth
                         variant="contained"
                         onClick={handleVerify}
-                        disabled={isLoading}
+                        disabled={isLoading || attemptsLeft <= 0}
                         sx={{
                             py: 1.5,
                             fontWeight: 'bold',

@@ -6,6 +6,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import './ChangePassword.css';
 import BackIcon from '../assets/search/back.svg';
 import SaveIcon from '../assets/network/save.svg';
+import DeleteUserIcon from '../assets/search/delete-user.svg';
 
 const ChangePassword: React.FC = () => {
     const [oldPassword, setOldPassword] = useState<string>("");
@@ -113,6 +114,10 @@ const ChangePassword: React.FC = () => {
         navigate('/edit');
     };
 
+    const handleDeleteUser = () => {
+        navigate('/delete');
+    };
+
     return (
         <div className="change-password-container">
             <h1>Change Password</h1>
@@ -170,6 +175,9 @@ const ChangePassword: React.FC = () => {
                 </button>
                 <button onClick={handleUpdatePassword} className="change-password-update-button" disabled={loading}>
                     {loading ? 'Updating...' : <img src={SaveIcon} alt="Save" className="change-password-button-icon" />}
+                </button>
+                <button onClick={handleDeleteUser} className="change-password-delete-button">
+                    <img src={DeleteUserIcon} alt="Delete User" className="change-password-button-icon" />
                 </button>
             </div>
 

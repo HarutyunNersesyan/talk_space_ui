@@ -315,16 +315,16 @@ const Profile: React.FC = () => {
                                     {userInfo?.about ? (
                                         <pre>{formatAboutText(userInfo.about)}</pre>
                                     ) : (
-                                        "No information available"
+                                        "No information available."
                                     )}
                                 </span>
                             </p>
                         </div>
                         <div className="profile-section">
-                            <p><b>Hobbies:</b> {userInfo?.hobbies?.join(', ') || "No Hobbies"}</p>
+                            <p><b>Hobbies:</b> {userInfo?.hobbies?.join(', ') || "No selected hobbies yet."}</p>
                         </div>
                         <div className="profile-section">
-                            <p><b>Specialities:</b> {userInfo?.specialities?.join(', ') || "No Specialties"}</p>
+                            <p><b>Specialities:</b> {userInfo?.specialities?.join(', ') || "No selected specialities yet."}</p>
                         </div>
                         <div className="profile-section social-networks-section">
                             <p className="social-networks-title"><b>Social Networks:</b></p>
@@ -347,7 +347,7 @@ const Profile: React.FC = () => {
                                         );
                                     })
                                 ) : (
-                                    <span className="no-social">No Social Networks</span>
+                                    <span className="no-social">No social networks added yet.</span>
                                 )}
                             </div>
                         </div>
