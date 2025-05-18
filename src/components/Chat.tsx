@@ -333,9 +333,9 @@ const Chat: React.FC = () => {
         const tempMessage: ChatMessageDto = {
             id: tempId,
             sender: userName,
-            senderDisplayName: userName, // Changed from display name to username
+            senderDisplayName: userName,
             receiver: selectedPartner,
-            receiverDisplayName: selectedPartner, // Changed from display name to username
+            receiverDisplayName: selectedPartner,
             content: newMessage,
             timestamp: new Date().toISOString(),
             isRead: false

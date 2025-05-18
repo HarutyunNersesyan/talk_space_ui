@@ -1,0 +1,195 @@
+.delete-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.delete-standalone {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.delete-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px 30px;
+    width: 400px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.delete-standalone .delete-content {
+    width: 450px;
+    padding: 30px;
+}
+
+.delete-title {
+    margin-top: 0;
+    color: #d32f2f;
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+.delete-warning-box {
+    background-color: #fff8f8;
+    border-left: 4px solid #ff6b6b;
+    padding: 15px;
+    margin-bottom: 25px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.warning-icon {
+    color: #ff6b6b;
+    margin-top: 3px;
+}
+
+.delete-warning {
+    margin: 0;
+    color: #d32f2f;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.delete-input-group {
+    margin-bottom: 20px;
+}
+
+.delete-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.delete-input {
+    width: 100%;
+    padding: 12px 40px 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.delete-input:focus {
+    border-color: #4d90fe;
+    outline: none;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1rem;
+}
+
+.password-toggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.delete-button-container {
+    display: flex;
+    justify-content: center;
+}
+
+.delete-confirm-button {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    width: 100%;
+}
+
+.delete-confirm-button:hover {
+    background-color: #b71c1c;
+}
+
+.delete-confirm-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.delete-confirm-button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.delete-close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.delete-close-button:hover {
+    color: #333;
+}
+
+.delete-back-button {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: #666;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+}
+
+.delete-back-button:hover {
+    color: #333;
+}
+
+.delete-error {
+    color: #d32f2f;
+    font-size: 0.9rem;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.delete-success {
+    color: #388e3c;
+    font-size: 0.9rem;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    text-align: center;
+}

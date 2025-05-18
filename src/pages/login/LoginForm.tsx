@@ -16,12 +16,6 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 const apiUrl = process.env.REACT_APP_API_URL;
 const blue = '#1abc9c';
 
-const handleRateLimitExceeded = (navigate: ReturnType<typeof useNavigate>) => {
-    localStorage.removeItem('token');
-    alert("Too many requests detected. You have been logged out for security reasons.");
-    navigate('/login');
-};
-
 const LoginForm: React.FC = () => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -39,7 +33,8 @@ const LoginForm: React.FC = () => {
             });
 
             if (response.status === 429) {
-                handleRateLimitExceeded(navigate);
+                localStorage.removeItem('token');
+                setError('Your IP address has been blocked for security reasons due to a suspected DDoS attack');
                 return;
             }
 
@@ -66,7 +61,8 @@ const LoginForm: React.FC = () => {
         } catch (err: unknown) {
             const error = err as AxiosError;
             if (error.response?.status === 429) {
-                handleRateLimitExceeded(navigate);
+                localStorage.removeItem('token');
+                setError('Your IP address has been blocked for security reasons due to a suspected DDoS attack');
                 return;
             }
 
