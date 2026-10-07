@@ -1,149 +1,1211 @@
-/* Image Container */
-.image-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    text-align: center;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+:root {
+    --profile-image-primary: #6d5dfc;
+    --profile-image-primary-dark: #5848e5;
+    --profile-image-text: #182230;
+    --profile-image-muted: #697386;
+    --profile-image-light: #98a2b3;
+    --profile-image-border: #e8eaf0;
 }
 
-/* Upload Section */
-.upload-section {
-    margin-bottom: 30px;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.profile-image-page {
+    width: 100%;
+    min-height: 100vh;
+
+    box-sizing: border-box;
+
+    padding: 38px 42px 90px;
+
+    color: var(--profile-image-text);
+
+    font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
 }
 
-.upload-section input[type="file"] {
-    margin-bottom: 15px;
-    padding: 10px;
-    border: 2px dashed #ccc;
-    border-radius: 6px;
-    width: 80%;
-    max-width: 400px;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.profile-image-header {
+    margin-bottom: 24px;
 }
 
-.upload-section input[type="file"]:hover {
-    border-color: #28a745;
-}
 
-.upload-button {
-    padding: 12px 24px;
-    background-color: #28a745;
-    color: white;
+.profile-image-back {
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+
+    margin-bottom: 18px;
+    padding: 0;
+
     border: none;
-    border-radius: 6px;
+
+    background: transparent;
+
+    color: var(--profile-image-muted);
+
+    font-size: 9px;
+    font-weight: 650;
+
     cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+
+    transition:
+            color 0.2s ease,
+            transform 0.2s ease;
 }
 
-.upload-button:hover {
-    background-color: #218838;
-    transform: scale(1.05);
+
+.profile-image-back:hover {
+    color: var(--profile-image-primary);
+
+    transform: translateX(-2px);
 }
 
-.upload-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    transform: none;
+
+.profile-image-back svg {
+    width: 15px;
+    height: 15px;
 }
 
-/* Image Display */
-.image-display {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
+
+.profile-image-label {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin-bottom: 7px;
+
+    color: var(--profile-image-primary);
+
+    font-size: 8px;
+    font-weight: 800;
+
+    letter-spacing: 1.2px;
 }
 
-.image-item {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background-color: #fff;
-    max-width: 400px;
-    margin: 0 auto;
+
+.profile-image-label svg {
+    width: 14px;
+    height: 14px;
 }
 
-.image-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+
+.profile-image-header h1 {
+    margin: 0;
+
+    font-size: clamp(
+            30px,
+            3vw,
+            40px
+    );
+
+    font-weight: 800;
+
+    letter-spacing: -1.5px;
 }
 
-/* Image */
-.image {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    transition: opacity 0.3s ease;
+
+.profile-image-header p {
+    max-width: 560px;
+
+    margin: 8px 0 0;
+
+    color: var(--profile-image-muted);
+
+    font-size: 11px;
+    line-height: 1.65;
 }
 
-.image-item:hover .image {
-    opacity: 0.9;
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.profile-image-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 0.85fr)
+        minmax(0, 1.15fr);
+
+    gap: 18px;
 }
 
-/* Delete Button */
-.delete-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.profile-image-card {
+    min-width: 0;
+
+    padding: 22px;
+
+    border: 1px solid
+    rgba(229, 231, 235, 0.9);
+
+    border-radius: 21px;
+
+    background:
+            rgba(255, 255, 255, 0.9);
+
+    box-shadow:
+            0 9px 30px
+            rgba(40, 45, 70, 0.045);
+}
+
+
+.profile-image-card-heading {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+
+.profile-image-heading-icon {
+    width: 39px;
+    height: 39px;
+
+    min-width: 39px;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
+    border-radius: 12px;
+
+    background:
+            rgba(109, 93, 252, 0.08);
+
+    color: var(--profile-image-primary);
+}
+
+
+.profile-image-heading-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+
+.profile-image-card-heading span {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: var(--profile-image-primary);
+
+    font-size: 7px;
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+
+.profile-image-card-heading h2 {
+    margin: 0;
+
     font-size: 14px;
-    transition: background-color 0.3s ease;
+    font-weight: 750;
 }
 
-.delete-button:hover {
-    background-color: #c82333;
+
+.profile-image-card-heading p {
+    margin: 4px 0 0;
+
+    color: var(--profile-image-muted);
+
+    font-size: 8px;
+    line-height: 1.5;
 }
 
-/* Loading Spinner */
-.loading-spinner {
+
+/* =========================================================
+   IMAGE PREVIEW AREA
+   ========================================================= */
+
+.profile-image-preview-area {
+    min-height: 320px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    padding: 18px;
+
+    box-sizing: border-box;
+
+    border: 1px solid
+    #eef0f4;
+
+    border-radius: 17px;
+
+    background:
+            radial-gradient(
+                    circle at top,
+                    rgba(109, 93, 252, 0.06),
+                    transparent 55%
+            ),
+            #fafbfc;
+}
+
+
+/* =========================================================
+   PHOTO
+   ========================================================= */
+
+.profile-image-photo-wrapper {
+    position: relative;
+
+    width: min(
+            280px,
+            100%
+    );
+
+    aspect-ratio: 1 / 1;
+
+    overflow: hidden;
+
+    border-radius: 24px;
+
+    background: #ffffff;
+
+    box-shadow:
+            0 15px 40px
+            rgba(45, 45, 70, 0.12);
+}
+
+
+.profile-image-photo {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+.profile-image-new-badge {
+    position: absolute;
+
+    right: 10px;
+    bottom: 10px;
+
+    padding: 6px 9px;
+
+    border-radius: 100px;
+
+    background:
+            rgba(24, 34, 48, 0.78);
+
+    color: #ffffff;
+
+    font-size: 7px;
+    font-weight: 700;
+
+    backdrop-filter: blur(8px);
+}
+
+
+/* =========================================================
+   EMPTY IMAGE
+   ========================================================= */
+
+.profile-image-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
     text-align: center;
-    font-size: 1.2em;
-    color: #555;
-    margin-top: 20px;
 }
 
-/* Error Message */
-.error-message {
+
+.profile-image-empty-avatar {
+    width: 100px;
+    height: 100px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 15px;
+
+    border-radius: 50%;
+
+    background:
+            linear-gradient(
+                    135deg,
+                    rgba(109, 93, 252, 0.1),
+                    rgba(139, 92, 246, 0.06)
+            );
+
+    color: #a99ff9;
+}
+
+
+.profile-image-empty-avatar svg {
+    width: 48px;
+    height: 48px;
+}
+
+
+.profile-image-empty strong {
+    color: var(--profile-image-text);
+
+    font-size: 11px;
+}
+
+
+.profile-image-empty span {
+    max-width: 220px;
+
+    margin-top: 4px;
+
+    color: var(--profile-image-muted);
+
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   DELETE
+   ========================================================= */
+
+.profile-image-delete {
+    width: 100%;
+    min-height: 39px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    margin-top: 13px;
+
+    border: 1px solid
+    rgba(239, 68, 68, 0.1);
+
+    border-radius: 10px;
+
+    background:
+            rgba(239, 68, 68, 0.035);
+
+    color: #dc3545;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+            background 0.2s ease,
+            transform 0.2s ease;
+}
+
+
+.profile-image-delete:hover:not(:disabled) {
+    background:
+            rgba(239, 68, 68, 0.07);
+
+    transform: translateY(-1px);
+}
+
+
+.profile-image-delete:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+
+.profile-image-delete svg {
+    width: 15px;
+    height: 15px;
+}
+
+
+/* =========================================================
+   HIDDEN FILE INPUT
+   ========================================================= */
+
+.profile-image-file-input {
+    display: none;
+}
+
+
+/* =========================================================
+   DROPZONE
+   ========================================================= */
+
+.profile-image-dropzone {
+    min-height: 280px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    padding: 30px;
+
+    border: 1.5px dashed
+    #d7d9e2;
+
+    border-radius: 17px;
+
+    background:
+            linear-gradient(
+                    145deg,
+                    #fafbfc,
+                    #ffffff
+            );
+
     text-align: center;
-    font-size: 1.2em;
-    color: red;
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #ffe6e6;
-    border: 1px solid #ffcccc;
-    border-radius: 6px;
+
+    cursor: pointer;
+
+    transition:
+            border-color 0.2s ease,
+            background 0.2s ease,
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .upload-section input[type="file"] {
+
+.profile-image-dropzone:hover {
+    border-color:
+            rgba(109, 93, 252, 0.45);
+
+    background:
+            rgba(109, 93, 252, 0.025);
+}
+
+
+.profile-image-dropzone.dragging {
+    border-color:
+            var(--profile-image-primary);
+
+    background:
+            rgba(109, 93, 252, 0.055);
+
+    box-shadow:
+            0 0 0 4px
+            rgba(109, 93, 252, 0.05);
+
+    transform: scale(1.005);
+}
+
+
+.profile-image-upload-icon {
+    width: 54px;
+    height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 12px;
+
+    border-radius: 16px;
+
+    background:
+            rgba(109, 93, 252, 0.08);
+
+    color: var(--profile-image-primary);
+}
+
+
+.profile-image-upload-icon svg {
+    width: 25px;
+    height: 25px;
+}
+
+
+.profile-image-dropzone > strong {
+    color: var(--profile-image-text);
+
+    font-size: 11px;
+}
+
+
+.profile-image-dropzone > span {
+    margin-top: 4px;
+
+    color: var(--profile-image-muted);
+
+    font-size: 8px;
+}
+
+
+.profile-image-dropzone > button {
+    min-height: 37px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+
+    margin-top: 15px;
+    padding: 0 12px;
+
+    border: 1px solid
+    rgba(109, 93, 252, 0.12);
+
+    border-radius: 10px;
+
+    background:
+            rgba(109, 93, 252, 0.06);
+
+    color: var(--profile-image-primary);
+
+    font-size: 8px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.profile-image-dropzone > button svg {
+    width: 14px;
+    height: 14px;
+}
+
+
+/* =========================================================
+   SELECTED FILE
+   ========================================================= */
+
+.profile-image-selected-file {
+    min-height: 90px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    box-sizing: border-box;
+
+    padding: 14px;
+
+    border: 1px solid
+    rgba(109, 93, 252, 0.13);
+
+    border-radius: 14px;
+
+    background:
+            rgba(109, 93, 252, 0.035);
+}
+
+
+.profile-image-file-icon {
+    width: 42px;
+    height: 42px;
+
+    min-width: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background:
+            rgba(109, 93, 252, 0.09);
+
+    color: var(--profile-image-primary);
+}
+
+
+.profile-image-file-icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+
+.profile-image-file-details {
+    min-width: 0;
+
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+
+.profile-image-file-details strong {
+    overflow: hidden;
+
+    color: var(--profile-image-text);
+
+    font-size: 9px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.profile-image-file-details span {
+    color: var(--profile-image-muted);
+
+    font-size: 8px;
+}
+
+
+.profile-image-remove-file {
+    width: 31px;
+    height: 31px;
+
+    min-width: 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 9px;
+
+    background:
+            rgba(239, 68, 68, 0.05);
+
+    color: #dc3545;
+
+    cursor: pointer;
+}
+
+
+.profile-image-remove-file svg {
+    width: 15px;
+    height: 15px;
+}
+
+
+/* =========================================================
+   UPLOAD ACTIONS
+   ========================================================= */
+
+.profile-image-upload-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    margin-top: 17px;
+    padding-top: 16px;
+
+    border-top: 1px solid #f0f1f4;
+}
+
+
+.profile-image-change-button,
+.profile-image-upload-button {
+    min-height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 0 14px;
+
+    border-radius: 10px;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+            transform 0.2s ease,
+            opacity 0.2s ease;
+}
+
+
+.profile-image-change-button {
+    border: 1px solid
+    var(--profile-image-border);
+
+    background: #ffffff;
+
+    color: var(--profile-image-muted);
+}
+
+
+.profile-image-upload-button {
+    border: none;
+
+    background:
+            linear-gradient(
+                    135deg,
+                    #6d5dfc,
+                    #8b5cf6
+            );
+
+    color: #ffffff;
+
+    box-shadow:
+            0 8px 20px
+            rgba(109, 93, 252, 0.2);
+}
+
+
+.profile-image-upload-button:hover:not(:disabled),
+.profile-image-change-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+
+.profile-image-upload-button:disabled,
+.profile-image-change-button:disabled {
+    opacity: 0.45;
+
+    cursor: not-allowed;
+}
+
+
+.profile-image-upload-button svg {
+    width: 15px;
+    height: 15px;
+}
+
+
+/* =========================================================
+   TIP
+   ========================================================= */
+
+.profile-image-tip {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 9px;
+
+    margin-top: 16px;
+
+    padding: 14px 16px;
+
+    border: 1px solid
+    rgba(109, 93, 252, 0.07);
+
+    border-radius: 14px;
+
+    background:
+            rgba(109, 93, 252, 0.025);
+}
+
+
+.profile-image-tip > div {
+    width: 31px;
+    height: 31px;
+
+    min-width: 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background:
+            rgba(109, 93, 252, 0.08);
+
+    color: var(--profile-image-primary);
+}
+
+
+.profile-image-tip svg {
+    width: 15px;
+    height: 15px;
+}
+
+
+.profile-image-tip p {
+    margin: 0;
+
+    color: var(--profile-image-muted);
+
+    font-size: 8px;
+    line-height: 1.55;
+}
+
+
+.profile-image-tip strong {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: var(--profile-image-text);
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   NOTIFICATION
+   ========================================================= */
+
+.profile-image-notification {
+    position: fixed;
+
+    right: 25px;
+    bottom: 25px;
+
+    z-index: 1500;
+
+    width: min(
+            340px,
+            calc(100vw - 30px)
+    );
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    box-sizing: border-box;
+
+    padding: 13px;
+
+    border-radius: 14px;
+
+    background:
+            rgba(255, 255, 255, 0.98);
+
+    box-shadow:
+            0 18px 50px
+            rgba(30, 35, 60, 0.15);
+
+    animation:
+            profileImageNotificationIn
+            0.25s ease;
+}
+
+
+.profile-image-notification.success {
+    border: 1px solid
+    rgba(34, 197, 94, 0.16);
+}
+
+
+.profile-image-notification.error {
+    border: 1px solid
+    rgba(239, 68, 68, 0.16);
+}
+
+
+.profile-image-notification-icon {
+    width: 31px;
+    height: 31px;
+
+    min-width: 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+}
+
+
+.profile-image-notification.success
+.profile-image-notification-icon {
+    background:
+            rgba(34, 197, 94, 0.09);
+
+    color: #16a34a;
+}
+
+
+.profile-image-notification.error
+.profile-image-notification-icon {
+    background:
+            rgba(239, 68, 68, 0.08);
+
+    color: #dc3545;
+}
+
+
+.profile-image-notification-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+
+.profile-image-notification >
+div:last-child {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+
+.profile-image-notification strong {
+    color: var(--profile-image-text);
+
+    font-size: 9px;
+}
+
+
+.profile-image-notification span {
+    color: var(--profile-image-muted);
+
+    font-size: 8px;
+    line-height: 1.45;
+}
+
+
+@keyframes profileImageNotificationIn {
+    from {
+        opacity: 0;
+
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================================
+   SPINNER
+   ========================================================= */
+
+.profile-image-spinner {
+    width: 13px;
+    height: 13px;
+
+    display: inline-block;
+
+    border: 2px solid
+    rgba(255, 255, 255, 0.35);
+
+    border-top-color: #ffffff;
+
+    border-radius: 50%;
+
+    animation:
+            profileImageSpin
+            0.7s linear infinite;
+}
+
+
+.profile-image-spinner.danger {
+    border-color:
+            rgba(220, 53, 69, 0.18);
+
+    border-top-color: #dc3545;
+}
+
+
+@keyframes profileImageSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.profile-image-loading {
+    min-height: 100vh;
+
+    box-sizing: border-box;
+
+    padding: 45px 42px;
+
+    animation:
+            profileImageLoadingPulse
+            1.3s ease-in-out infinite;
+}
+
+
+.profile-image-loading-title {
+    width: 320px;
+    height: 42px;
+
+    margin-bottom: 25px;
+
+    border-radius: 12px;
+
+    background: #e8eaf0;
+}
+
+
+.profile-image-loading-content {
+    display: grid;
+
+    grid-template-columns:
+        0.85fr
+        1.15fr;
+
+    gap: 18px;
+}
+
+
+.profile-image-loading-preview,
+.profile-image-loading-upload {
+    height: 450px;
+
+    border-radius: 21px;
+
+    background: #e8eaf0;
+}
+
+
+@keyframes profileImageLoadingPulse {
+    0%,
+    100% {
+        opacity: 0.55;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 950px) {
+    .profile-image-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .profile-image-preview-area {
+        min-height: 290px;
+    }
+
+
+    .profile-image-loading-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 800px) {
+    .profile-image-page {
+        padding:
+                25px
+                18px
+                80px;
+    }
+}
+
+
+@media (max-width: 520px) {
+    .profile-image-page {
+        padding:
+                20px
+                13px
+                75px;
+    }
+
+
+    .profile-image-header h1 {
+        font-size: 29px;
+    }
+
+
+    .profile-image-card {
+        padding: 17px;
+    }
+
+
+    .profile-image-preview-area {
+        min-height: 260px;
+
+        padding: 13px;
+    }
+
+
+    .profile-image-photo-wrapper {
+        width: 230px;
+
+        border-radius: 20px;
+    }
+
+
+    .profile-image-dropzone {
+        min-height: 230px;
+
+        padding: 20px;
+    }
+
+
+    .profile-image-upload-actions {
+        flex-direction: column-reverse;
+    }
+
+
+    .profile-image-change-button,
+    .profile-image-upload-button {
         width: 100%;
     }
 
-    .image-item {
-        width: 100%;
-        max-width: 300px;
+
+    .profile-image-notification {
+        left: 13px;
+        right: 13px;
+        bottom: 13px;
+
+        width: auto;
     }
+
+
+    .profile-image-loading {
+        padding:
+                25px
+                15px;
+    }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.profile-image-back:focus-visible,
+.profile-image-dropzone:focus-visible,
+.profile-image-dropzone button:focus-visible,
+.profile-image-delete:focus-visible,
+.profile-image-remove-file:focus-visible,
+.profile-image-change-button:focus-visible,
+.profile-image-upload-button:focus-visible {
+    outline:
+            3px solid
+            rgba(109, 93, 252, 0.2);
+
+    outline-offset: 3px;
 }

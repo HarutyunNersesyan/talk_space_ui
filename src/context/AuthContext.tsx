@@ -1,145 +1,400 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
+import React, {
+    createContext,
+    ReactNode,
+    useCallback,
+    useEffect,
+    useState
+} from 'react';
+
+import {
+    useNavigate
+} from 'react-router-dom';
+
+import {
+    jwtDecode
+} from 'jwt-decode';
+
+import {
+    getRoleFromToken,
+    UserRole
+} from '../routes/ProtectedRoute';
+
+
+/* =========================================================
+   TYPES
+   ========================================================= */
+
+interface DecodedToken {
+    sub: string;
+    exp?: number;
+}
+
 
 export interface AuthContextType {
+
     isAuthenticated: boolean;
+
     userName: string | null;
-    userRole: string | null;
+
+    userRole: UserRole | null;
+
     checkAuth: () => void;
-    setUser: (userName: string | null, userRole?: string | null) => void;
+
+    setUser: (
+        userName: string | null,
+        userRole?: UserRole | null
+    ) => void;
+
     redirectToSignUp: () => void;
+
     redirectToForgotPassword: () => void;
+
     logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const publicRoutes = ['/', '/login', '/signup', '/verify', '/forgot-password'];
+/* =========================================================
+   CONTEXT
+   ========================================================= */
 
-interface DecodedToken {
-    roles: string[];
-    sub: string;
-    iat: number;
-    exp: number;
-}
+const AuthContext =
+    createContext<AuthContextType | undefined>(
+        undefined
+    );
 
-const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [userName, setUserName] = useState<string | null>(null);
-    const [userRole, setUserRole] = useState<string | null>(null);
-    const navigate = useNavigate();
-    const location = useLocation();
 
-    const decodeToken = (token: string): { userName: string; userRole: string } | null => {
-        try {
-            const decodedToken = jwtDecode<DecodedToken>(token);
-            const role = decodedToken.roles.includes('ADMIN') ? 'ADMIN' : 'USER';
-            return {
-                userName: decodedToken.sub,
-                userRole: role
-            };
-        } catch (error) {
-            console.error('Error decoding token:', error);
-            return null;
-        }
-    };
+/* =========================================================
+   PROVIDER
+   ========================================================= */
 
-    const checkAuth = () => {
-        const token = localStorage.getItem('token');
-        const storedUserName = localStorage.getItem('userName');
-        const storedUserRole = localStorage.getItem('userRole');
+const AuthProvider: React.FC<{
+    children: ReactNode;
+}> = ({
+          children
+      }) => {
 
-        if (token) {
-            try {
-                const decodedToken = decodeToken(token);
-                if (!decodedToken) {
-                    throw new Error('Invalid token');
-                }
+    const navigate =
+        useNavigate();
 
-                const decodedPayload = jwtDecode<DecodedToken>(token);
-                const currentTime = Date.now() / 1000;
 
-                if (decodedPayload.exp > currentTime) {
-                    setIsAuthenticated(true);
-                    setUserName(decodedToken.userName || storedUserName);
-                    setUserRole(decodedToken.userRole || storedUserRole);
-                } else {
-                    logout();
-                }
-            } catch (error) {
-                console.error('Error decoding token:', error);
-                logout();
-            }
-        } else {
+    const [
+        isAuthenticated,
+        setIsAuthenticated
+    ] = useState<boolean>(false);
+
+
+    const [
+        userName,
+        setUserName
+    ] = useState<string | null>(null);
+
+
+    const [
+        userRole,
+        setUserRole
+    ] = useState<UserRole | null>(null);
+
+
+    /* =====================================================
+       CLEAR AUTH
+       ===================================================== */
+
+    const clearAuthData =
+        useCallback(() => {
+
+            localStorage.removeItem(
+                'token'
+            );
+
+            localStorage.removeItem(
+                'userName'
+            );
+
+            localStorage.removeItem(
+                'userRole'
+            );
+
+            localStorage.removeItem(
+                'redirectPath'
+            );
+
+
             setIsAuthenticated(false);
+
             setUserName(null);
+
             setUserRole(null);
-        }
-    };
 
-    const setUser = (userName: string | null, userRole?: string | null) => {
-        if (userName) {
-            localStorage.setItem('userName', userName);
-            setUserName(userName);
-        } else {
-            localStorage.removeItem('userName');
-            setUserName(null);
-        }
+        }, []);
 
-        if (userRole) {
-            localStorage.setItem('userRole', userRole);
-            setUserRole(userRole);
-        } else {
-            localStorage.removeItem('userRole');
-            setUserRole(null);
-        }
-    };
 
-    const redirectToSignUp = () => {
-        navigate('/signup');
-    };
+    /* =====================================================
+       CHECK AUTH
+       ===================================================== */
 
-    const redirectToForgotPassword = () => {
-        navigate('/forgot-password');
-    };
+    const checkAuth =
+        useCallback(() => {
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userRole');
-        setIsAuthenticated(false);
-        setUserName(null);
-        setUserRole(null);
-        navigate('/login');
-    };
+            const token =
+                localStorage.getItem('token');
+
+
+            if (!token) {
+
+                setIsAuthenticated(false);
+
+                setUserName(null);
+
+                setUserRole(null);
+
+                return;
+            }
+
+
+            try {
+
+                /*
+                 * IMPORTANT
+                 *
+                 * Role-ը վերցնում ենք միայն JWT-ից։
+                 */
+                const role =
+                    getRoleFromToken(token);
+
+
+                if (!role) {
+
+                    clearAuthData();
+
+                    return;
+                }
+
+
+                const decoded =
+                    jwtDecode<DecodedToken>(
+                        token
+                    );
+
+
+                /* =========================================
+                   TOKEN EXPIRATION
+                   ========================================= */
+
+                if (
+                    decoded.exp &&
+                    decoded.exp <= Date.now() / 1000
+                ) {
+
+                    clearAuthData();
+
+                    return;
+                }
+
+
+                /* =========================================
+                   AUTHENTICATED
+                   ========================================= */
+
+                setIsAuthenticated(true);
+
+                setUserRole(role);
+
+
+                /*
+                 * userRole-ը localStorage-ում պահվում է
+                 * միայն UI state-ի համար։
+                 *
+                 * Authorization-ի համար չենք վստահում դրան։
+                 */
+                localStorage.setItem(
+                    'userRole',
+                    role
+                );
+
+
+                const storedUserName =
+                    localStorage.getItem(
+                        'userName'
+                    );
+
+
+                /*
+                 * USER-ի իրական username-ը Navbar/Profile-ը
+                 * backend-ից կարող են ստանալ։
+                 *
+                 * Եթե դեռ չունենք՝ ժամանակավորապես JWT sub։
+                 */
+                setUserName(
+                    storedUserName ||
+                    decoded.sub
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    'Authentication check failed:',
+                    error
+                );
+
+
+                clearAuthData();
+            }
+
+        }, [clearAuthData]);
+
+
+    /* =====================================================
+       SET USER
+       ===================================================== */
+
+    const setUser =
+        useCallback((
+            newUserName: string | null,
+            newUserRole?: UserRole | null
+        ) => {
+
+            if (newUserName) {
+
+                localStorage.setItem(
+                    'userName',
+                    newUserName
+                );
+
+                setUserName(
+                    newUserName
+                );
+
+            } else {
+
+                localStorage.removeItem(
+                    'userName'
+                );
+
+                setUserName(null);
+            }
+
+
+            /*
+             * LoginForm-ից եկող role-ը արդեն JWT-ից է
+             * ստացված։
+             */
+            if (newUserRole) {
+
+                localStorage.setItem(
+                    'userRole',
+                    newUserRole
+                );
+
+                setUserRole(
+                    newUserRole
+                );
+            }
+
+
+            setIsAuthenticated(
+                Boolean(newUserName)
+            );
+
+        }, []);
+
+
+    /* =====================================================
+       LOGOUT
+       ===================================================== */
+
+    const logout =
+        useCallback(() => {
+
+            clearAuthData();
+
+
+            navigate(
+                '/login',
+                {
+                    replace: true
+                }
+            );
+
+        }, [
+            clearAuthData,
+            navigate
+        ]);
+
+
+    /* =====================================================
+       SIGN UP
+       ===================================================== */
+
+    const redirectToSignUp =
+        useCallback(() => {
+
+            navigate(
+                '/signUp'
+            );
+
+        }, [navigate]);
+
+
+    /* =====================================================
+       FORGOT PASSWORD
+       ===================================================== */
+
+    const redirectToForgotPassword =
+        useCallback(() => {
+
+            navigate(
+                '/forgot-password'
+            );
+
+        }, [navigate]);
+
+
+    /* =====================================================
+       INITIAL TOKEN CHECK
+       ===================================================== */
 
     useEffect(() => {
+
         checkAuth();
-    }, []);
 
-    useEffect(() => {
-        if (!isAuthenticated && !publicRoutes.includes(location.pathname)) {
-            navigate('/login');
-        }
-    }, [isAuthenticated, navigate, location.pathname]);
+    }, [checkAuth]);
+
+
+    /* =====================================================
+       PROVIDER
+       ===================================================== */
 
     return (
+
         <AuthContext.Provider
             value={{
                 isAuthenticated,
+
                 userName,
+
                 userRole,
+
                 checkAuth,
+
                 setUser,
+
                 redirectToSignUp,
+
                 redirectToForgotPassword,
-                logout,
+
+                logout
             }}
         >
+
             {children}
+
         </AuthContext.Provider>
     );
 };
 
-export { AuthProvider, AuthContext };
+
+export {
+    AuthProvider,
+    AuthContext
+};

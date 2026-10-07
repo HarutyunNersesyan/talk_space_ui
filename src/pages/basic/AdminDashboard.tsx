@@ -1,348 +1,1044 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios, { AxiosError } from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import React, {
+    useEffect,
+    useState
+} from 'react';
+
 import './AdminDashboard.css';
-import chatImage from '../../assets/admin/chat.svg';
-import blockImage from '../../assets/admin/block.svg';
-import userImage from '../../assets/admin/users.svg';
-import feedBacksImage from '../../assets/admin/feedbacks.svg';
-import backgroundImage from '../../assets/admin/admin.jpg';
-import checkIcon from '../../assets/search/check.svg';
-import backIcon from '../../assets/search/back.svg';
+
+import {
+    useNavigate
+} from 'react-router-dom';
+
+import axios, {
+    AxiosError
+} from 'axios';
+
+import {
+    jwtDecode
+} from 'jwt-decode';
+
+import AdminPanelSettingsRoundedIcon
+    from '@mui/icons-material/AdminPanelSettingsRounded';
+
+import PeopleAltRoundedIcon
+    from '@mui/icons-material/PeopleAltRounded';
+
+import ReviewsRoundedIcon
+    from '@mui/icons-material/ReviewsRounded';
+
+import BlockRoundedIcon
+    from '@mui/icons-material/BlockRounded';
+
+import ArrowForwardRoundedIcon
+    from '@mui/icons-material/ArrowForwardRounded';
+
+import CloseRoundedIcon
+    from '@mui/icons-material/CloseRounded';
+
+import CheckRoundedIcon
+    from '@mui/icons-material/CheckRounded';
+
+import PersonOffRoundedIcon
+    from '@mui/icons-material/PersonOffRounded';
+
+import CalendarMonthRoundedIcon
+    from '@mui/icons-material/CalendarMonthRounded';
+
+import WarningAmberRoundedIcon
+    from '@mui/icons-material/WarningAmberRounded';
+
+import VerifiedUserRoundedIcon
+    from '@mui/icons-material/VerifiedUserRounded';
+
 
 interface JwtPayload {
     sub: string;
 }
 
-interface ChatMessage {
-    id: string;
-    sender: string;
-    receiver: string;
-    content: string;
-    timestamp: string;
-}
+
+const API_URL =
+    process.env.REACT_APP_API_URL ||
+    'http://localhost:8080';
+
 
 const AdminDashboard: React.FC = () => {
-    const navigate = useNavigate();
-    const [mounted, setMounted] = useState<boolean>(false);
-    const [userName, setUserName] = useState<string | null>(null);
-    const [showChatForm, setShowChatForm] = useState<boolean>(false);
-    const [showBlockForm, setShowBlockForm] = useState<boolean>(false);
-    const [senderUsername, setSenderUsername] = useState<string>('');
-    const [receiverUsername, setReceiverUsername] = useState<string>('');
-    const [blockUsername, setBlockUsername] = useState<string>('');
-    const [blockMessage, setBlockMessage] = useState<string>('');
-    const [blockUntil, setBlockUntil] = useState<string>('');
-    const [errorMessage, setErrorMessage] = useState<string>('');
-    const token = localStorage.getItem('token');
+    const navigate =
+        useNavigate();
+
+
+    const token =
+        localStorage.getItem('token');
+
+
+    const [
+        userName,
+        setUserName
+    ] = useState<string>('Admin');
+
+
+    const [
+        showBlockForm,
+        setShowBlockForm
+    ] = useState<boolean>(false);
+
+
+    const [
+        blockUsername,
+        setBlockUsername
+    ] = useState<string>('');
+
+
+    const [
+        blockMessage,
+        setBlockMessage
+    ] = useState<string>('');
+
+
+    const [
+        blockUntil,
+        setBlockUntil
+    ] = useState<string>('');
+
+
+    const [
+        errorMessage,
+        setErrorMessage
+    ] = useState<string>('');
+
+
+    const [
+        successMessage,
+        setSuccessMessage
+    ] = useState<string>('');
+
+
+    const [
+        isBlocking,
+        setIsBlocking
+    ] = useState<boolean>(false);
+
+
+    /* =====================================================
+       DEFAULT BLOCK DATE
+       ===================================================== */
+
+    const getTomorrowDate =
+        (): string => {
+            const tomorrow =
+                new Date();
+
+
+            tomorrow.setDate(
+                tomorrow.getDate() + 1
+            );
+
+
+            return tomorrow
+                .toISOString()
+                .split('T')[0];
+        };
+
 
     useEffect(() => {
-        const now = new Date();
-        now.setDate(now.getDate() + 1);
-        const formattedDate = now.toISOString().split('T')[0];
-        setBlockUntil(formattedDate);
+        setBlockUntil(
+            getTomorrowDate()
+        );
     }, []);
 
-    const handleRateLimitExceeded = () => {
-        localStorage.removeItem('token');
-        alert("Too many requests detected. You have been logged out for security reasons.");
-        navigate('/login');
-    };
 
-    const handleViewChats = (): void => {
-        setShowChatForm(true);
-        setShowBlockForm(false);
-        setErrorMessage('');
-    };
+    /* =====================================================
+       RATE LIMIT
+       ===================================================== */
 
-    const handleBlockUser = (): void => {
-        setShowBlockForm(true);
-        setShowChatForm(false);
-        setErrorMessage('');
-    };
-
-    const handleViewUsers = (): void => {
-        navigate('/users');
-    };
-
-    const handleViewFeedbacks = (): void => {
-        navigate('/feedbacks');
-    };
-
-    const handleCheckChats = async (): Promise<void> => {
-        if (!senderUsername.trim()) {
-            setErrorMessage('Please enter sender username');
-            return;
-        }
-        if (!receiverUsername.trim()) {
-            setErrorMessage('Please enter receiver username');
-            return;
-        }
-
-        try {
-            const response = await axios.get<ChatMessage[]>(
-                `http://localhost:8080/api/private/admin/history/${senderUsername}/${receiverUsername}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+    const handleRateLimitExceeded =
+        () => {
+            localStorage.removeItem(
+                'token'
             );
 
-            if (response.status === 429) {
-                handleRateLimitExceeded();
-                return;
-            }
 
-            if (response.data.length === 0) {
-                setErrorMessage('No chat history found between these users');
-            } else {
-                navigate('/view', { state: { chatHistory: response.data } });
-            }
-        } catch (error) {
-            const err = error as AxiosError;
-            if (err.response?.status === 429) {
-                handleRateLimitExceeded();
-                return;
-            }
-
-            console.error('Error fetching chat history:', error);
-            if (err.response) {
-                setErrorMessage(err.response.data as string || 'Error fetching chat history');
-            } else {
-                setErrorMessage('Error fetching chat history. Please try again.');
-            }
-        }
-    };
-
-    const handleBlockSubmit = async (): Promise<void> => {
-        if (!blockUsername.trim()) {
-            setErrorMessage('Please enter username to block');
-            return;
-        }
-        if (!blockMessage.trim()) {
-            setErrorMessage('Please enter block reason');
-            return;
-        }
-        if (!blockUntil) {
-            setErrorMessage('Please select block until date');
-            return;
-        }
-
-        try {
-            const response = await axios.put(
-                'http://localhost:8080/api/private/admin/block',
+            navigate(
+                '/login',
                 {
-                    userName: blockUsername,
-                    blockMessage: blockMessage,
-                    blockUntil: blockUntil
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    replace: true,
+                    state: {
+                        message:
+                            'Too many requests were detected. Please log in again.'
+                    }
                 }
             );
+        };
 
-            if (response.status === 429) {
-                handleRateLimitExceeded();
-                return;
-            }
 
-            setErrorMessage(`User ${blockUsername} has been blocked successfully until ${new Date(blockUntil).toLocaleDateString()}. Reason: ${blockMessage}`);
-            setBlockUsername('');
-            setBlockMessage('');
-            const now = new Date();
-            now.setDate(now.getDate() + 1);
-            setBlockUntil(now.toISOString().split('T')[0]);
-        } catch (error) {
-            const err = error as AxiosError;
-            if (err.response?.status === 429) {
-                handleRateLimitExceeded();
-                return;
-            }
-
-            console.error('Error blocking user:', error);
-            if (err.response) {
-                setErrorMessage(err.response.data as string || 'Error blocking user');
-            } else {
-                setErrorMessage('Error blocking user. Please try again.');
-            }
-        }
-    };
-
-    const handleCancelChatForm = (): void => {
-        setShowChatForm(false);
-        setSenderUsername('');
-        setReceiverUsername('');
-        setErrorMessage('');
-    };
-
-    const handleCancelBlockForm = (): void => {
-        setShowBlockForm(false);
-        setBlockUsername('');
-        setBlockMessage('');
-        setErrorMessage('');
-    };
+    /* =====================================================
+       FETCH ADMIN USERNAME
+       ===================================================== */
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setMounted(true);
-        }, 100);
-
-        const fetchUserName = async (): Promise<void> => {
-            try {
+        const fetchUserName =
+            async () => {
                 if (!token) {
+                    navigate(
+                        '/login',
+                        {
+                            replace: true
+                        }
+                    );
+
                     return;
                 }
 
-                const decodedToken = jwtDecode<JwtPayload>(token);
-                const email = decodedToken.sub;
 
-                const response = await axios.get<string>(
-                    `http://localhost:8080/api/public/user/get/userName/${email}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
+                try {
+                    const decodedToken =
+                        jwtDecode<JwtPayload>(
+                            token
+                        );
+
+
+                    const email =
+                        decodedToken.sub;
+
+
+                    const response =
+                        await axios.get<string>(
+                            `${API_URL}/api/public/user/get/userName/${email}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    setUserName(
+                        response.data ||
+                        'Admin'
+                    );
+
+                } catch (error) {
+
+                    const err =
+                        error as AxiosError;
+
+
+                    if (
+                        err.response?.status ===
+                        429
+                    ) {
+                        handleRateLimitExceeded();
+
+                        return;
                     }
-                );
 
-                if (response.status === 429) {
-                    handleRateLimitExceeded();
-                    return;
+
+                    console.error(
+                        'Error fetching admin username:',
+                        error
+                    );
                 }
+            };
 
-                setUserName(response.data);
-            } catch (error) {
-                const err = error as AxiosError;
-                if (err.response?.status === 429) {
-                    handleRateLimitExceeded();
-                    return;
-                }
-
-                console.error('Error fetching userName:', err);
-            }
-        };
 
         fetchUserName();
 
-        return () => {
-            clearTimeout(timer);
-            setMounted(false);
-        };
     }, [token]);
 
+
+    /* =====================================================
+       NAVIGATION
+       ===================================================== */
+
+    const handleViewUsers =
+        () => {
+            navigate('/users');
+        };
+
+
+    const handleViewFeedbacks =
+        () => {
+            navigate('/feedbacks');
+        };
+
+
+    /* =====================================================
+       BLOCK USER MODAL
+       ===================================================== */
+
+    const openBlockForm =
+        () => {
+            setErrorMessage('');
+            setSuccessMessage('');
+
+            setShowBlockForm(true);
+        };
+
+
+    const closeBlockForm =
+        () => {
+            if (isBlocking) {
+                return;
+            }
+
+
+            setShowBlockForm(false);
+
+            setBlockUsername('');
+            setBlockMessage('');
+
+            setBlockUntil(
+                getTomorrowDate()
+            );
+
+            setErrorMessage('');
+            setSuccessMessage('');
+        };
+
+
+    /* =====================================================
+       BLOCK USER
+       ===================================================== */
+
+    const handleBlockSubmit =
+        async (
+            event:
+                React.FormEvent<HTMLFormElement>
+        ) => {
+            event.preventDefault();
+
+
+            setErrorMessage('');
+            setSuccessMessage('');
+
+
+            const username =
+                blockUsername.trim();
+
+
+            const reason =
+                blockMessage.trim();
+
+
+            if (!username) {
+                setErrorMessage(
+                    'Please enter the username you want to block.'
+                );
+
+                return;
+            }
+
+
+            if (!reason) {
+                setErrorMessage(
+                    'Please enter a reason for blocking this user.'
+                );
+
+                return;
+            }
+
+
+            if (!blockUntil) {
+                setErrorMessage(
+                    'Please select the date until which the user should remain blocked.'
+                );
+
+                return;
+            }
+
+
+            if (!token) {
+                navigate(
+                    '/login',
+                    {
+                        replace: true
+                    }
+                );
+
+                return;
+            }
+
+
+            try {
+                setIsBlocking(true);
+
+
+                const response =
+                    await axios.put(
+                        `${API_URL}/api/private/admin/block`,
+                        {
+                            userName:
+                            username,
+
+                            blockMessage:
+                            reason,
+
+                            blockUntil:
+                            blockUntil
+                        },
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+
+                if (
+                    response.status ===
+                    429
+                ) {
+                    handleRateLimitExceeded();
+
+                    return;
+                }
+
+
+                setSuccessMessage(
+                    `${username} has been blocked until ${new Date(
+                        `${blockUntil}T00:00:00`
+                    ).toLocaleDateString()}.`
+                );
+
+
+                setBlockUsername('');
+                setBlockMessage('');
+
+                setBlockUntil(
+                    getTomorrowDate()
+                );
+
+            } catch (error) {
+
+                const err =
+                    error as AxiosError;
+
+
+                if (
+                    err.response?.status ===
+                    429
+                ) {
+                    handleRateLimitExceeded();
+
+                    return;
+                }
+
+
+                console.error(
+                    'Error blocking user:',
+                    error
+                );
+
+
+                if (
+                    typeof err.response?.data ===
+                    'string' &&
+                    err.response.data.trim()
+                ) {
+                    setErrorMessage(
+                        err.response.data
+                    );
+
+                } else {
+                    setErrorMessage(
+                        'Could not block this user. Please try again.'
+                    );
+                }
+
+            } finally {
+                setIsBlocking(false);
+            }
+        };
+
+
+    /* =====================================================
+       VIEW
+       ===================================================== */
+
     return (
-        <div className={`admin-dashboard-container ${mounted ? 'mounted' : ''}`}>
-            <div className="admin-background-banner" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
-            <div className="admin-dashboard-content">
-                <div className="admin-actions-grid">
-                    <div className="admin-action-card" onClick={handleViewChats}>
-                        <img src={chatImage} alt="View Chats" className="admin-action-image" />
-                        <button className="admin-action-button">View Chats</button>
+        <div className="admin-dashboard">
+
+            {/* HERO */}
+
+            <section className="admin-dashboard-hero">
+
+                <div className="admin-dashboard-glow admin-dashboard-glow-one" />
+                <div className="admin-dashboard-glow admin-dashboard-glow-two" />
+
+
+                <div className="admin-dashboard-hero-content">
+
+                    <span className="admin-dashboard-eyebrow">
+
+                        <AdminPanelSettingsRoundedIcon />
+
+                        ADMINISTRATION
+
+                    </span>
+
+
+                    <h1>
+                        Welcome back,
+                        {' '}
+                        <span>
+                            {userName}
+                        </span>
+                    </h1>
+
+
+                    <p>
+                        Manage TalkSpace users,
+                        review community feedback and
+                        handle account restrictions
+                        from one place.
+                    </p>
+
+
+                    <div className="admin-dashboard-security">
+
+                        <VerifiedUserRoundedIcon />
+
+
+                        <div>
+                            <strong>
+                                Administrator access
+                            </strong>
+
+                            <span>
+                                Protected management
+                                environment
+                            </span>
+                        </div>
+
                     </div>
-                    <div className="admin-action-card" onClick={handleBlockUser}>
-                        <img src={blockImage} alt="Block User" className="admin-action-image" />
-                        <button className="admin-action-button">Block User</button>
-                    </div>
-                    <div className="admin-action-card" onClick={handleViewUsers}>
-                        <img src={userImage} alt="Users" className="admin-action-image" />
-                        <button className="admin-action-button">Users</button>
-                    </div>
-                    <div className="admin-action-card" onClick={handleViewFeedbacks}>
-                        <img src={feedBacksImage} alt="Feedbacks" className="admin-action-image" />
-                        <button className="admin-action-button">Feedbacks</button>
-                    </div>
+
                 </div>
 
-                {showChatForm && (
-                    <div className="admin-form-container">
-                        <div className="admin-form">
-                            <h3>View Chats Between Users</h3>
-                            <div className="admin-form-group">
-                                <label htmlFor="senderUsername">Sender Username:</label>
-                                <input
-                                    type="text"
-                                    id="senderUsername"
-                                    value={senderUsername}
-                                    onChange={(e) => setSenderUsername(e.target.value)}
-                                    placeholder="Enter sender username"
-                                />
-                            </div>
-                            <div className="admin-form-group">
-                                <label htmlFor="receiverUsername">Receiver Username:</label>
-                                <input
-                                    type="text"
-                                    id="receiverUsername"
-                                    value={receiverUsername}
-                                    onChange={(e) => setReceiverUsername(e.target.value)}
-                                    placeholder="Enter receiver username"
-                                />
-                            </div>
-                            {errorMessage && <div className="admin-error-message">{errorMessage}</div>}
-                            <div className="admin-form-buttons">
-                                <button className="admin-icon-button" onClick={handleCancelChatForm}>
-                                    <img src={backIcon} alt="Cancel" className="admin-button-icon" />
-                                </button>
-                                <button className="admin-icon-button" onClick={handleCheckChats}>
-                                    <img src={checkIcon} alt="Check" className="admin-button-icon" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
-                {showBlockForm && (
-                    <div className="admin-form-container">
-                        <div className="admin-block-form">
-                            <h3>Block User</h3>
-                            <div className="admin-form-group compact">
-                                <label htmlFor="blockUsername">Username:</label>
-                                <input
-                                    type="text"
-                                    id="blockUsername"
-                                    value={blockUsername}
-                                    onChange={(e) => setBlockUsername(e.target.value)}
-                                    placeholder="Enter username to block"
-                                />
+                <div className="admin-dashboard-hero-icon">
+
+                    <AdminPanelSettingsRoundedIcon />
+
+                </div>
+
+            </section>
+
+
+            {/* SECTION HEADER */}
+
+            <section className="admin-dashboard-actions-section">
+
+                <div className="admin-dashboard-section-header">
+
+                    <div>
+                        <span>
+                            MANAGEMENT
+                        </span>
+
+                        <h2>
+                            Admin tools
+                        </h2>
+
+                        <p>
+                            Select the area you want
+                            to manage.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                {/* ACTIONS */}
+
+                <div className="admin-dashboard-actions">
+
+                    {/* USERS */}
+
+                    <button
+                        type="button"
+                        className="admin-dashboard-action-card"
+                        onClick={
+                            handleViewUsers
+                        }
+                    >
+
+                        <div className="admin-dashboard-card-header">
+
+                            <span className="admin-dashboard-action-icon users">
+                                <PeopleAltRoundedIcon />
+                            </span>
+
+
+                            <span className="admin-dashboard-card-number">
+                                01
+                            </span>
+
+                        </div>
+
+
+                        <div className="admin-dashboard-card-content">
+
+                            <span>
+                                USER MANAGEMENT
+                            </span>
+
+
+                            <h3>
+                                Users
+                            </h3>
+
+
+                            <p>
+                                View registered users,
+                                account verification,
+                                status and restriction
+                                information.
+                            </p>
+
+                        </div>
+
+
+                        <div className="admin-dashboard-card-link">
+
+                            Manage users
+
+                            <ArrowForwardRoundedIcon />
+
+                        </div>
+
+                    </button>
+
+
+                    {/* FEEDBACK */}
+
+                    <button
+                        type="button"
+                        className="admin-dashboard-action-card"
+                        onClick={
+                            handleViewFeedbacks
+                        }
+                    >
+
+                        <div className="admin-dashboard-card-header">
+
+                            <span className="admin-dashboard-action-icon feedback">
+                                <ReviewsRoundedIcon />
+                            </span>
+
+
+                            <span className="admin-dashboard-card-number">
+                                02
+                            </span>
+
+                        </div>
+
+
+                        <div className="admin-dashboard-card-content">
+
+                            <span>
+                                COMMUNITY
+                            </span>
+
+
+                            <h3>
+                                Feedback
+                            </h3>
+
+
+                            <p>
+                                Review ratings and
+                                messages submitted by
+                                TalkSpace users.
+                            </p>
+
+                        </div>
+
+
+                        <div className="admin-dashboard-card-link">
+
+                            View feedback
+
+                            <ArrowForwardRoundedIcon />
+
+                        </div>
+
+                    </button>
+
+
+                    {/* BLOCK USER */}
+
+                    <button
+                        type="button"
+                        className="admin-dashboard-action-card danger"
+                        onClick={
+                            openBlockForm
+                        }
+                    >
+
+                        <div className="admin-dashboard-card-header">
+
+                            <span className="admin-dashboard-action-icon block">
+                                <BlockRoundedIcon />
+                            </span>
+
+
+                            <span className="admin-dashboard-card-number">
+                                03
+                            </span>
+
+                        </div>
+
+
+                        <div className="admin-dashboard-card-content">
+
+                            <span>
+                                ACCOUNT CONTROL
+                            </span>
+
+
+                            <h3>
+                                Block user
+                            </h3>
+
+
+                            <p>
+                                Temporarily restrict
+                                access for a user and
+                                provide the reason for
+                                the restriction.
+                            </p>
+
+                        </div>
+
+
+                        <div className="admin-dashboard-card-link danger">
+
+                            Block account
+
+                            <ArrowForwardRoundedIcon />
+
+                        </div>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            {/* INFO */}
+
+            <section className="admin-dashboard-info">
+
+                <WarningAmberRoundedIcon />
+
+
+                <div>
+                    <strong>
+                        Administrative actions
+                    </strong>
+
+                    <p>
+                        Account restrictions should
+                        only be applied when necessary.
+                        Block reasons and expiration
+                        dates are visible in the Users
+                        management page.
+                    </p>
+                </div>
+
+            </section>
+
+
+            {/* BLOCK MODAL */}
+
+            {showBlockForm && (
+
+                <div
+                    className="admin-block-backdrop"
+                    onMouseDown={
+                        event => {
+                            if (
+                                event.target ===
+                                event.currentTarget
+                            ) {
+                                closeBlockForm();
+                            }
+                        }
+                    }
+                >
+
+                    <div className="admin-block-modal">
+
+                        {/* MODAL HEADER */}
+
+                        <div className="admin-block-modal-header">
+
+                            <div className="admin-block-title">
+
+                                <span>
+                                    <PersonOffRoundedIcon />
+                                </span>
+
+
+                                <div>
+                                    <small>
+                                        ACCOUNT CONTROL
+                                    </small>
+
+                                    <h2>
+                                        Block user
+                                    </h2>
+                                </div>
+
                             </div>
-                            <div className="admin-form-group compact">
-                                <label htmlFor="blockMessage">Block Reason:</label>
+
+
+                            <button
+                                type="button"
+                                className="admin-block-close"
+                                onClick={
+                                    closeBlockForm
+                                }
+                                disabled={
+                                    isBlocking
+                                }
+                                aria-label="Close"
+                            >
+                                <CloseRoundedIcon />
+                            </button>
+
+                        </div>
+
+
+                        <p className="admin-block-description">
+                            The selected user will be
+                            unable to use the account
+                            until the block expiration
+                            date.
+                        </p>
+
+
+                        {/* FORM */}
+
+                        <form
+                            onSubmit={
+                                handleBlockSubmit
+                            }
+                            className="admin-block-form"
+                        >
+
+                            {/* USERNAME */}
+
+                            <div className="admin-block-field">
+
+                                <label
+                                    htmlFor="blockUsername"
+                                >
+                                    Username
+                                </label>
+
+
+                                <input
+                                    id="blockUsername"
+                                    type="text"
+                                    value={
+                                        blockUsername
+                                    }
+                                    onChange={
+                                        event =>
+                                            setBlockUsername(
+                                                event.target.value
+                                            )
+                                    }
+                                    placeholder="Enter username"
+                                    autoComplete="off"
+                                    disabled={
+                                        isBlocking
+                                    }
+                                />
+
+                            </div>
+
+
+                            {/* REASON */}
+
+                            <div className="admin-block-field">
+
+                                <div className="admin-block-label-row">
+
+                                    <label
+                                        htmlFor="blockMessage"
+                                    >
+                                        Block reason
+                                    </label>
+
+
+                                    <span>
+                                        {blockMessage.length}
+                                    </span>
+
+                                </div>
+
+
                                 <textarea
                                     id="blockMessage"
-                                    value={blockMessage}
-                                    onChange={(e) => setBlockMessage(e.target.value)}
-                                    placeholder="Enter block reason"
-                                    rows={3}
+                                    value={
+                                        blockMessage
+                                    }
+                                    onChange={
+                                        event =>
+                                            setBlockMessage(
+                                                event.target.value
+                                            )
+                                    }
+                                    placeholder="Explain why this account is being blocked..."
+                                    rows={4}
+                                    disabled={
+                                        isBlocking
+                                    }
                                 />
+
                             </div>
-                            <div className="admin-form-group compact">
-                                <label htmlFor="blockUntil">Block until:</label>
-                                <input
-                                    type="date"
-                                    id="blockUntil"
-                                    value={blockUntil}
-                                    onChange={(e) => setBlockUntil(e.target.value)}
-                                    min={new Date().toISOString().split('T')[0]}
-                                />
+
+
+                            {/* DATE */}
+
+                            <div className="admin-block-field">
+
+                                <label
+                                    htmlFor="blockUntil"
+                                >
+                                    Block until
+                                </label>
+
+
+                                <div className="admin-block-date">
+
+                                    <CalendarMonthRoundedIcon />
+
+
+                                    <input
+                                        id="blockUntil"
+                                        type="date"
+                                        value={
+                                            blockUntil
+                                        }
+                                        onChange={
+                                            event =>
+                                                setBlockUntil(
+                                                    event.target.value
+                                                )
+                                        }
+                                        min={
+                                            new Date()
+                                                .toISOString()
+                                                .split('T')[0]
+                                        }
+                                        disabled={
+                                            isBlocking
+                                        }
+                                    />
+
+                                </div>
+
                             </div>
-                            {errorMessage && <div className="admin-error-message">{errorMessage}</div>}
-                            <div className="admin-form-buttons">
-                                <button className="admin-icon-button" onClick={handleCancelBlockForm}>
-                                    <img src={backIcon} alt="Cancel" className="admin-button-icon" />
+
+
+                            {/* ERROR */}
+
+                            {errorMessage && (
+
+                                <div className="admin-block-message error">
+
+                                    <WarningAmberRoundedIcon />
+
+                                    <span>
+                                        {errorMessage}
+                                    </span>
+
+                                </div>
+
+                            )}
+
+
+                            {/* SUCCESS */}
+
+                            {successMessage && (
+
+                                <div className="admin-block-message success">
+
+                                    <CheckRoundedIcon />
+
+                                    <span>
+                                        {successMessage}
+                                    </span>
+
+                                </div>
+
+                            )}
+
+
+                            {/* BUTTONS */}
+
+                            <div className="admin-block-actions">
+
+                                <button
+                                    type="button"
+                                    className="admin-block-cancel"
+                                    onClick={
+                                        closeBlockForm
+                                    }
+                                    disabled={
+                                        isBlocking
+                                    }
+                                >
+                                    Cancel
                                 </button>
-                                <button className="admin-icon-button" onClick={handleBlockSubmit}>
-                                    <img src={checkIcon} alt="Submit" className="admin-button-icon" />
+
+
+                                <button
+                                    type="submit"
+                                    className="admin-block-submit"
+                                    disabled={
+                                        isBlocking
+                                    }
+                                >
+
+                                    {isBlocking ? (
+
+                                        <>
+                                            <span className="admin-block-spinner" />
+
+                                            Blocking...
+                                        </>
+
+                                    ) : (
+
+                                        <>
+                                            <BlockRoundedIcon />
+
+                                            Block user
+                                        </>
+
+                                    )}
+
                                 </button>
+
                             </div>
-                        </div>
+
+                        </form>
+
                     </div>
-                )}
-            </div>
+
+                </div>
+
+            )}
+
         </div>
     );
 };
+
 
 export default AdminDashboard;

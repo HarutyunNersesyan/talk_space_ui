@@ -1,414 +1,1686 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import './Profile.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faFacebook,
-    faInstagram,
-    faTwitter,
-    faLinkedin,
-    faYoutube,
-} from '@fortawesome/free-brands-svg-icons';
-import { faArrowRight, faTimes, faSave, faTrash } from '@fortawesome/free-solid-svg-icons';
-import femaleIcon from '../assets/gender/female-symbol.svg';
-import maleIcon from '../assets/gender/male-symbol.svg';
-import ariesIcon from '../assets/zodiac/aries.svg';
-import taurusIcon from '../assets/zodiac/taurus.svg';
-import geminiIcon from '../assets/zodiac/gemini.svg';
-import cancerIcon from '../assets/zodiac/cancer.svg';
-import leoIcon from '../assets/zodiac/leo.svg';
-import virgoIcon from '../assets/zodiac/virgo.svg';
-import libraIcon from '../assets/zodiac/libra.svg';
-import scorpioIcon from '../assets/zodiac/scorpio.svg';
-import sagittariusIcon from '../assets/zodiac/sagittarius.svg';
-import capricornIcon from '../assets/zodiac/capricorn.svg';
-import aquariusIcon from '../assets/zodiac/aquarius.svg';
-import piscesIcon from '../assets/zodiac/horoscope-pisces-solid.svg';
-import editIcon from '../assets/edit.svg';
-import hobbiesIcon from '../assets/search/hobbies-icon.svg';
-import specialtiesIcon from '../assets/search/specialties-icon.svg';
-import internetIcon from '../assets/search/internet.svg';
+import React, {
+    useEffect,
+    useRef,
+    useState
+} from 'react';
 
-interface SearchUser {
-    firstName: string;
-    lastName: string;
-    userName: string;
-    email: string;
-    age: number;
-    gender: string;
-    zodiac: string;
-    about: string;
-    hobbies: string[];
-    specialities: string[];
-    socialNetworks: string[] | undefined;
+import {
+    useNavigate
+} from 'react-router-dom';
+
+import axios from 'axios';
+
+import {
+    jwtDecode
+} from 'jwt-decode';
+
+
+import EditRoundedIcon
+    from '@mui/icons-material/EditRounded';
+
+import InterestsRoundedIcon
+    from '@mui/icons-material/InterestsRounded';
+
+import WorkspacesRoundedIcon
+    from '@mui/icons-material/WorkspacesRounded';
+
+import PublicRoundedIcon
+    from '@mui/icons-material/PublicRounded';
+
+import PhotoCameraRoundedIcon
+    from '@mui/icons-material/PhotoCameraRounded';
+
+import LockRoundedIcon
+    from '@mui/icons-material/LockRounded';
+
+import DeleteOutlineRoundedIcon
+    from '@mui/icons-material/DeleteOutlineRounded';
+
+import LocationOnRoundedIcon
+    from '@mui/icons-material/LocationOnRounded';
+
+import ArrowForwardRoundedIcon
+    from '@mui/icons-material/ArrowForwardRounded';
+
+import CloseRoundedIcon
+    from '@mui/icons-material/CloseRounded';
+
+import SaveRoundedIcon
+    from '@mui/icons-material/SaveRounded';
+
+import PersonRoundedIcon
+    from '@mui/icons-material/PersonRounded';
+
+
+import LocationPicker
+    from './LocationPicker';
+
+import './Profile.css';
+
+
+/* =========================================================
+   API
+   ========================================================= */
+
+const API_URL =
+    process.env.REACT_APP_API_URL ||
+    'http://localhost:8080';
+
+
+/* =========================================================
+   TYPES
+   ========================================================= */
+
+interface DecodedToken {
+    sub: string;
 }
 
-const socialIcons: { [key: string]: any } = {
-    'facebook': faFacebook,
-    'instagram': faInstagram,
-    'twitter': faTwitter,
-    'linkedin': faLinkedin,
-    'youtube': faYoutube,
-};
 
-const zodiacIcons: { [key: string]: string } = {
-    'ARIES': ariesIcon,
-    'TAURUS': taurusIcon,
-    'GEMINI': geminiIcon,
-    'CANCER': cancerIcon,
-    'LEO': leoIcon,
-    'VIRGO': virgoIcon,
-    'LIBRA': libraIcon,
-    'SCORPIO': scorpioIcon,
-    'SAGITTARIUS': sagittariusIcon,
-    'CAPRICORN': capricornIcon,
-    'AQUARIUS': aquariusIcon,
-    'PISCES': piscesIcon,
-};
+interface SearchUser {
 
-const genderIcons: { [key: string]: string } = {
-    'FEMALE': femaleIcon,
-    'MALE': maleIcon
-};
+    firstName: string;
 
-const getPlatformFromUrl = (url: string): string => {
-    if (url.includes('facebook.com')) return 'facebook';
-    if (url.includes('instagram.com')) return 'instagram';
-    if (url.includes('twitter.com')) return 'twitter';
-    if (url.includes('linkedin.com')) return 'linkedin';
-    if (url.includes('youtube.com')) return 'youtube';
-    return 'default';
-};
+    lastName: string;
+
+    userName: string;
+
+    email: string;
+
+    age: number;
+
+    gender: string;
+
+    zodiac: string;
+
+    about: string;
+
+    hobbies: string[];
+
+    specialities: string[];
+
+    socialNetworks?: string[];
+}
+
+
+interface UserLocation {
+
+    country: string;
+
+    region: string;
+
+    city: string;
+
+    village: string;
+
+    formattedAddress: string;
+
+    latitude?: number;
+
+    longitude?: number;
+}
+
+
+/* =========================================================
+   COMPONENT
+   ========================================================= */
 
 const Profile: React.FC = () => {
-    const [picture, setPicture] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const [userName, setUserName] = useState<string | null>(null);
-    const [userInfo, setUserInfo] = useState<SearchUser | null>(null);
-    const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const navigate = useNavigate();
-    const token = localStorage.getItem('token');
+
+    const navigate =
+        useNavigate();
+
+
+    const fileInputRef =
+        useRef<HTMLInputElement>(null);
+
+
+    const [
+        userName,
+        setUserName
+    ] = useState<string>('');
+
+
+    const [
+        userInfo,
+        setUserInfo
+    ] = useState<SearchUser | null>(null);
+
+
+    const [
+        picture,
+        setPicture
+    ] = useState<string | null>(null);
+
+
+    const [
+        selectedFile,
+        setSelectedFile
+    ] = useState<File | null>(null);
+
+
+    const [
+        isImageModalOpen,
+        setIsImageModalOpen
+    ] = useState<boolean>(false);
+
+
+    const [
+        isUploading,
+        setIsUploading
+    ] = useState<boolean>(false);
+
+
+    const [
+        isDeletingImage,
+        setIsDeletingImage
+    ] = useState<boolean>(false);
+
+
+    const [
+        userLocation,
+        setUserLocation
+    ] = useState<UserLocation | null>(null);
+
+
+    const [
+        isSavingLocation,
+        setIsSavingLocation
+    ] = useState<boolean>(false);
+
+
+    const [
+        loading,
+        setLoading
+    ] = useState<boolean>(true);
+
+
+    const [
+        error,
+        setError
+    ] = useState<string>('');
+
+
+    const token =
+        localStorage.getItem('token');
+
+
+    /* =====================================================
+       LOAD PROFILE
+       ===================================================== */
 
     useEffect(() => {
-        const fetchUserInfo = async () => {
-            if (token) {
-                try {
-                    const decodedToken = jwtDecode<{ sub: string }>(token);
-                    const email = decodedToken.sub;
 
-                    const nameResponse = await axios.get(`http://localhost:8080/api/public/user/get/userName/${email}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    setUserName(nameResponse.data);
+        const loadProfile =
+            async () => {
 
-                    const infoResponse = await axios.get(`http://localhost:8080/api/public/user/profile/${email}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    setUserInfo(infoResponse.data);
-                } catch (err) {
-                    console.error('Error fetching user information:', err);
-                    setError('Failed to fetch user information. Please try again later.');
+                if (!token) {
+
+                    setLoading(false);
+
+                    return;
                 }
-            }
-        };
 
-        fetchUserInfo();
+
+                try {
+
+                    setLoading(true);
+
+                    setError('');
+
+
+                    const decoded =
+                        jwtDecode<DecodedToken>(
+                            token
+                        );
+
+
+                    const email =
+                        decoded.sub;
+
+
+                    const nameResponse =
+                        await axios.get<string>(
+                            `${API_URL}/api/public/user/get/userName/${email}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    const currentUserName =
+                        nameResponse.data;
+
+
+                    setUserName(
+                        currentUserName
+                    );
+
+
+                    const profileResponse =
+                        await axios.get<SearchUser>(
+                            `${API_URL}/api/public/user/profile/${email}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    setUserInfo(
+                        profileResponse.data
+                    );
+
+
+                } catch (err) {
+
+                    console.error(
+                        'Failed to load profile:',
+                        err
+                    );
+
+
+                    setError(
+                        'Unable to load your profile.'
+                    );
+
+                } finally {
+
+                    setLoading(false);
+                }
+            };
+
+
+        loadProfile();
+
     }, [token]);
 
+
+    /* =====================================================
+       LOAD PROFILE IMAGE
+       ===================================================== */
+
     useEffect(() => {
-        const fetchProfilePicture = async () => {
-            if (!userName) return;
-            try {
-                const response = await axios.get(`http://localhost:8080/api/public/user/image/${userName}`, {
-                    responseType: 'blob',
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const imageUrl = URL.createObjectURL(response.data);
-                setPicture(imageUrl);
-            } catch (err) {
-                console.error('No profile picture found:', err);
-                setPicture(null);
+
+        if (!userName || !token) {
+            return;
+        }
+
+
+        let objectUrl: string | null = null;
+
+
+        const loadImage =
+            async () => {
+
+                try {
+
+                    const response =
+                        await axios.get(
+                            `${API_URL}/api/public/user/image/${userName}`,
+                            {
+                                responseType: 'blob',
+
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    objectUrl =
+                        URL.createObjectURL(
+                            response.data
+                        );
+
+
+                    setPicture(
+                        objectUrl
+                    );
+
+                } catch {
+
+                    setPicture(null);
+                }
+            };
+
+
+        loadImage();
+
+
+        return () => {
+
+            if (objectUrl) {
+                URL.revokeObjectURL(
+                    objectUrl
+                );
             }
         };
 
-        if (userName) fetchProfilePicture();
     }, [userName, token]);
 
-    const formatAboutText = (text: string) => {
-        if (!text) return "No information available";
 
-        const result = [];
-        for (let i = 0; i < text.length; i += 60) {
-            result.push(text.substring(i, i + 60));
+    /* =====================================================
+       LOAD LOCATION
+       ===================================================== */
+
+    useEffect(() => {
+
+        if (!userName || !token) {
+            return;
         }
-        return result.join('\n');
+
+
+        const loadLocation =
+            async () => {
+
+                try {
+
+                    const response =
+                        await axios.get<UserLocation>(
+                            `${API_URL}/api/public/location/${userName}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    setUserLocation(
+                        response.data
+                    );
+
+                } catch {
+
+                    setUserLocation(null);
+                }
+            };
+
+
+        loadLocation();
+
+    }, [userName, token]);
+
+
+    /* =====================================================
+       PROFILE IMAGE
+       ===================================================== */
+
+    const openFilePicker = () => {
+
+        fileInputRef.current?.click();
     };
 
-    const handleEditClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (picture) {
-            setIsFullScreen(true);
-        } else {
-            fileInputRef.current?.click();
+
+    const handleFileChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+
+        const file =
+            event.target.files?.[0];
+
+
+        if (!file) {
+            return;
         }
+
+
+        setSelectedFile(file);
+
+
+        const previewUrl =
+            URL.createObjectURL(file);
+
+
+        setPicture(
+            previewUrl
+        );
+
+
+        setIsImageModalOpen(true);
     };
 
-    const handleEditUsernameClick = () => {
-        navigate('/edit');
-    };
 
-    const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0] && userName) {
-            const file = e.target.files[0];
-            setSelectedFile(file);
-            const previewUrl = URL.createObjectURL(file);
-            setPicture(previewUrl);
-            setIsFullScreen(true);
-        }
-    };
+    const handleSavePicture =
+        async () => {
 
-    const handleCloseFullScreen = () => {
-        setIsFullScreen(false);
-        setSelectedFile(null);
-        window.location.reload();
-    };
+            if (
+                !selectedFile ||
+                !userName ||
+                !token
+            ) {
+                return;
+            }
 
-    const handleSavePicture = async () => {
-        if (selectedFile && userName) {
+
             try {
-                setLoading(true);
-                const formData = new FormData();
-                formData.append('file', selectedFile);
-                formData.append('userName', userName);
 
-                await axios.post('http://localhost:8080/api/public/user/image/upload', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                setIsUploading(true);
+
+                setError('');
+
+
+                const formData =
+                    new FormData();
+
+
+                formData.append(
+                    'file',
+                    selectedFile
+                );
+
+
+                formData.append(
+                    'userName',
+                    userName
+                );
+
+
+                await axios.post(
+                    `${API_URL}/api/public/user/image/upload`,
+                    formData,
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+
+                setSelectedFile(null);
+
+                setIsImageModalOpen(false);
 
                 window.location.reload();
+
+
             } catch (err) {
-                console.error('Error uploading profile picture:', err);
-                setError('Failed to upload profile picture. Please try again.');
-            } finally {
-                setLoading(false);
-            }
-        }
-    };
 
-    const handleDeletePicture = async () => {
-        if (userName) {
-            setDeleteLoading(true);
+                console.error(
+                    'Image upload failed:',
+                    err
+                );
+
+
+                setError(
+                    'Unable to update your profile picture.'
+                );
+
+            } finally {
+
+                setIsUploading(false);
+            }
+        };
+
+
+    const handleDeletePicture =
+        async () => {
+
+            if (!userName || !token) {
+                return;
+            }
+
+
             try {
-                await axios.delete(`http://localhost:8080/api/public/user/image/delete/${userName}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                window.location.reload();
-            } catch (err: any) {
-                console.error('Error deleting profile picture:', err);
-                setError(err.response?.data || 'Failed to delete profile picture.');
+
+                setIsDeletingImage(true);
+
+                setError('');
+
+
+                await axios.delete(
+                    `${API_URL}/api/public/user/image/delete/${userName}`,
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+
+                setPicture(null);
+
+                setSelectedFile(null);
+
+                setIsImageModalOpen(false);
+
+
+            } catch (err) {
+
+                console.error(
+                    'Image delete failed:',
+                    err
+                );
+
+
+                setError(
+                    'Unable to delete your profile picture.'
+                );
+
             } finally {
-                setDeleteLoading(false);
+
+                setIsDeletingImage(false);
             }
+        };
+
+
+    /* =====================================================
+       LOCATION
+       ===================================================== */
+
+    const handleLocationSelect =
+        async (
+            location: {
+                country: string;
+                region: string;
+                city: string;
+                village: string;
+                placeId: string;
+                formattedAddress: string;
+                lat: number;
+                lng: number;
+            }
+        ) => {
+
+            if (!userName || !token) {
+                return;
+            }
+
+
+            try {
+
+                setIsSavingLocation(true);
+
+                setError('');
+
+
+                await axios.post(
+                    `${API_URL}/api/public/location/update/${userName}`,
+                    {
+                        country:
+                        location.country,
+
+                        region:
+                        location.region,
+
+                        city:
+                        location.city,
+
+                        village:
+                        location.village,
+
+                        placeId:
+                        location.placeId,
+
+                        formattedAddress:
+                        location.formattedAddress,
+
+                        latitude:
+                        location.lat,
+
+                        longitude:
+                        location.lng
+                    },
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+
+                setUserLocation({
+                    country:
+                    location.country,
+
+                    region:
+                    location.region,
+
+                    city:
+                    location.city,
+
+                    village:
+                    location.village,
+
+                    formattedAddress:
+                    location.formattedAddress,
+
+                    latitude:
+                    location.lat,
+
+                    longitude:
+                    location.lng
+                });
+
+
+            } catch (err) {
+
+                console.error(
+                    'Location update failed:',
+                    err
+                );
+
+
+                setError(
+                    'Unable to update your location.'
+                );
+
+
+                throw err;
+
+            } finally {
+
+                setIsSavingLocation(false);
+            }
+        };
+
+
+    /* =====================================================
+       FORMAT LOCATION
+       ===================================================== */
+
+    const getLocationText = () => {
+
+        if (!userLocation) {
+            return 'Location not added';
         }
+
+
+        const parts = [
+
+            userLocation.country,
+
+            userLocation.region,
+
+            userLocation.city,
+
+            userLocation.village
+
+        ].filter(Boolean);
+
+
+        return parts.length > 0
+            ? parts.join(', ')
+            : 'Location not added';
     };
 
-    const handleViewPicture = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (picture) {
-            setIsFullScreen(true);
-        }
-    };
 
-    const handleUpdateHobbiesClick = () => navigate('/hobbies');
-    const handleUpdateSpecialtiesClick = () => navigate('/specialities');
-    const handleUpdateSocialNetworksClick = () => navigate('/social-networks');
+    /* =====================================================
+       LOADING
+       ===================================================== */
 
-    const formatZodiac = (zodiac: string) =>
-        zodiac.charAt(0).toUpperCase() + zodiac.slice(1).toLowerCase();
+    if (loading) {
+
+        return (
+
+            <div className="profile-loading">
+
+                <div className="profile-loader" />
+
+                <p>
+                    Loading your profile...
+                </p>
+
+            </div>
+        );
+    }
+
+
+    /* =====================================================
+       UI
+       ===================================================== */
 
     return (
+
         <div className="profile-page">
-            <div className="profile-container">
-                <div className="profile-content">
-                    <div className="profile-info">
-                        <div className="profile-image-wrapper">
-                            <div className="profile-image-container" onClick={handleViewPicture}>
-                                {picture ? (
-                                    <img src={picture} alt="Profile" className="profile-image" />
-                                ) : (
-                                    <div className="profile-image-placeholder"></div>
-                                )}
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handlePictureChange}
-                                    accept="image/*"
-                                    style={{ display: 'none' }}
-                                />
-                            </div>
+
+            <div className="profile-page-inner">
+
+
+                {/* =========================================
+                    HEADER
+                    ========================================= */}
+
+                <section className="profile-header-card">
+
+                    <div className="profile-header-main">
+
+                        <div className="profile-avatar-wrapper">
+
                             <button
-                                className="edit-image-button"
-                                onClick={handleEditClick}
-                                aria-label="Edit profile picture"
+                                type="button"
+                                className="profile-avatar"
+                                onClick={() => {
+                                    if (picture) {
+                                        setIsImageModalOpen(
+                                            true
+                                        );
+                                    }
+                                }}
                             >
-                                <img src={editIcon} alt="Edit" className="edit-icon" />
+
+                                {picture ? (
+
+                                    <img
+                                        src={picture}
+                                        alt="Profile"
+                                    />
+
+                                ) : (
+
+                                    <PersonRoundedIcon />
+
+                                )}
+
                             </button>
+
+
+                            <button
+                                type="button"
+                                className="profile-camera-button"
+                                onClick={openFilePicker}
+                                aria-label="Change profile picture"
+                            >
+
+                                <PhotoCameraRoundedIcon />
+
+                            </button>
+
+
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={
+                                    handleFileChange
+                                }
+                                hidden
+                            />
+
                         </div>
-                        {userInfo && (
-                            <>
-                                <h2 className="profile-name">
-                                    {userInfo.firstName} {userInfo.lastName}
-                                    <span className="username-brackets"> ({userName})</span>
-                                    <button
-                                        className="edit-username-button"
-                                        onClick={handleEditUsernameClick}
-                                        aria-label="Edit username"
-                                    >
-                                        <img src={editIcon} alt="Edit" className="edit-username-icon" />
-                                    </button>
-                                </h2>
-                                <div className="profile-details">
-                                    <span className="profile-detail">Age: {userInfo.age}</span>
-                                    {userInfo.gender && (
-                                        <span className="profile-detail gender-icon-container">
-                                            {['FEMALE', 'MALE'].includes(userInfo.gender.toUpperCase()) && (
-                                                <img
-                                                    src={genderIcons[userInfo.gender.toUpperCase()]}
-                                                    alt={userInfo.gender}
-                                                    className={`gender-icon ${
-                                                        userInfo.gender.toUpperCase() === 'FEMALE'
-                                                            ? 'female-icon'
-                                                            : 'male-icon'
-                                                    }`}
-                                                    title={userInfo.gender.toUpperCase()}
-                                                />
-                                            )}
-                                        </span>
-                                    )}
-                                    {userInfo.zodiac && (
-                                        <span className="profile-detail zodiac-container">
-                                            Zodiac:
-                                            <img
-                                                src={zodiacIcons[userInfo.zodiac.toUpperCase()]}
-                                                alt={userInfo.zodiac}
-                                                className="zodiac-icon"
-                                                title={formatZodiac(userInfo.zodiac)}
-                                            />
-                                        </span>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                        <div className="profile-section">
-                            <p className="about-me-section">
-                                <b>About me:</b>
-                                <span className="about-me-text">
-                                    {userInfo?.about ? (
-                                        <pre>{formatAboutText(userInfo.about)}</pre>
-                                    ) : (
-                                        "No information available."
-                                    )}
-                                </span>
+
+
+                        <div className="profile-header-info">
+
+                            <span className="profile-label">
+                                MY PROFILE
+                            </span>
+
+
+                            <h1>
+
+                                {userInfo?.firstName || ''}
+                                {' '}
+                                {userInfo?.lastName || ''}
+
+                            </h1>
+
+
+                            <p className="profile-username">
+
+                                @{userName}
+
                             </p>
+
+
+                            <div className="profile-location">
+
+                                <LocationOnRoundedIcon />
+
+                                <span>
+                                    {getLocationText()}
+                                </span>
+
+                            </div>
+
                         </div>
-                        <div className="profile-section">
-                            <p><b>Hobbies:</b> {userInfo?.hobbies?.join(', ') || "No selected hobbies yet."}</p>
-                        </div>
-                        <div className="profile-section">
-                            <p><b>Specialities:</b> {userInfo?.specialities?.join(', ') || "No selected specialities yet."}</p>
-                        </div>
-                        <div className="profile-section social-networks-section">
-                            <p className="social-networks-title"><b>Social Networks:</b></p>
-                            <div className="social-icons-container">
-                                {userInfo?.socialNetworks && userInfo.socialNetworks.length > 0 ? (
-                                    userInfo.socialNetworks.map((url, index) => {
-                                        const platform = getPlatformFromUrl(url);
-                                        const icon = socialIcons[platform];
-                                        if (!icon) return null;
-                                        return (
+
+                    </div>
+
+
+                    {/* EDIT PROFILE */}
+
+                    <button
+                        type="button"
+                        className="profile-main-edit-button"
+                        onClick={() =>
+                            navigate('/edit')
+                        }
+                    >
+
+                        <EditRoundedIcon />
+
+                        <span>
+                            Edit Profile
+                        </span>
+
+                    </button>
+
+                </section>
+
+
+                {/* =========================================
+                    ERROR
+                    ========================================= */}
+
+                {error && (
+
+                    <div className="profile-error">
+
+                        {error}
+
+                    </div>
+
+                )}
+
+
+                {/* =========================================
+                    PROFILE CONTENT
+                    ========================================= */}
+
+                <div className="profile-layout">
+
+
+                    {/* LEFT */}
+
+                    <div className="profile-main-column">
+
+
+                        {/* ABOUT */}
+
+                        <section className="profile-card">
+
+                            <div className="profile-card-heading">
+
+                                <div>
+
+                                    <span>
+                                        ABOUT
+                                    </span>
+
+                                    <h2>
+                                        About me
+                                    </h2>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    className="profile-small-edit"
+                                    onClick={() =>
+                                        navigate('/edit')
+                                    }
+                                >
+
+                                    <EditRoundedIcon />
+
+                                    Edit
+
+                                </button>
+
+                            </div>
+
+
+                            <p className="profile-about-text">
+
+                                {userInfo?.about ||
+                                    'Tell people a little about yourself.'}
+
+                            </p>
+
+                        </section>
+
+
+                        {/* DETAILS */}
+
+                        <section className="profile-card">
+
+                            <div className="profile-card-heading">
+
+                                <div>
+
+                                    <span>
+                                        DETAILS
+                                    </span>
+
+                                    <h2>
+                                        Personal information
+                                    </h2>
+
+                                </div>
+
+                            </div>
+
+
+                            <div className="profile-details-grid">
+
+                                <div className="profile-detail-item">
+
+                                    <span>
+                                        Age
+                                    </span>
+
+                                    <strong>
+                                        {userInfo?.age || '—'}
+                                    </strong>
+
+                                </div>
+
+
+                                <div className="profile-detail-item">
+
+                                    <span>
+                                        Gender
+                                    </span>
+
+                                    <strong>
+                                        {userInfo?.gender || '—'}
+                                    </strong>
+
+                                </div>
+
+
+                                <div className="profile-detail-item">
+
+                                    <span>
+                                        Zodiac
+                                    </span>
+
+                                    <strong>
+                                        {userInfo?.zodiac || '—'}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        {/* HOBBIES */}
+
+                        <section className="profile-card">
+
+                            <div className="profile-card-heading">
+
+                                <div>
+
+                                    <span>
+                                        INTERESTS
+                                    </span>
+
+                                    <h2>
+                                        Hobbies
+                                    </h2>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    className="profile-small-edit"
+                                    onClick={() =>
+                                        navigate('/hobbies')
+                                    }
+                                >
+
+                                    <EditRoundedIcon />
+
+                                    Edit
+
+                                </button>
+
+                            </div>
+
+
+                            <div className="profile-tags">
+
+                                {userInfo?.hobbies &&
+                                userInfo.hobbies.length > 0 ? (
+
+                                    userInfo.hobbies.map(
+                                        hobby => (
+
+                                            <span
+                                                key={hobby}
+                                                className="profile-tag"
+                                            >
+                                                {hobby}
+                                            </span>
+
+                                        )
+                                    )
+
+                                ) : (
+
+                                    <p className="profile-empty-text">
+
+                                        You haven't added
+                                        any hobbies yet.
+
+                                    </p>
+
+                                )}
+
+                            </div>
+
+                        </section>
+
+
+                        {/* SPECIALITIES */}
+
+                        <section className="profile-card">
+
+                            <div className="profile-card-heading">
+
+                                <div>
+
+                                    <span>
+                                        PROFESSIONAL
+                                    </span>
+
+                                    <h2>
+                                        Specialities
+                                    </h2>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    className="profile-small-edit"
+                                    onClick={() =>
+                                        navigate('/specialities')
+                                    }
+                                >
+
+                                    <EditRoundedIcon />
+
+                                    Edit
+
+                                </button>
+
+                            </div>
+
+
+                            <div className="profile-tags">
+
+                                {userInfo?.specialities &&
+                                userInfo.specialities.length > 0 ? (
+
+                                    userInfo.specialities.map(
+                                        speciality => (
+
+                                            <span
+                                                key={speciality}
+                                                className="profile-tag speciality"
+                                            >
+                                                {speciality}
+                                            </span>
+
+                                        )
+                                    )
+
+                                ) : (
+
+                                    <p className="profile-empty-text">
+
+                                        You haven't added
+                                        any specialities yet.
+
+                                    </p>
+
+                                )}
+
+                            </div>
+
+                        </section>
+
+
+                        {/* SOCIAL */}
+
+                        <section className="profile-card">
+
+                            <div className="profile-card-heading">
+
+                                <div>
+
+                                    <span>
+                                        CONTACT
+                                    </span>
+
+                                    <h2>
+                                        Social Networks
+                                    </h2>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    className="profile-small-edit"
+                                    onClick={() =>
+                                        navigate(
+                                            '/social-networks'
+                                        )
+                                    }
+                                >
+
+                                    <EditRoundedIcon />
+
+                                    Edit
+
+                                </button>
+
+                            </div>
+
+
+                            {userInfo?.socialNetworks &&
+                            userInfo.socialNetworks.length > 0 ? (
+
+                                <div className="profile-social-list">
+
+                                    {userInfo.socialNetworks.map(
+                                        (
+                                            social,
+                                            index
+                                        ) => (
+
                                             <a
-                                                key={index}
-                                                href={url}
+                                                key={`${social}-${index}`}
+                                                href={social}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="social-link"
+                                                className="profile-social-link"
                                             >
-                                                <FontAwesomeIcon icon={icon} />
+
+                                                <PublicRoundedIcon />
+
+                                                <span>
+                                                    {social}
+                                                </span>
+
                                             </a>
-                                        );
-                                    })
-                                ) : (
-                                    <span className="no-social">No social networks added yet.</span>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            ) : (
+
+                                <p className="profile-empty-text">
+
+                                    You haven't added any
+                                    social networks yet.
+
+                                </p>
+
+                            )}
+
+                        </section>
+
+
+                        {/* LOCATION */}
+
+                        {userName && (
+
+                            <section className="profile-card">
+
+                                <div className="profile-card-heading">
+
+                                    <div>
+
+                                        <span>
+                                            LOCATION
+                                        </span>
+
+                                        <h2>
+                                            Your location
+                                        </h2>
+
+                                    </div>
+
+                                </div>
+
+
+                                <LocationPicker
+                                    userName={userName}
+                                    initialLocation={
+                                        userLocation
+                                            ? {
+                                                country:
+                                                userLocation.country,
+
+                                                region:
+                                                userLocation.region,
+
+                                                city:
+                                                userLocation.city,
+
+                                                village:
+                                                userLocation.village,
+
+                                                formattedAddress:
+                                                userLocation.formattedAddress,
+
+                                                lat:
+                                                userLocation.latitude,
+
+                                                lng:
+                                                userLocation.longitude
+                                            }
+                                            : undefined
+                                    }
+                                    onLocationSelect={
+                                        handleLocationSelect
+                                    }
+                                />
+
+
+                                {isSavingLocation && (
+
+                                    <p className="profile-saving-text">
+                                        Saving location...
+                                    </p>
+
                                 )}
-                            </div>
-                        </div>
+
+                            </section>
+
+                        )}
+
                     </div>
 
-                    <div className="profile-actions">
-                        <div className="welcome-container">
-                            <h2 className="welcome-message">Welcome !</h2>
-                        </div>
-                        <p className="complete-profile-text">Complete your profile so others can find you more easily and get to know you better.</p>
-                        <button className="action-item" onClick={handleUpdateHobbiesClick}>
-                            <img src={hobbiesIcon} alt="Hobbies" className="action-icon" />
-                            Update Hobbies <FontAwesomeIcon icon={faArrowRight} />
-                        </button>
-                        <button className="action-item" onClick={handleUpdateSpecialtiesClick}>
-                            <img src={specialtiesIcon} alt="Specialties" className="action-icon" />
-                            Update Specialties <FontAwesomeIcon icon={faArrowRight} />
-                        </button>
-                        <button className="action-item" onClick={handleUpdateSocialNetworksClick}>
-                            <img src={internetIcon} alt="Social Networks" className="action-icon" />
-                            Update Social Networks <FontAwesomeIcon icon={faArrowRight} />
-                        </button>
-                    </div>
+
+                    {/* =====================================
+                        RIGHT — PROFILE SETTINGS
+                        ===================================== */}
+
+                    <aside className="profile-side-column">
+
+                        <section className="profile-actions-card">
+
+                            <div className="profile-actions-heading">
+
+                                <span>
+                                    PROFILE SETTINGS
+                                </span>
+
+                                <h2>
+                                    Manage profile
+                                </h2>
+
+                                <p>
+                                    Complete your profile
+                                    to get better matches.
+                                </p>
+
+                            </div>
+
+
+                            {/* EDIT PROFILE */}
+
+                            <button
+                                type="button"
+                                className="profile-action-button"
+                                onClick={() =>
+                                    navigate('/edit')
+                                }
+                            >
+
+                                <span className="profile-action-icon">
+
+                                    <EditRoundedIcon />
+
+                                </span>
+
+
+                                <span className="profile-action-text">
+
+                                    <strong>
+                                        Edit Profile
+                                    </strong>
+
+                                    <small>
+                                        Update your personal information
+                                    </small>
+
+                                </span>
+
+
+                                <ArrowForwardRoundedIcon />
+
+                            </button>
+
+
+                            {/* HOBBIES */}
+
+                            <button
+                                type="button"
+                                className="profile-action-button"
+                                onClick={() =>
+                                    navigate('/hobbies')
+                                }
+                            >
+
+                                <span className="profile-action-icon">
+
+                                    <InterestsRoundedIcon />
+
+                                </span>
+
+
+                                <span className="profile-action-text">
+
+                                    <strong>
+                                        Hobbies
+                                    </strong>
+
+                                    <small>
+                                        Add or change your interests
+                                    </small>
+
+                                </span>
+
+
+                                <ArrowForwardRoundedIcon />
+
+                            </button>
+
+
+                            {/* SPECIALITIES */}
+
+                            <button
+                                type="button"
+                                className="profile-action-button"
+                                onClick={() =>
+                                    navigate('/specialities')
+                                }
+                            >
+
+                                <span className="profile-action-icon">
+
+                                    <WorkspacesRoundedIcon />
+
+                                </span>
+
+
+                                <span className="profile-action-text">
+
+                                    <strong>
+                                        Specialities
+                                    </strong>
+
+                                    <small>
+                                        Manage your professional skills
+                                    </small>
+
+                                </span>
+
+
+                                <ArrowForwardRoundedIcon />
+
+                            </button>
+
+
+                            {/* SOCIAL NETWORKS */}
+
+                            <button
+                                type="button"
+                                className="profile-action-button"
+                                onClick={() =>
+                                    navigate(
+                                        '/social-networks'
+                                    )
+                                }
+                            >
+
+                                <span className="profile-action-icon">
+
+                                    <PublicRoundedIcon />
+
+                                </span>
+
+
+                                <span className="profile-action-text">
+
+                                    <strong>
+                                        Social Networks
+                                    </strong>
+
+                                    <small>
+                                        Add your social profiles
+                                    </small>
+
+                                </span>
+
+
+                                <ArrowForwardRoundedIcon />
+
+                            </button>
+
+
+                            {/* PROFILE IMAGE */}
+
+                            <button
+                                type="button"
+                                className="profile-action-button"
+                                onClick={openFilePicker}
+                            >
+
+                                <span className="profile-action-icon">
+
+                                    <PhotoCameraRoundedIcon />
+
+                                </span>
+
+
+                                <span className="profile-action-text">
+
+                                    <strong>
+                                        Profile Picture
+                                    </strong>
+
+                                    <small>
+                                        Change your profile photo
+                                    </small>
+
+                                </span>
+
+
+                                <ArrowForwardRoundedIcon />
+
+                            </button>
+
+
+                            {/* PASSWORD */}
+
+                            <button
+                                type="button"
+                                className="profile-action-button"
+                                onClick={() =>
+                                    navigate(
+                                        '/changePassword'
+                                    )
+                                }
+                            >
+
+                                <span className="profile-action-icon">
+
+                                    <LockRoundedIcon />
+
+                                </span>
+
+
+                                <span className="profile-action-text">
+
+                                    <strong>
+                                        Change Password
+                                    </strong>
+
+                                    <small>
+                                        Update your account password
+                                    </small>
+
+                                </span>
+
+
+                                <ArrowForwardRoundedIcon />
+
+                            </button>
+
+                        </section>
+
+
+                        {/* DANGER ZONE */}
+
+                        <section className="profile-danger-card">
+
+                            <span>
+                                ACCOUNT
+                            </span>
+
+                            <h3>
+                                Danger zone
+                            </h3>
+
+                            <p>
+                                Permanently remove your
+                                TalkSpace account.
+                            </p>
+
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    navigate('/delete')
+                                }
+                            >
+
+                                <DeleteOutlineRoundedIcon />
+
+                                Delete Account
+
+                            </button>
+
+                        </section>
+
+                    </aside>
+
                 </div>
+
             </div>
 
-            {isFullScreen && picture && (
-                <div className="fullscreen-image-overlay">
-                    <div className="fullscreen-image-container">
-                        <img src={picture} alt="Profile Preview" className="fullscreen-image" />
-                        <div className="fullscreen-image-controls">
-                            <button
-                                className="fullscreen-button delete-button"
-                                onClick={handleDeletePicture}
-                                disabled={deleteLoading}
-                            >
-                                <FontAwesomeIcon icon={faTrash} /> {deleteLoading ? 'Deleting...' : 'Delete'}
-                            </button>
+
+            {/* =================================================
+                IMAGE MODAL
+                ================================================= */}
+
+            {isImageModalOpen && picture && (
+
+                <div
+                    className="profile-image-modal"
+                    onClick={() =>
+                        setIsImageModalOpen(false)
+                    }
+                >
+
+                    <div
+                        className="profile-image-modal-content"
+                        onClick={event =>
+                            event.stopPropagation()
+                        }
+                    >
+
+                        <button
+                            type="button"
+                            className="profile-modal-close"
+                            onClick={() =>
+                                setIsImageModalOpen(false)
+                            }
+                        >
+
+                            <CloseRoundedIcon />
+
+                        </button>
+
+
+                        <img
+                            src={picture}
+                            alt="Profile preview"
+                        />
+
+
+                        <div className="profile-modal-actions">
+
                             {selectedFile && (
+
                                 <button
-                                    className="fullscreen-button save-button"
-                                    onClick={handleSavePicture}
-                                    disabled={loading}
+                                    type="button"
+                                    className="profile-modal-save"
+                                    onClick={
+                                        handleSavePicture
+                                    }
+                                    disabled={
+                                        isUploading
+                                    }
                                 >
-                                    <FontAwesomeIcon icon={faSave} /> {loading ? 'Saving...' : 'Save'}
+
+                                    <SaveRoundedIcon />
+
+                                    {isUploading
+                                        ? 'Saving...'
+                                        : 'Save Photo'
+                                    }
+
                                 </button>
+
                             )}
+
+
                             <button
-                                className="fullscreen-button close-button"
-                                onClick={handleCloseFullScreen}
+                                type="button"
+                                className="profile-modal-delete"
+                                onClick={
+                                    handleDeletePicture
+                                }
+                                disabled={
+                                    isDeletingImage
+                                }
                             >
-                                <FontAwesomeIcon icon={faTimes} /> Close
+
+                                <DeleteOutlineRoundedIcon />
+
+                                {isDeletingImage
+                                    ? 'Deleting...'
+                                    : 'Delete Photo'
+                                }
+
                             </button>
+
                         </div>
+
                     </div>
+
                 </div>
+
             )}
 
-            {error && <div className="error-message">{error}</div>}
         </div>
     );
 };
+
 
 export default Profile;

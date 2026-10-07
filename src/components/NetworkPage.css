@@ -1,255 +1,739 @@
-body, html {
-    margin: 0;
-    padding: 0;
-}
+/* =========================================================
+   NETWORK PAGE
+   ========================================================= */
 
-.network-container {
-    font-family: 'Arial', sans-serif;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    overflow-x: hidden;
-
-}
-
-.network-header {
-    height: 220px;
-    position: relative;
+.network-page {
     width: 100%;
-    background-size: 2800px;
-    background-position: center;
-    background-repeat: no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-height: 100vh;
+
+    box-sizing: border-box;
+
+    padding:
+            38px
+            42px
+            80px;
+
+    color: #182230;
+
+    font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
 }
 
-.header-content {
-    position: relative;
-    z-index: 2;
-    max-width: 2000px;
-    bottom: 60px;
+
+.network-page-inner {
+    width: 100%;
+    max-width: 1500px;
+
     margin: 0 auto;
-    /*padding: 40px 20px;*/
-    transform: translateY(50px);
-}
-
-.network-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.3);
-    z-index: 1;
-}
-
-.network-header h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 2.5em;
-    margin-bottom: 15px;
-    color: #333;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-.network-header p {
-    font-family: 'Lato', sans-serif;
-    font-size: 1.2em;
-    color: #555;
-    margin-bottom: 20px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    text-align: justify;
-    text-justify: inter-word;
 }
 
 
-.network-options {
-    background-color: white;
-    height: 60vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 80px;
-    flex-wrap: wrap;
-    padding: 20px;
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.network-hero {
     position: relative;
+
+    min-height: 265px;
+
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.1fr)
+        minmax(300px, 0.9fr);
+
+    align-items: center;
+
+    gap: 45px;
+
+    box-sizing: border-box;
+
+    padding:
+            42px
+            48px;
+
+    overflow: hidden;
+
+    border:
+            1px solid
+            rgba(109, 93, 252, 0.09);
+
+    border-radius: 24px;
+
+    background:
+            linear-gradient(
+                    135deg,
+                    rgba(248, 247, 255, 0.98),
+                    rgba(243, 247, 255, 0.96)
+            );
+
+    box-shadow:
+            0 12px 38px
+            rgba(60, 55, 120, 0.035);
 }
 
-.divider {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    height: calc(100% - 120px);
-    width: 1px;
-    background-color: #d0f0ff;
+
+/* =========================================================
+   HERO BADGE
+   ========================================================= */
+
+.network-hero-badge {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    color: #4d5666;
+
+    font-size: 13px;
+    font-weight: 650;
+
+    line-height: 1.4;
 }
 
-.option {
+
+.network-hero-badge svg {
+    width: 20px;
+    height: 20px;
+
+    color: #6d5dfc;
+}
+
+
+/* =========================================================
+   HERO TITLE
+   ========================================================= */
+
+.network-hero h1 {
+    max-width: 700px;
+
+    margin: 0;
+
+    color: #172033;
+
+    font-size:
+            clamp(
+                    42px,
+                    4vw,
+                    56px
+            );
+
+    font-weight: 820;
+
+    line-height: 1.06;
+
+    letter-spacing: -2px;
+}
+
+
+.network-hero h1 span {
+    color: #6d5dfc;
+}
+
+
+/* =========================================================
+   HERO DESCRIPTION
+   ========================================================= */
+
+.network-hero > p {
+    max-width: 560px;
+
+    margin: 0;
+
+    color: #5f697a;
+
+    font-size: 15px;
+    font-weight: 450;
+
+    line-height: 1.65;
+}
+
+
+/* =========================================================
+   OPTIONS GRID
+   ========================================================= */
+
+.network-options-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-top: 0;
+}
+
+
+/* =========================================================
+   OPTION CARD
+   ========================================================= */
+
+.network-option-card {
+    position: relative;
+
+    min-height: 280px;
+
     display: flex;
     flex-direction: column;
+
+    box-sizing: border-box;
+
+    padding:
+            24px
+            22px
+            20px;
+
+    overflow: hidden;
+
+    border:
+            1px solid
+            rgba(229, 231, 235, 0.95);
+
+    border-radius: 20px;
+
+    background:
+            rgba(255, 255, 255, 0.97);
+
+    box-shadow:
+            0 8px 28px
+            rgba(40, 45, 70, 0.045);
+
+    transition:
+            transform 0.25s ease,
+            border-color 0.25s ease,
+            box-shadow 0.25s ease;
+}
+
+
+.network-option-card:hover {
+    transform: translateY(-3px);
+
+    border-color:
+            rgba(109, 93, 252, 0.18);
+
+    box-shadow:
+            0 15px 35px
+            rgba(60, 55, 120, 0.08);
+}
+
+
+.network-option-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    right: -90px;
+    bottom: -100px;
+
+    border-radius: 50%;
+
+    background:
+            radial-gradient(
+                    circle,
+                    rgba(109, 93, 252, 0.06),
+                    rgba(109, 93, 252, 0)
+            );
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   CARD ICON
+   ========================================================= */
+
+.network-card-icon {
+    position: relative;
+    z-index: 1;
+
+    width: 46px;
+    height: 46px;
+
+    display: flex;
     align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 13px;
+
+    background:
+            rgba(109, 93, 252, 0.09);
+
+    color: #6d5dfc;
+}
+
+
+.network-card-icon.specialties {
+    background:
+            rgba(109, 93, 252, 0.08);
+
+    color: #6d5dfc;
+}
+
+
+.network-card-icon svg {
+    width: 23px;
+    height: 23px;
+}
+
+
+/* =========================================================
+   CARD CONTENT
+   ========================================================= */
+
+.network-card-content {
+    position: relative;
+
+    z-index: 1;
+
+    flex: 1;
+
+    padding-top: 16px;
+}
+
+
+.network-card-label {
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: #8b94a5;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    line-height: 1.2;
+
+    letter-spacing: 1px;
+}
+
+
+.network-card-content h2 {
+    margin: 0;
+
+    color: #1d2939;
+
+    font-size: 23px;
+    font-weight: 780;
+
+    line-height: 1.25;
+
+    letter-spacing: -0.5px;
+}
+
+
+.network-card-content > p {
+    max-width: 500px;
+
+    margin:
+            12px
+            0
+            16px;
+
+    color: #697386;
+
+    font-size: 13px;
+    font-weight: 450;
+
+    line-height: 1.65;
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.network-error {
+    position: relative;
+
+    z-index: 1;
+
+    margin-bottom: 11px;
+
+    padding:
+            10px
+            12px;
+
+    border:
+            1px solid
+            rgba(239, 68, 68, 0.12);
+
+    border-radius: 9px;
+
+    background:
+            rgba(239, 68, 68, 0.045);
+
+    color: #dc4a4a;
+
+    font-size: 12px;
+    font-weight: 550;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   SEARCH BUTTON
+   ========================================================= */
+
+.network-search-button {
+    position: relative;
+
+    z-index: 1;
+
+    width: 100%;
+    min-height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-top: auto;
+
+    padding:
+            0
+            15px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+            linear-gradient(
+                    135deg,
+                    #6d5dfc,
+                    #8b5cf6
+            );
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    line-height: 1;
+
     cursor: pointer;
-    padding: 20px;
-    transition: all 0.3s ease;
-    position: relative;
+
+    box-shadow:
+            0 8px 20px
+            rgba(109, 93, 252, 0.16);
+
+    transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            opacity 0.2s ease;
 }
 
-.option:hover {
-    transform: translateY(-5px);
+
+.network-search-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    box-shadow:
+            0 10px 24px
+            rgba(109, 93, 252, 0.22);
 }
 
-.hobbies-option {
-    align-items: flex-start;
+
+.network-search-button:disabled {
+    opacity: 0.62;
+
+    cursor: wait;
 }
 
-.specialties-option {
-    align-items: flex-end;
+
+.network-search-button svg {
+    width: 18px;
+    height: 18px;
+
+    flex-shrink: 0;
 }
 
-.hobbies-image-container,
-.specialties-image-container {
-    position: relative;
-    display: inline-block;
+
+/* =========================================================
+   BOTTOM NOTE
+   ========================================================= */
+
+.network-bottom-note {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 18px;
+
+    padding:
+            0
+            2px;
+
+    color: #606b7d;
 }
 
-.hobbies-image,
-.specialties-image {
-    width: 500px;
-    height: auto;
-    border-radius: 8px;
+
+.network-bottom-note > svg {
+    width: 20px;
+    height: 20px;
+
+    flex-shrink: 0;
+
+    color: #6d5dfc;
 }
 
-.hobbies-image {
-    top: -40px;
-    position: relative;
-    left: -200px;
+
+.network-bottom-note p {
+    margin: 0;
+
+    color: #606b7d;
+
+    font-size: 14px;
+    font-weight: 450;
+
+    line-height: 1.6;
 }
 
-.specialties-image {
-    top: -35px;
-    position: relative;
-    right: -100px;
+
+/* =========================================================
+   BUTTON SPINNER
+   ========================================================= */
+
+.network-button-spinner {
+    width: 16px;
+    height: 16px;
+
+    box-sizing: border-box;
+
+    border:
+            2px solid
+            rgba(255, 255, 255, 0.3);
+
+    border-top-color: #ffffff;
+
+    border-radius: 50%;
+
+    animation:
+            networkSpin
+            0.7s
+            linear
+            infinite;
 }
 
-.hobbies-button,
-.specialties-button {
-    position: absolute;
-    background-color: transparent;
-    border: 2px solid #b3f0ff;
-    border-radius: 25px;
-    padding: 12px 25px;
-    color: #007a99;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    z-index: 2;
-    white-space: nowrap;
+
+@keyframes networkSpin {
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-.hobbies-button {
-    right: 140px;
-    top: 15px;
-}
 
-.specialties-button {
-    left: 520px;
-    top: 70px;
-}
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
 
-.hobbies-button:hover:not(:disabled),
-.specialties-button:hover:not(:disabled) {
-    background-color: #b3f0ff;
-    transform: scale(1.05);
-}
+@media (max-width: 1050px) {
 
-.hobbies-button:disabled,
-.specialties-button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
+    .network-hero {
+        grid-template-columns: 1fr;
 
-.hobbies-error {
-    position: absolute;
-    bottom: -20px;
-    left: -120px;
-    width: 400px;
-    color: #ff6b6b;
-    font-size: 1.1em;
-    text-align: center;
-}
-
-.specialties-error {
-    position: absolute;
-    bottom: -10px;
-    right: -160px;
-    width: 400px;
-    color: #ff6b6b;
-    font-size: 1.1em;
-    text-align: center;
-}
-
-@media (max-width: 768px) {
-    .network-options {
-        flex-direction: column;
-        gap: 50px;
-        height: auto;
-        min-height: 60vh;
+        gap: 20px;
     }
 
-    .network-header {
-        height: auto;
-        min-height: 40vh;
+
+    .network-hero > p {
+        max-width: 650px;
     }
 
-    .header-content {
-        transform: translateY(30px);
+}
+
+
+@media (max-width: 850px) {
+
+    .network-page {
+        padding:
+                28px
+                22px
+                70px;
     }
 
-    .option {
-        padding: 10px;
+
+    .network-hero {
+        min-height: 240px;
+
+        padding:
+                34px
+                30px;
     }
 
-    .hobbies-image,
-    .specialties-image {
-        width: 250px;
-        left: 0;
-        right: 0;
+
+    .network-hero h1 {
+        font-size: 44px;
     }
 
-    .hobbies-button,
-    .specialties-button {
-        right: auto;
-        left: 50%;
-        transform: translateX(-50%);
-        top: 20px;
-        padding: 8px 15px;
-        font-size: 1em;
+
+    .network-options-grid {
+        grid-template-columns: 1fr;
     }
 
-    .divider {
-        display: none;
+
+    .network-option-card {
+        min-height: 260px;
     }
 
-    .network-header h1 {
-        font-size: 2em;
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .network-page {
+        padding:
+                20px
+                13px
+                65px;
     }
 
-    .network-header p {
-        font-size: 1em;
+
+    .network-hero {
+        min-height: auto;
+
+        padding:
+                28px
+                20px;
+
+        gap: 16px;
+
+        border-radius: 18px;
     }
 
-    .hobbies-error,
-    .specialties-error {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        right: auto;
-        width: 100%;
-        margin-top: 10px;
+
+    .network-hero-badge {
+        font-size: 12px;
     }
+
+
+    .network-hero-badge svg {
+        width: 18px;
+        height: 18px;
+    }
+
+
+    .network-hero h1 {
+        font-size: 35px;
+
+        line-height: 1.08;
+
+        letter-spacing: -1.4px;
+    }
+
+
+    .network-hero > p {
+        font-size: 14px;
+
+        line-height: 1.6;
+    }
+
+
+    .network-option-card {
+        min-height: 260px;
+
+        padding: 19px;
+
+        border-radius: 16px;
+    }
+
+
+    .network-card-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+
+    .network-card-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+
+    .network-card-label {
+        font-size: 10px;
+    }
+
+
+    .network-card-content h2 {
+        font-size: 21px;
+    }
+
+
+    .network-card-content > p {
+        font-size: 13px;
+    }
+
+
+    .network-search-button {
+        min-height: 45px;
+
+        font-size: 13px;
+    }
+
+
+    .network-bottom-note {
+        align-items: flex-start;
+    }
+
+
+    .network-bottom-note p {
+        font-size: 13px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 400px) {
+
+    .network-hero h1 {
+        font-size: 32px;
+    }
+
+
+    .network-card-content h2 {
+        font-size: 20px;
+    }
+
+
+    .network-option-card {
+        padding: 17px;
+    }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.network-search-button:focus-visible {
+    outline:
+            3px solid
+            rgba(109, 93, 252, 0.22);
+
+    outline-offset: 3px;
 }

@@ -1,34 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, {
+    useCallback,
+    useEffect,
+    useState
+} from 'react';
+
+import {
+    useLocation,
+    useNavigate
+} from 'react-router-dom';
+
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import './SearchBySpecialities.css';
+
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
+import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import WorkRoundedIcon from '@mui/icons-material/WorkRounded';
+import InterestsRoundedIcon from '@mui/icons-material/InterestsRounded';
+import CakeOutlinedIcon from '@mui/icons-material/CakeOutlined';
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
+
+import FacebookRoundedIcon from '@mui/icons-material/FacebookRounded';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import YouTubeIcon from '@mui/icons-material/YouTube';
+import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded';
+
 import defaultProfileImage from '../assets/default-profile-image.jpg';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faFacebook,
-    faInstagram,
-    faTwitter,
-    faLinkedin,
-    faYoutube
-} from '@fortawesome/free-brands-svg-icons';
-import likeIcon from '../assets/search/like.svg';
-import backIcon from '../assets/search/back.svg';
-import searchIcon from '../assets/search/loop.svg';
-import femaleIcon from '../assets/gender/female-symbol.svg';
-import maleIcon from '../assets/gender/male-symbol.svg';
-import ariesIcon from '../assets/zodiac/aries.svg';
-import taurusIcon from '../assets/zodiac/taurus.svg';
-import geminiIcon from '../assets/zodiac/gemini.svg';
-import cancerIcon from '../assets/zodiac/cancer.svg';
-import leoIcon from '../assets/zodiac/leo.svg';
-import virgoIcon from '../assets/zodiac/virgo.svg';
-import libraIcon from '../assets/zodiac/libra.svg';
-import scorpioIcon from '../assets/zodiac/scorpio.svg';
-import sagittariusIcon from '../assets/zodiac/sagittarius.svg';
-import capricornIcon from '../assets/zodiac/capricorn.svg';
-import aquariusIcon from '../assets/zodiac/aquarius.svg';
-import piscesIcon from '../assets/zodiac/horoscope-pisces-solid.svg';
+
+import './SearchBySpecialities.css';
+
+
+const API_BASE_URL =
+    process.env.REACT_APP_API_URL
+        ? `${process.env.REACT_APP_API_URL}/api`
+        : 'http://localhost:8080/api';
+
 
 interface SearchUser {
     firstName: string;
@@ -43,369 +54,1139 @@ interface SearchUser {
     socialNetworks: string[];
 }
 
-interface Like {
-    liker: {
-        userName: string;
-    };
-    liked: {
-        userName: string;
-    };
+
+interface LocationState {
+    initialProfile?: SearchUser;
 }
 
-const socialIcons: { [key: string]: any } = {
-    'facebook': faFacebook,
-    'instagram': faInstagram,
-    'twitter': faTwitter,
-    'linkedin': faLinkedin,
-    'youtube': faYoutube,
-};
-
-const zodiacIcons: { [key: string]: string } = {
-    'ARIES': ariesIcon,
-    'TAURUS': taurusIcon,
-    'GEMINI': geminiIcon,
-    'CANCER': cancerIcon,
-    'LEO': leoIcon,
-    'VIRGO': virgoIcon,
-    'LIBRA': libraIcon,
-    'SCORPIO': scorpioIcon,
-    'SAGITTARIUS': sagittariusIcon,
-    'CAPRICORN': capricornIcon,
-    'AQUARIUS': aquariusIcon,
-    'PISCES': piscesIcon,
-};
-
-const genderIcons: { [key: string]: string } = {
-    'FEMALE': femaleIcon,
-    'MALE': maleIcon
-};
 
 const SearchBySpecialities: React.FC = () => {
-    const [userProfile, setUserProfile] = useState<SearchUser | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [currentUserName, setCurrentUserName] = useState<string | null>(null);
-    const [isLiking, setIsLiking] = useState(false);
-    const [isSearching, setIsSearching] = useState(false);
-    const [imageUrls, setImageUrls] = useState<{[key: string]: string}>({});
-    const [hasLiked, setHasLiked] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
-    useEffect(() => {
-        const fetchUserName = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) return;
+    const token =
+        localStorage.getItem('token');
 
-            try {
-                const decodedToken = jwtDecode<{ sub: string }>(token);
-                const email = decodedToken.sub;
 
-                const response = await axios.get(
-                    `http://localhost:8080/api/public/user/get/userName/${email}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+    const [
+        userProfile,
+        setUserProfile
+    ] = useState<SearchUser | null>(null);
 
-                setCurrentUserName(response.data);
 
-                if (!location.state?.initialProfile) {
-                    handleSearchBySpecialities();
+    const [
+        currentUserName,
+        setCurrentUserName
+    ] = useState<string | null>(null);
+
+
+    const [
+        profileImage,
+        setProfileImage
+    ] = useState<string | null>(null);
+
+
+    const [
+        hasLiked,
+        setHasLiked
+    ] = useState<boolean>(false);
+
+
+    const [
+        isLiking,
+        setIsLiking
+    ] = useState<boolean>(false);
+
+
+    const [
+        isSearching,
+        setIsSearching
+    ] = useState<boolean>(true);
+
+
+    const [
+        error,
+        setError
+    ] = useState<string | null>(null);
+
+
+    /* =====================================================
+       NORMALIZE PROFILE
+       ===================================================== */
+
+    const normalizeProfile = (
+        data: any
+    ): SearchUser => ({
+        ...data,
+
+        hobbies:
+            Array.isArray(data?.hobbies)
+                ? data.hobbies
+                : [],
+
+        specialities:
+            Array.isArray(data?.specialities)
+                ? data.specialities
+                : [],
+
+        socialNetworks:
+            Array.isArray(data?.socialNetworks)
+                ? data.socialNetworks
+                : []
+    });
+
+
+    /* =====================================================
+       SEARCH BY SPECIALITIES
+       ===================================================== */
+
+    const handleSearchBySpecialities =
+        useCallback(
+            async (
+                username?: string
+            ) => {
+                const name =
+                    username ||
+                    currentUserName;
+
+
+                if (!name) {
+                    return;
                 }
-            } catch (error) {
-                console.error('Failed to fetch userName:', error);
-                setError('Failed to authenticate user');
-            }
-        };
 
-        fetchUserName();
-    }, []);
 
-    useEffect(() => {
-        const fetchInitialData = async () => {
-            const locationState = location.state as { initialProfile?: SearchUser };
-            if (locationState?.initialProfile) {
-                setUserProfile(locationState.initialProfile);
-            } else {
-                await handleSearchBySpecialities();
-            }
-        };
+                setIsSearching(true);
+                setError(null);
 
-        fetchInitialData();
-    }, [currentUserName]);
 
-    useEffect(() => {
-        if (userProfile && currentUserName) {
-            const fetchImage = async () => {
                 try {
-                    const response = await axios.get(
-                        `http://localhost:8080/api/public/user/image/${userProfile.userName}`,
-                        {
-                            headers: {
-                                Authorization: `Bearer ${localStorage.getItem('token')}`,
-                            },
-                            responseType: 'blob'
-                        }
+                    const response =
+                        await axios.get(
+                            `${API_BASE_URL}/public/user/searchBySpecialities/${name}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    if (response.data) {
+                        setUserProfile(
+                            normalizeProfile(
+                                response.data
+                            )
+                        );
+
+                        setHasLiked(false);
+
+                    } else {
+                        setUserProfile(null);
+
+                        setError(
+                            'No matching profiles found. Try again later.'
+                        );
+                    }
+
+                } catch (err: any) {
+
+                    console.error(
+                        'Search by specialities error:',
+                        err
                     );
 
-                    const imageUrl = URL.createObjectURL(response.data);
-                    setImageUrls(prev => ({
-                        ...prev,
-                        [userProfile.userName]: imageUrl
-                    }));
-                } catch (error) {
-                    console.error('Error fetching image:', error);
+
+                    setUserProfile(null);
+
+
+                    if (
+                        axios.isAxiosError(err)
+                    ) {
+                        if (
+                            err.response?.status ===
+                            404
+                        ) {
+                            setError(
+                                'No matching profiles found. Try again later.'
+                            );
+                        } else {
+                            setError(
+                                typeof err.response?.data ===
+                                'string'
+                                    ? err.response.data
+                                    : err.response?.data?.message ||
+                                    'Failed to search for people with similar specialities.'
+                            );
+                        }
+
+                    } else {
+                        setError(
+                            'An unexpected error occurred.'
+                        );
+                    }
+
+                } finally {
+                    setIsSearching(false);
+                }
+            },
+            [
+                currentUserName,
+                token
+            ]
+        );
+
+
+    /* =====================================================
+       CURRENT USER
+       ===================================================== */
+
+    useEffect(() => {
+        const initialize =
+            async () => {
+                if (!token) {
+                    setError(
+                        'User not authenticated.'
+                    );
+
+                    setIsSearching(false);
+
+                    return;
+                }
+
+
+                try {
+                    const decoded =
+                        jwtDecode<{
+                            sub: string;
+                        }>(token);
+
+
+                    const email =
+                        decoded.sub;
+
+
+                    const response =
+                        await axios.get(
+                            `${API_BASE_URL}/public/user/get/userName/${email}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    const username =
+                        response.data;
+
+
+                    setCurrentUserName(
+                        username
+                    );
+
+
+                    const state =
+                        location.state as
+                            LocationState | null;
+
+
+                    if (
+                        state?.initialProfile
+                    ) {
+                        setUserProfile(
+                            normalizeProfile(
+                                state.initialProfile
+                            )
+                        );
+
+                        setIsSearching(false);
+
+                    } else {
+                        await handleSearchBySpecialities(
+                            username
+                        );
+                    }
+
+                } catch (err) {
+
+                    console.error(
+                        'Failed to initialize speciality search:',
+                        err
+                    );
+
+
+                    setError(
+                        'Failed to authenticate user.'
+                    );
+
+                    setIsSearching(false);
                 }
             };
 
-            const checkIfLiked = async () => {
+
+        initialize();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+
+    /* =====================================================
+       PROFILE IMAGE
+       ===================================================== */
+
+    useEffect(() => {
+        let imageUrl:
+            string | null = null;
+
+
+        const fetchImage =
+            async () => {
+                if (
+                    !userProfile ||
+                    !token
+                ) {
+                    return;
+                }
+
+
                 try {
-                    const response = await axios.get(
-                        'http://localhost:8080/api/public/user/like/get',
-                        {
-                            params: {
-                                liker: currentUserName,
-                                liked: userProfile.userName
-                            },
-                            headers: {
-                                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    const response =
+                        await axios.get(
+                            `${API_BASE_URL}/public/user/image/${userProfile.userName}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                },
+
+                                responseType:
+                                    'blob'
                             }
-                        }
+                        );
+
+
+                    if (
+                        response.data?.size >
+                        0
+                    ) {
+                        imageUrl =
+                            URL.createObjectURL(
+                                response.data
+                            );
+
+
+                        setProfileImage(
+                            imageUrl
+                        );
+
+                    } else {
+                        setProfileImage(null);
+                    }
+
+                } catch (err) {
+
+                    console.log(
+                        'No profile image:',
+                        err
                     );
-                    setHasLiked(response.data);
-                } catch (error) {
-                    console.error('Error checking like status:', error);
+
+
+                    setProfileImage(null);
+                }
+            };
+
+
+        fetchImage();
+
+
+        return () => {
+            if (imageUrl) {
+                URL.revokeObjectURL(
+                    imageUrl
+                );
+            }
+        };
+
+    }, [
+        userProfile,
+        token
+    ]);
+
+
+    /* =====================================================
+       CHECK LIKE
+       ===================================================== */
+
+    useEffect(() => {
+        const checkIfLiked =
+            async () => {
+                if (
+                    !userProfile ||
+                    !currentUserName ||
+                    !token
+                ) {
+                    return;
+                }
+
+
+                try {
+                    const response =
+                        await axios.get(
+                            `${API_BASE_URL}/public/user/like/get`,
+                            {
+                                params: {
+                                    liker:
+                                    currentUserName,
+
+                                    liked:
+                                    userProfile.userName
+                                },
+
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    setHasLiked(
+                        Boolean(
+                            response.data
+                        )
+                    );
+
+                } catch (err) {
+
+                    console.error(
+                        'Error checking like status:',
+                        err
+                    );
+
+
                     setHasLiked(false);
                 }
             };
 
-            fetchImage();
-            checkIfLiked();
-        }
-    }, [userProfile, currentUserName]);
 
-    useEffect(() => {
-        return () => {
-            Object.values(imageUrls).forEach(url => URL.revokeObjectURL(url));
-        };
-    }, [imageUrls]);
+        checkIfLiked();
 
-    const handleSearchBySpecialities = async () => {
-        if (!currentUserName) {
-            setError('User not authenticated');
-            return;
-        }
+    }, [
+        userProfile,
+        currentUserName,
+        token
+    ]);
 
-        setIsSearching(true);
-        setError(null);
 
-        try {
-            const response = await axios.get(
-                `http://localhost:8080/api/public/user/searchBySpecialities/${currentUserName}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
-                    },
-                }
-            );
+    /* =====================================================
+       LIKE
+       ===================================================== */
 
-            if (response.data) {
-                const userData = {
-                    ...response.data,
-                    hobbies: Array.isArray(response.data.hobbies) ? response.data.hobbies : [],
-                    specialities: Array.isArray(response.data.specialities) ? response.data.specialities : [],
-                    socialNetworks: Array.isArray(response.data.socialNetworks) ? response.data.socialNetworks : []
-                };
-                setUserProfile(userData);
-            } else {
-                setError('No matching profiles found, please try again later.');
+    const handleLike =
+        async () => {
+            if (
+                !currentUserName ||
+                !userProfile ||
+                isLiking ||
+                hasLiked
+            ) {
+                return;
             }
-        } catch (error: any) {
-            setIsSearching(false);
-            if (axios.isAxiosError(error)) {
-                if (error.response?.status === 404) {
-                    setError('No matching profiles found, please try again later.');
-                } else {
-                    setError(error.response?.data || 'Failed to fetch by specialities');
-                }
-            } else {
-                setError('An unexpected error occurred');
-            }
-        } finally {
-            setIsSearching(false);
-        }
-    };
 
-    const handleLike = async () => {
-        if (!currentUserName || !userProfile || isLiking || hasLiked) return;
 
-        setIsLiking(true);
-        try {
-            await axios.post(
-                'http://localhost:8080/api/public/user/like',
-                null,
-                {
-                    params: {
-                        liker: currentUserName,
-                        liked: userProfile.userName
-                    },
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+            setIsLiking(true);
+            setError(null);
+
+
+            try {
+                await axios.post(
+                    `${API_BASE_URL}/public/user/like`,
+                    null,
+                    {
+                        params: {
+                            liker:
+                            currentUserName,
+
+                            liked:
+                            userProfile.userName
+                        },
+
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
                     }
-                }
-            );
-            setHasLiked(true);
-        } catch (error: any) {
-            if (axios.isAxiosError(error)) {
-                if (error.response?.status === 409) {
+                );
+
+
+                setHasLiked(true);
+
+            } catch (err: any) {
+
+                console.error(
+                    'Like error:',
+                    err
+                );
+
+
+                if (
+                    axios.isAxiosError(err) &&
+                    err.response?.status ===
+                    409
+                ) {
                     setHasLiked(true);
+
                 } else {
-                    setError('Failed to send like');
+                    setError(
+                        'Failed to send like.'
+                    );
                 }
-            } else {
-                setError('An unexpected error occurred');
+
+            } finally {
+                setIsLiking(false);
             }
-        } finally {
-            setIsLiking(false);
+        };
+
+
+    /* =====================================================
+       SOCIAL ICONS
+       ===================================================== */
+
+    const getSocialIcon = (
+        url: string
+    ) => {
+        const value =
+            url.toLowerCase();
+
+
+        if (
+            value.includes(
+                'facebook.com'
+            )
+        ) {
+            return <FacebookRoundedIcon />;
         }
+
+
+        if (
+            value.includes(
+                'instagram.com'
+            )
+        ) {
+            return <InstagramIcon />;
+        }
+
+
+        if (
+            value.includes(
+                'linkedin.com'
+            )
+        ) {
+            return <LinkedInIcon />;
+        }
+
+
+        if (
+            value.includes(
+                'youtube.com'
+            )
+        ) {
+            return <YouTubeIcon />;
+        }
+
+
+        return <LanguageRoundedIcon />;
     };
 
-    const handleBack = () => {
-        navigate('/choose');
+
+    const formatText = (
+        value?: string
+    ) => {
+        if (!value) {
+            return '';
+        }
+
+
+        return (
+            value.charAt(0).toUpperCase() +
+            value
+                .slice(1)
+                .toLowerCase()
+        );
     };
 
-    const getPlatformFromUrl = (url: string): string => {
-        if (url.includes('facebook.com')) return 'facebook';
-        if (url.includes('instagram.com')) return 'instagram';
-        if (url.includes('twitter.com')) return 'twitter';
-        if (url.includes('linkedin.com')) return 'linkedin';
-        if (url.includes('youtube.com')) return 'youtube';
-        return 'unknown';
-    };
 
-    const formatZodiac = (zodiac: string) => {
-        return zodiac.charAt(0).toUpperCase() + zodiac.slice(1).toLowerCase();
-    };
+    /* =====================================================
+       LOADING
+       ===================================================== */
+
+    if (
+        isSearching &&
+        !userProfile
+    ) {
+        return (
+            <div className="speciality-discover-page">
+
+                <div className="speciality-loading">
+
+                    <div className="speciality-loading-icon">
+                        <WorkRoundedIcon />
+                    </div>
+
+
+                    <h2>
+                        Finding a professional match
+                    </h2>
+
+
+                    <p>
+                        Looking for people with
+                        similar specialities...
+                    </p>
+
+
+                    <div className="speciality-loading-bar">
+                        <span />
+                    </div>
+
+                </div>
+
+            </div>
+        );
+    }
+
+
+    /* =====================================================
+       VIEW
+       ===================================================== */
 
     return (
-        <div className="specialities-parent-container">
-            <div className="specialities-search-container">
-                {userProfile ? (
-                    <div className="profile-content-container">
-                        <div className="profile-image-section">
-                            <div className="specialities-image-placeholder">
+        <div className="speciality-discover-page">
+
+            {/* HEADER */}
+
+            <section className="speciality-header">
+
+                <div>
+
+                    <button
+                        type="button"
+                        className="speciality-back"
+                        onClick={() =>
+                            navigate('/choose')
+                        }
+                    >
+                        <ArrowBackRoundedIcon />
+
+                        Back to discover
+                    </button>
+
+
+                    <span className="speciality-label">
+                        <WorkRoundedIcon />
+
+                        SPECIALITY MATCH
+                    </span>
+
+
+                    <h1>
+                        Find people in your field
+                    </h1>
+
+
+                    <p>
+                        Discover TalkSpace members
+                        whose professional interests
+                        and specialities are similar
+                        to yours.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    className="speciality-next"
+                    onClick={() =>
+                        handleSearchBySpecialities()
+                    }
+                    disabled={
+                        isSearching ||
+                        !currentUserName
+                    }
+                >
+
+                    {isSearching ? (
+                        <span className="speciality-spinner" />
+                    ) : (
+                        <RefreshRoundedIcon />
+                    )}
+
+
+                    {isSearching
+                        ? 'Searching...'
+                        : 'Find another'}
+
+                </button>
+
+            </section>
+
+
+            {!userProfile ? (
+
+                /* EMPTY */
+
+                <section className="speciality-empty">
+
+                    <div className="speciality-empty-icon">
+                        <WorkRoundedIcon />
+                    </div>
+
+
+                    <h2>
+                        No professional match yet
+                    </h2>
+
+
+                    <p>
+                        We couldn't find another
+                        profile with matching
+                        specialities right now.
+                    </p>
+
+
+                    {error && (
+                        <div className="speciality-error">
+
+                            <ErrorOutlineRoundedIcon />
+
+                            {error}
+
+                        </div>
+                    )}
+
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            handleSearchBySpecialities()
+                        }
+                        disabled={
+                            isSearching ||
+                            !currentUserName
+                        }
+                    >
+                        <RefreshRoundedIcon />
+
+                        Try again
+                    </button>
+
+                </section>
+
+            ) : (
+
+                <>
+                    {/* PROFILE */}
+
+                    <section className="speciality-match-card">
+
+                        {/* IMAGE */}
+
+                        <div className="speciality-image-column">
+
+                            <div className="speciality-image-wrapper">
+
                                 <img
-                                    src={imageUrls[userProfile.userName] || defaultProfileImage}
-                                    alt="Profile"
-                                    className="specialities-profile-image"
-                                    onError={(e) => {
-                                        e.currentTarget.src = defaultProfileImage;
+                                    src={
+                                        profileImage ||
+                                        defaultProfileImage
+                                    }
+                                    alt={`${userProfile.firstName} ${userProfile.lastName}`}
+                                    className="speciality-profile-image"
+                                    onError={event => {
+                                        event.currentTarget.src =
+                                            defaultProfileImage;
                                     }}
                                 />
+
+
+                                <div className="speciality-image-overlay" />
+
+
+                                <span className="speciality-match-badge">
+                                    <WorkRoundedIcon />
+
+                                    Professional match
+                                </span>
+
+
+                                <div className="speciality-mobile-name">
+
+                                    <h2>
+                                        {userProfile.firstName}
+                                        {' '}
+                                        {userProfile.lastName}
+                                    </h2>
+
+
+                                    <span>
+                                        @{userProfile.userName}
+                                    </span>
+
+                                </div>
+
                             </div>
+
                         </div>
-                        <div className="profile-info-section">
-                            <div className="specialities-search-info">
-                                <div className="specialities-user-name">
-                                    {userProfile.firstName} {userProfile.lastName} ({userProfile.userName})
-                                </div>
-                                <div className="specialities-user-details">
-                                    <span className="specialities-age-text">Age: {userProfile.age}</span>
-                                    <span className="specialities-gender-icon-container">
-                                        {['FEMALE', 'MALE'].includes(userProfile.gender.toUpperCase()) && (
-                                            <img
-                                                src={genderIcons[userProfile.gender.toUpperCase()]}
-                                                alt={userProfile.gender}
-                                                className={`specialities-gender-icon ${
-                                                    userProfile.gender.toUpperCase() === 'FEMALE'
-                                                        ? 'specialities-female-icon'
-                                                        : 'specialities-male-icon'
-                                                }`}
-                                                title={userProfile.gender}
-                                            />
-                                        )}
+
+
+                        {/* INFORMATION */}
+
+                        <div className="speciality-info">
+
+                            <div className="speciality-name">
+
+                                <div>
+
+                                    <span className="speciality-eyebrow">
+                                        DISCOVERED PROFILE
                                     </span>
-                                    <span className="specialities-zodiac-container">
-                                        {formatZodiac(userProfile.zodiac)}
-                                        <img
-                                            src={zodiacIcons[userProfile.zodiac.toUpperCase()]}
-                                            alt={userProfile.zodiac}
-                                            className="specialities-zodiac-icon"
-                                        />
-                                    </span>
+
+
+                                    <h2>
+                                        {userProfile.firstName}
+                                        {' '}
+                                        {userProfile.lastName}
+                                    </h2>
+
+
+                                    <p>
+                                        @{userProfile.userName}
+                                    </p>
+
                                 </div>
-                                <div className="specialities-user-about">
-                                    <strong>About:</strong> {userProfile.about || 'No information available'}
-                                </div>
-                                <div className="specialities-user-hobbies">
-                                    <strong>Hobbies:</strong> {userProfile.hobbies.length > 0 ? userProfile.hobbies.join(', ') : 'No hobbies listed'}
-                                </div>
-                                <div className="specialities-user-specialities">
-                                    <strong>Specialities:</strong> {userProfile.specialities.length > 0 ? userProfile.specialities.join(', ') : 'No specialities listed'}
-                                </div>
-                                <div className="specialities-user-social-networks">
-                                    <div className="specialities-social-networks-header">
-                                        <strong>Social Networks:</strong>
-                                        {userProfile.socialNetworks.length > 0 ? (
-                                            <div className="specialities-social-icons">
-                                                {userProfile.socialNetworks.map((url, index) => {
-                                                    const platform = getPlatformFromUrl(url);
-                                                    const icon = socialIcons[platform];
-                                                    return (
-                                                        <div key={index} className="specialities-social-icon-container">
-                                                            <a
-                                                                href={url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="specialities-social-icon-link"
-                                                            >
-                                                                <FontAwesomeIcon
-                                                                    icon={icon}
-                                                                    className="specialities-social-icon"
-                                                                />
-                                                            </a>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <span className="specialities-no-social">No social networks listed</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="specialities-search-buttons">
-                                <button className="specialities-search-back-button" onClick={handleBack}>
-                                    <img src={backIcon} alt="Back" className="specialities-back-icon"/>
+
+
+                                <button
+                                    type="button"
+                                    className={
+                                        `speciality-like ${
+                                            hasLiked
+                                                ? 'liked'
+                                                : ''
+                                        }`
+                                    }
+                                    onClick={
+                                        handleLike
+                                    }
+                                    disabled={
+                                        isLiking ||
+                                        hasLiked
+                                    }
+                                >
+
+                                    {isLiking ? (
+                                        <span className="speciality-like-spinner" />
+                                    ) : hasLiked ? (
+                                        <FavoriteRoundedIcon />
+                                    ) : (
+                                        <FavoriteBorderRoundedIcon />
+                                    )}
+
                                 </button>
-                                <div className="specialities-action-buttons">
-                                    <button
-                                        className={`specialities-like-button ${hasLiked ? 'specialities-liked' : ''}`}
-                                        onClick={handleLike}
-                                        disabled={isLiking || !userProfile || hasLiked}
-                                    >
-                                        <img src={likeIcon} alt="Like" className="specialities-like-icon"/>
-                                    </button>
-                                    <button
-                                        className="specialities-search-button"
-                                        onClick={handleSearchBySpecialities}
-                                        disabled={isSearching}
-                                    >
-                                        <img src={searchIcon} alt="Search" className="specialities-search-icon"/>
-                                    </button>
-                                </div>
+
                             </div>
+
+
+                            {/* META */}
+
+                            <div className="speciality-meta">
+
+                                <span>
+                                    <CakeOutlinedIcon />
+
+                                    {userProfile.age
+                                        ? `${userProfile.age} years`
+                                        : 'Age not specified'}
+                                </span>
+
+
+                                <span>
+                                    <PersonRoundedIcon />
+
+                                    {formatText(
+                                            userProfile.gender
+                                        ) ||
+                                        'Not specified'}
+                                </span>
+
+
+                                {userProfile.zodiac && (
+                                    <span>
+                                        <AutoAwesomeRoundedIcon />
+
+                                        {formatText(
+                                            userProfile.zodiac
+                                        )}
+                                    </span>
+                                )}
+
+                            </div>
+
+
+                            {/* ABOUT */}
+
+                            <div className="speciality-section">
+
+                                <span className="speciality-section-label">
+                                    ABOUT
+                                </span>
+
+
+                                <p className="speciality-about">
+                                    {userProfile.about ||
+                                        'This user has not added information about themselves yet.'}
+                                </p>
+
+                            </div>
+
+
+                            {/* SPECIALITIES */}
+
+                            <div className="speciality-section">
+
+                                <div className="speciality-section-heading">
+
+                                    <span className="speciality-section-label">
+                                        SPECIALITIES
+                                    </span>
+
+
+                                    <WorkRoundedIcon />
+
+                                </div>
+
+
+                                {userProfile.specialities.length >
+                                0 ? (
+                                    <div className="speciality-tags">
+
+                                        {userProfile.specialities.map(
+                                            (
+                                                speciality,
+                                                index
+                                            ) => (
+                                                <span
+                                                    key={`${speciality}-${index}`}
+                                                    className="speciality-tag primary"
+                                                >
+                                                    {speciality}
+                                                </span>
+                                            )
+                                        )}
+
+                                    </div>
+                                ) : (
+                                    <p className="speciality-empty-text">
+                                        No specialities listed
+                                    </p>
+                                )}
+
+                            </div>
+
+
+                            {/* HOBBIES */}
+
+                            <div className="speciality-section">
+
+                                <div className="speciality-section-heading">
+
+                                    <span className="speciality-section-label">
+                                        HOBBIES
+                                    </span>
+
+
+                                    <InterestsRoundedIcon />
+
+                                </div>
+
+
+                                {userProfile.hobbies.length >
+                                0 ? (
+                                    <div className="speciality-tags">
+
+                                        {userProfile.hobbies.map(
+                                            (
+                                                hobby,
+                                                index
+                                            ) => (
+                                                <span
+                                                    key={`${hobby}-${index}`}
+                                                    className="speciality-tag"
+                                                >
+                                                    {hobby}
+                                                </span>
+                                            )
+                                        )}
+
+                                    </div>
+                                ) : (
+                                    <p className="speciality-empty-text">
+                                        No hobbies listed
+                                    </p>
+                                )}
+
+                            </div>
+
+
+                            {/* SOCIAL */}
+
+                            <div className="speciality-section social">
+
+                                <span className="speciality-section-label">
+                                    SOCIAL NETWORKS
+                                </span>
+
+
+                                {userProfile.socialNetworks.length >
+                                0 ? (
+                                    <div className="speciality-socials">
+
+                                        {userProfile.socialNetworks.map(
+                                            (
+                                                url,
+                                                index
+                                            ) => (
+                                                <a
+                                                    key={`${url}-${index}`}
+                                                    href={url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    {getSocialIcon(
+                                                        url
+                                                    )}
+                                                </a>
+                                            )
+                                        )}
+
+                                    </div>
+                                ) : (
+                                    <p className="speciality-empty-text">
+                                        No social networks listed
+                                    </p>
+                                )}
+
+                            </div>
+
+
+                            {/* ACTIONS */}
+
+                            <div className="speciality-actions">
+
+                                <button
+                                    type="button"
+                                    className={
+                                        `speciality-like-large ${
+                                            hasLiked
+                                                ? 'liked'
+                                                : ''
+                                        }`
+                                    }
+                                    onClick={
+                                        handleLike
+                                    }
+                                    disabled={
+                                        isLiking ||
+                                        hasLiked
+                                    }
+                                >
+
+                                    {isLiking ? (
+                                        <span className="speciality-like-spinner" />
+                                    ) : hasLiked ? (
+                                        <FavoriteRoundedIcon />
+                                    ) : (
+                                        <FavoriteBorderRoundedIcon />
+                                    )}
+
+
+                                    {hasLiked
+                                        ? 'Liked'
+                                        : 'Like profile'}
+
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    className="speciality-next-large"
+                                    onClick={() =>
+                                        handleSearchBySpecialities()
+                                    }
+                                    disabled={
+                                        isSearching
+                                    }
+                                >
+
+                                    {isSearching ? (
+                                        <span className="speciality-spinner" />
+                                    ) : (
+                                        <RefreshRoundedIcon />
+                                    )}
+
+
+                                    Find another
+
+                                </button>
+
+                            </div>
+
                         </div>
-                    </div>
-                ) : (
-                    <div className="specialities-no-profile">
-                        {isSearching ? 'Searching for matching profiles...' : 'No matching profiles found, please try again later.'}
-                    </div>
-                )}
-                {error && <div className="specialities-error-message">{error}</div>}
-            </div>
+
+                    </section>
+
+
+                    {error && (
+                        <div className="speciality-inline-error">
+
+                            <ErrorOutlineRoundedIcon />
+
+                            {error}
+
+                        </div>
+                    )}
+
+
+                    {/* TIP */}
+
+                    <section className="speciality-tip">
+
+                        <div>
+                            <GroupsRoundedIcon />
+                        </div>
+
+
+                        <p>
+                            <strong>
+                                Connect through professional interests
+                            </strong>
+
+                            TalkSpace uses the
+                            specialities added to your
+                            profile to discover people
+                            working or interested in
+                            similar fields.
+                        </p>
+
+                    </section>
+
+                </>
+
+            )}
+
         </div>
     );
 };

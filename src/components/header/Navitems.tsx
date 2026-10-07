@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
-import SettingsIcon from '@mui/icons-material/Settings';
-import SearchIcon from '@mui/icons-material/Search';
-import ChatIcon from '@mui/icons-material/Chat';
+
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import ReviewsRoundedIcon from '@mui/icons-material/ReviewsRounded';
 
 export interface NavItem {
     to: string;
@@ -9,10 +9,17 @@ export interface NavItem {
     label?: string;
 }
 
-const navItems: NavItem[] = [
-    { to: '/profile', icon: <SettingsIcon />, label: 'Profile' },
-    { to: '/choose', icon: <SearchIcon />, label: 'Search' },
-    { to: '/chat', icon: <ChatIcon />, label: 'Chat' },
+const adminNavItems: NavItem[] = [
+    {
+        to: '/users',
+        icon: <PeopleAltRoundedIcon />,
+        label: 'Users'
+    },
+    {
+        to: '/feedbacks',
+        icon: <ReviewsRoundedIcon />,
+        label: 'Feedbacks'
+    }
 ];
 
-export default navItems;
+export default adminNavItems;

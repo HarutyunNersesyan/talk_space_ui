@@ -1,39 +1,167 @@
-import React from 'react';
+import React, {
+    useContext,
+    useState
+} from 'react';
+
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+
+import LogoutRoundedIcon
+    from '@mui/icons-material/LogoutRounded';
+
+import {
+    AuthContext
+} from '../context/AuthContext';
+
+import './Logout.css';
+
+
+const API_URL =
+    process.env.REACT_APP_API_URL ||
+    'http://localhost:8080';
+
 
 const LogoutForm: React.FC = () => {
-    const navigate = useNavigate();
 
-    const handleLogout = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('No token found. Please log in.');
+    const authContext =
+        useContext(AuthContext);
+
+
+    const [
+        isLoggingOut,
+        setIsLoggingOut
+    ] = useState<boolean>(false);
+
+
+    /* =====================================================
+       LOGOUT
+       ===================================================== */
+
+    const handleLogout =
+        async () => {
+
+            if (isLoggingOut) {
                 return;
             }
 
-            const response = await axios.get('http://localhost:8080/account/profile/logout', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
 
-            if (response.status === 200) {
-                localStorage.removeItem('token'); // Clear the token from local storage
-                navigate('/login'); // Redirect to the login page
+            setIsLoggingOut(true);
+
+
+            const token =
+                localStorage.getItem(
+                    'token'
+                );
+
+
+            try {
+
+                /*
+                 * Եթե token կա՝ backend-ին ասում ենք,
+                 * որ user-ը logout է անում։
+                 */
+                if (token) {
+
+                    await axios.get(
+                        `${API_URL}/account/profile/logout`,
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                }
+
+            } catch (error) {
+
+                /*
+                 * Backend logout-ի ձախողումը
+                 * չպետք է user-ին պահի համակարգում։
+                 *
+                 * Local authentication-ը միևնույն է
+                 * մաքրում ենք։
+                 */
+                console.error(
+                    'Backend logout failed:',
+                    error
+                );
+
+            } finally {
+
+                /*
+                 * AuthContext-ը միաժամանակ՝
+                 *
+                 * - ջնջում է token-ը
+                 * - ջնջում է userName-ը
+                 * - ջնջում է userRole-ը
+                 * - isAuthenticated = false
+                 * - տեղափոխում է /login
+                 */
+                if (authContext) {
+
+                    authContext.logout();
+
+                } else {
+
+                    /*
+                     * Fallback՝ եթե ինչ-որ պատճառով
+                     * component-ը AuthProvider-ից դուրս է։
+                     */
+                    localStorage.removeItem(
+                        'token'
+                    );
+
+                    localStorage.removeItem(
+                        'userName'
+                    );
+
+                    localStorage.removeItem(
+                        'userRole'
+                    );
+
+                    localStorage.removeItem(
+                        'redirectPath'
+                    );
+
+
+                    window.location.href =
+                        '/login';
+                }
+
+
+                setIsLoggingOut(false);
             }
-        } catch (error) {
-            console.error('Error logging out:', error);
-            alert('Failed to log out. Please try again.');
-        }
-    };
+        };
+
 
     return (
-        <button onClick={handleLogout} className="logout-button">
-            Logout
+
+        <button
+            type="button"
+
+            className="logout-button"
+
+            onClick={handleLogout}
+
+            disabled={isLoggingOut}
+        >
+
+            <span className="logout-button-icon">
+                <LogoutRoundedIcon />
+            </span>
+
+
+            <span>
+                {isLoggingOut
+                    ? 'Logging out...'
+                    : 'Logout'
+                }
+            </span>
+
         </button>
     );
 };
+
 
 export default LogoutForm;

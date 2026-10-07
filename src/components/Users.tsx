@@ -1,21 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+    useEffect,
+    useMemo,
+    useState
+} from 'react';
+
 import './Users.css';
 
-// Import icons
-import femaleIcon from '../assets/gender/female-symbol.svg';
-import maleIcon from '../assets/gender/male-symbol.svg';
-import ariesIcon from '../assets/zodiac/aries.svg';
-import taurusIcon from '../assets/zodiac/taurus.svg';
-import geminiIcon from '../assets/zodiac/gemini.svg';
-import cancerIcon from '../assets/zodiac/cancer.svg';
-import leoIcon from '../assets/zodiac/leo.svg';
-import virgoIcon from '../assets/zodiac/virgo.svg';
-import libraIcon from '../assets/zodiac/libra.svg';
-import scorpioIcon from '../assets/zodiac/scorpio.svg';
-import sagittariusIcon from '../assets/zodiac/sagittarius.svg';
-import capricornIcon from '../assets/zodiac/capricorn.svg';
-import aquariusIcon from '../assets/zodiac/aquarius.svg';
-import piscesIcon from '../assets/zodiac/horoscope-pisces-solid.svg';
+import {
+    useNavigate
+} from 'react-router-dom';
+
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded';
+import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
+import InboxRoundedIcon from '@mui/icons-material/InboxRounded';
+import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
+import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
+import SortRoundedIcon from '@mui/icons-material/SortRounded';
+
+
+const API_URL =
+    process.env.REACT_APP_API_URL ||
+    'http://localhost:8080';
+
 
 interface User {
     userId: number;
@@ -33,305 +44,1383 @@ interface User {
     untilBlockedDate: number[];
 }
 
-type SortField = 'firstName' | 'lastName' | 'userName' | 'createdDate' | 'status';
-type SortDirection = 'asc' | 'desc';
 
-const zodiacIcons: Record<string, string> = {
-    'ARIES': ariesIcon,
-    'TAURUS': taurusIcon,
-    'GEMINI': geminiIcon,
-    'CANCER': cancerIcon,
-    'LEO': leoIcon,
-    'VIRGO': virgoIcon,
-    'LIBRA': libraIcon,
-    'SCORPIO': scorpioIcon,
-    'SAGITTARIUS': sagittariusIcon,
-    'CAPRICORN': capricornIcon,
-    'AQUARIUS': aquariusIcon,
-    'PISCES': piscesIcon
-};
+type SortField =
+    'firstName' |
+    'lastName' |
+    'userName' |
+    'createdDate' |
+    'status';
 
-const genderIcons: Record<string, string> = {
-    'FEMALE': femaleIcon,
-    'MALE': maleIcon,
-    'F': femaleIcon,
-    'M': maleIcon,
-    'WOMAN': femaleIcon,
-    'MAN': maleIcon
-};
+
+type SortDirection =
+    'asc' |
+    'desc';
+
 
 const Users: React.FC = () => {
-    const [users, setUsers] = useState<User[]>([]);
-    const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [sortField, setSortField] = useState<SortField>('firstName');
-    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [expandedMessages, setExpandedMessages] = useState<Record<number, boolean>>({});
+    const navigate =
+        useNavigate();
 
-    useEffect(() => {
-        const fetchUsers = async () => {
+
+    const token =
+        localStorage.getItem('token');
+
+
+    const [
+        users,
+        setUsers
+    ] = useState<User[]>([]);
+
+
+    const [
+        loading,
+        setLoading
+    ] = useState<boolean>(true);
+
+
+    const [
+        error,
+        setError
+    ] = useState<string | null>(null);
+
+
+    const [
+        searchTerm,
+        setSearchTerm
+    ] = useState<string>('');
+
+
+    const [
+        sortField,
+        setSortField
+    ] = useState<SortField>(
+        'createdDate'
+    );
+
+
+    const [
+        sortDirection,
+        setSortDirection
+    ] = useState<SortDirection>(
+        'desc'
+    );
+
+
+    const [
+        expandedMessages,
+        setExpandedMessages
+    ] = useState<Record<number, boolean>>({});
+
+
+    /* =====================================================
+       FETCH USERS
+       ===================================================== */
+
+    const fetchUsers =
+        async () => {
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+
             try {
-                const response = await fetch('http://localhost:8080/api/private/admin/getAll', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    credentials: 'include'
-                });
+                setLoading(true);
+                setError(null);
+
+
+                const response =
+                    await fetch(
+                        `${API_URL}/api/private/admin/getAll`,
+                        {
+                            method: 'GET',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json',
+
+                                Authorization:
+                                    `Bearer ${token}`
+                            },
+
+                            credentials:
+                                'include'
+                        }
+                    );
+
 
                 if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('API endpoint not found (404)');
-                    } else if (response.status === 403) {
-                        throw new Error('Access forbidden (403) - Check your permissions');
-                    } else if (response.status === 401) {
-                        throw new Error('Unauthorized (401) - Please login');
-                    } else {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    if (
+                        response.status ===
+                        401
+                    ) {
+                        navigate('/login');
+
+                        throw new Error(
+                            'Your session has expired.'
+                        );
                     }
+
+
+                    if (
+                        response.status ===
+                        403
+                    ) {
+                        throw new Error(
+                            'You do not have permission to view users.'
+                        );
+                    }
+
+
+                    if (
+                        response.status ===
+                        404
+                    ) {
+                        throw new Error(
+                            'Users endpoint was not found.'
+                        );
+                    }
+
+
+                    throw new Error(
+                        `Failed to load users (${response.status}).`
+                    );
                 }
 
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error('Response is not JSON');
+
+                const contentType =
+                    response.headers.get(
+                        'content-type'
+                    );
+
+
+                if (
+                    !contentType?.includes(
+                        'application/json'
+                    )
+                ) {
+                    throw new Error(
+                        'Invalid server response.'
+                    );
                 }
 
-                const data = await response.json();
-                setUsers(data);
-                setFilteredUsers(data);
-                setLoading(false);
+
+                const data =
+                    await response.json();
+
+
+                setUsers(
+                    Array.isArray(data)
+                        ? data
+                        : []
+                );
+
             } catch (err) {
-                let errorMessage = 'Failed to fetch user data';
-                if (err instanceof Error) {
-                    errorMessage = err.message;
-                } else if (typeof err === 'string') {
-                    errorMessage = err;
-                }
-                setError(errorMessage);
+
+                console.error(
+                    'Error fetching users:',
+                    err
+                );
+
+
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : 'Failed to load users.'
+                );
+
+            } finally {
                 setLoading(false);
             }
         };
 
-        fetchUsers();
-    }, []);
 
     useEffect(() => {
-        if (searchTerm.trim() === '') {
-            setFilteredUsers(users);
-        } else {
-            const filtered = users.filter(user =>
-                user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        fetchUsers();
+
+    }, []);
+
+
+    /* =====================================================
+       DATE
+       ===================================================== */
+
+    const formatDate = (
+        dateArray?: number[] | null
+    ): string => {
+        if (
+            !dateArray ||
+            dateArray.length < 3
+        ) {
+            return 'N/A';
+        }
+
+
+        const [
+            year,
+            month,
+            day
+        ] = dateArray;
+
+
+        return new Date(
+            year,
+            month - 1,
+            day
+        ).toLocaleDateString(
+            [],
+            {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            }
+        );
+    };
+
+
+    const dateValue = (
+        dateArray?: number[] | null
+    ): number => {
+        if (
+            !dateArray ||
+            dateArray.length < 3
+        ) {
+            return 0;
+        }
+
+
+        return new Date(
+            dateArray[0],
+            dateArray[1] - 1,
+            dateArray[2]
+        ).getTime();
+    };
+
+
+    /* =====================================================
+       SORT
+       ===================================================== */
+
+    const handleSort = (
+        field: SortField
+    ) => {
+        if (
+            sortField === field
+        ) {
+            setSortDirection(
+                previous =>
+                    previous === 'asc'
+                        ? 'desc'
+                        : 'asc'
             );
-            setFilteredUsers(filtered);
-        }
-    }, [searchTerm, users]);
 
-    const formatDate = (dateArray: number[] | null) => {
-        if (!dateArray || dateArray.length !== 3) return 'N/A';
-        return `${dateArray[0]}-${dateArray[1].toString().padStart(2, '0')}-${dateArray[2].toString().padStart(2, '0')}`;
-    };
-
-    const handleSort = (field: SortField) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDirection('asc');
-        }
-    };
-
-    const toggleMessageExpansion = (userId: number) => {
-        setExpandedMessages(prev => ({
-            ...prev,
-            [userId]: !prev[userId]
-        }));
-    };
-
-    const sortedUsers = [...filteredUsers].sort((a, b) => {
-        let compareValue = 0;
-
-        if (sortField === 'createdDate') {
-            const dateA = a.createdDate ? `${a.createdDate[0]}${a.createdDate[1].toString().padStart(2, '0')}${a.createdDate[2].toString().padStart(2, '0')}` : '';
-            const dateB = b.createdDate ? `${b.createdDate[0]}${b.createdDate[1].toString().padStart(2, '0')}${b.createdDate[2].toString().padStart(2, '0')}` : '';
-            compareValue = dateA.localeCompare(dateB);
-        } else {
-            compareValue = String(a[sortField]).localeCompare(String(b[sortField]));
+            return;
         }
 
-        return sortDirection === 'asc' ? compareValue : -compareValue;
-    });
 
-    const renderSortIcon = (field: SortField) => {
-        if (sortField !== field) return null;
-        return sortDirection === 'asc' ? '↑' : '↓';
+        setSortField(field);
+        setSortDirection('asc');
     };
 
-    const getZodiacIcon = (zodiacSign: string | undefined): string | undefined => {
-        if (!zodiacSign) return undefined;
-        const upperCaseSign = zodiacSign.toUpperCase();
-        return zodiacIcons[upperCaseSign];
-    };
 
-    const getGenderIcon = (gender: string | undefined): string | undefined => {
-        if (!gender) return undefined;
-        const upperCaseGender = gender.toUpperCase();
-        return genderIcons[upperCaseGender];
-    };
+    /* =====================================================
+       FILTER + SORT
+       ===================================================== */
 
-    if (loading) {
-        return (
-            <div className="users-container">
-                <div className="loading-message">Loading user data...</div>
-            </div>
+    const sortedUsers =
+        useMemo(
+            () => {
+                const query =
+                    searchTerm
+                        .trim()
+                        .toLowerCase();
+
+
+                const filtered =
+                    users.filter(
+                        user => {
+                            if (!query) {
+                                return true;
+                            }
+
+
+                            return (
+                                user.firstName
+                                    ?.toLowerCase()
+                                    .includes(query) ||
+
+                                user.lastName
+                                    ?.toLowerCase()
+                                    .includes(query) ||
+
+                                user.userName
+                                    ?.toLowerCase()
+                                    .includes(query) ||
+
+                                user.email
+                                    ?.toLowerCase()
+                                    .includes(query)
+                            );
+                        }
+                    );
+
+
+                return [
+                    ...filtered
+                ].sort(
+                    (
+                        a,
+                        b
+                    ) => {
+                        let comparison = 0;
+
+
+                        if (
+                            sortField ===
+                            'createdDate'
+                        ) {
+                            comparison =
+                                dateValue(
+                                    a.createdDate
+                                ) -
+                                dateValue(
+                                    b.createdDate
+                                );
+
+                        } else {
+                            comparison =
+                                String(
+                                    a[sortField] ??
+                                    ''
+                                ).localeCompare(
+                                    String(
+                                        b[sortField] ??
+                                        ''
+                                    )
+                                );
+                        }
+
+
+                        return sortDirection ===
+                        'asc'
+                            ? comparison
+                            : -comparison;
+                    }
+                );
+            },
+            [
+                users,
+                searchTerm,
+                sortField,
+                sortDirection
+            ]
         );
-    }
 
-    if (error) {
-        return (
-            <div className="users-container">
-                <div className="error-message">
-                    <h2>Error Loading Data</h2>
-                    <p>{error}</p>
-                    <div className="error-details">
-                        <p>Possible solutions:</p>
-                        <ul>
-                            <li>Check if the backend service is running</li>
-                            <li>Verify your authentication status</li>
-                            <li>Ensure you have proper permissions</li>
-                            <li>Check the API endpoint URL</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+
+    /* =====================================================
+       STATISTICS
+       ===================================================== */
+
+    const verifiedUsers =
+        users.filter(
+            user =>
+                user.verifyMail
+        ).length;
+
+
+    const blockedUsers =
+        users.filter(
+            user =>
+                user.status
+                    ?.toUpperCase() ===
+                'BLOCKED'
+        ).length;
+
+
+    const activeUsers =
+        users.filter(
+            user =>
+                user.status
+                    ?.toUpperCase() ===
+                'ACTIVE'
+        ).length;
+
+
+    /* =====================================================
+       BLOCK MESSAGE
+       ===================================================== */
+
+    const toggleMessageExpansion = (
+        userId: number
+    ) => {
+        setExpandedMessages(
+            previous => ({
+                ...previous,
+
+                [userId]:
+                    !previous[userId]
+            })
         );
-    }
+    };
+
+
+    /* =====================================================
+       STATUS
+       ===================================================== */
+
+    const getStatusClass = (
+        status?: string
+    ) => {
+        const value =
+            status
+                ?.toLowerCase() ||
+            'unknown';
+
+
+        if (
+            value === 'active'
+        ) {
+            return 'active';
+        }
+
+
+        if (
+            value === 'blocked'
+        ) {
+            return 'blocked';
+        }
+
+
+        if (
+            value === 'inactive'
+        ) {
+            return 'inactive';
+        }
+
+
+        return 'unknown';
+    };
+
+
+    const formatValue = (
+        value?: string
+    ) => {
+        if (!value) {
+            return 'N/A';
+        }
+
+
+        return (
+            value.charAt(0).toUpperCase() +
+            value
+                .slice(1)
+                .toLowerCase()
+        );
+    };
+
+
+    /* =====================================================
+       SORT BUTTON
+       ===================================================== */
+
+    const sortButton = (
+        field: SortField,
+        label: string
+    ) => (
+        <button
+            type="button"
+            className={
+                `admin-users-sort ${
+                    sortField === field
+                        ? 'active'
+                        : ''
+                }`
+            }
+            onClick={() =>
+                handleSort(field)
+            }
+        >
+            {label}
+
+            {sortField === field && (
+                <span>
+                    {sortDirection ===
+                    'asc'
+                        ? '↑'
+                        : '↓'}
+                </span>
+            )}
+        </button>
+    );
+
+
+    /* =====================================================
+       VIEW
+       ===================================================== */
 
     return (
-        <div className="users-container">
-            <div className="search-container">
-                <div className="search-box">
-                    <label htmlFor="user-search">Where</label>
-                    <input
-                        id="user-search"
-                        type="text"
-                        placeholder="Find user by name, username or email..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-            </div>
-            <div className="users-section">
-                <table className="users-table">
-                    <thead>
-                    <tr>
-                        <th className="name-column" onClick={() => handleSort('firstName')}>
-                            First name {renderSortIcon('firstName')}
-                        </th>
-                        <th className="name-column" onClick={() => handleSort('lastName')}>
-                            Last name {renderSortIcon('lastName')}
-                        </th>
-                        <th className="username-column" onClick={() => handleSort('userName')}>
-                            Username {renderSortIcon('userName')}
-                        </th>
-                        <th className="date-column">Birth Date</th>
-                        <th className="gender-column">Gender</th>
-                        <th className="email-column">Email</th>
-                        <th className="date-column" onClick={() => handleSort('createdDate')}>
-                            Created Date {renderSortIcon('createdDate')}
-                        </th>
-                        <th className="zodiac-column">Zodiac</th>
-                        <th className="status-column">Verified</th>
-                        <th className="status-column" onClick={() => handleSort('status')}>
-                            Status {renderSortIcon('status')}
-                        </th>
-                        <th className="message-column">Blocked message</th>
-                        <th className="date-column">Blocked until</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {sortedUsers.map((user) => {
-                        const genderIcon = getGenderIcon(user.gender);
-                        const zodiacIcon = getZodiacIcon(user.zodiacSign);
-                        const isExpanded = expandedMessages[user.userId] || false;
-                        const message = user.blockedMessage || 'N/A';
-                        const isLongMessage = message.length > 100;
+        <div className="admin-users-page">
 
-                        return (
-                            <tr key={user.userId}>
-                                <td className="name-column">{user.firstName}</td>
-                                <td className="name-column">{user.lastName}</td>
-                                <td className="username-column">{user.userName}</td>
-                                <td className="date-column">{formatDate(user.birthDate)}</td>
-                                <td className="gender-column">
-                                    <div className="gender-cell">
-                                        {genderIcon ? (
-                                            <img
-                                                src={genderIcon}
-                                                alt={user.gender}
-                                                className="gender-icon"
-                                                title={user.gender}
-                                            />
-                                        ) : (
-                                            <span className="gender-text">{user.gender || 'N/A'}</span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="email-column">{user.email}</td>
-                                <td className="date-column">{formatDate(user.createdDate)}</td>
-                                <td className="zodiac-column">
-                                    {zodiacIcon ? (
-                                        <img
-                                            src={zodiacIcon}
-                                            alt={user.zodiacSign}
-                                            className="icon-img"
-                                            title={user.zodiacSign}
-                                        />
-                                    ) : (
-                                        <span>{user.zodiacSign || 'N/A'}</span>
-                                    )}
-                                </td>
-                                <td className="status-column verified-column">
-                                    {user.verifyMail ? 'Yes' : 'No'}
-                                </td>
-                                <td className="status-column">
-                                    <span className={`status-badge ${user.status.toLowerCase()}`}>
-                                        {user.status}
-                                    </span>
-                                </td>
-                                <td className="message-column">
-                                    <div
-                                        className={`message-content ${isExpanded ? 'expanded' : ''} ${isLongMessage ? 'long-message' : ''}`}
-                                        onClick={() => isLongMessage && toggleMessageExpansion(user.userId)}
-                                        title={isLongMessage && !isExpanded ? message : undefined}
-                                    >
-                                        {isExpanded || !isLongMessage ? message : `${message.substring(0, 100)}...`}
-                                        {isLongMessage && (
-                                            <span className="expand-indicator">
-                                                {isExpanded ? ' (Show less)' : ' (Show more)'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="date-column">
-                                    {formatDate(user.untilBlockedDate)}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                    </tbody>
-                </table>
-                {filteredUsers.length === 0 && (
-                    <div className="no-users-message">
-                        {searchTerm.trim() ? 'No users match your search' : 'No user data available'}
+            {/* HEADER */}
+
+            <header className="admin-users-header">
+
+                <div>
+
+                    <span className="admin-users-eyebrow">
+                        <PeopleAltRoundedIcon />
+
+                        ADMIN PANEL
+                    </span>
+
+
+                    <h1>
+                        Users
+                    </h1>
+
+
+                    <p>
+                        View registered TalkSpace
+                        members, account status,
+                        verification and blocked
+                        account information.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    className="admin-users-refresh"
+                    onClick={
+                        fetchUsers
+                    }
+                    disabled={
+                        loading
+                    }
+                >
+                    <RefreshRoundedIcon
+                        className={
+                            loading
+                                ? 'spinning'
+                                : ''
+                        }
+                    />
+
+                    Refresh
+                </button>
+
+            </header>
+
+
+            {/* STATS */}
+
+            <section className="admin-users-stats">
+
+                <article className="admin-users-stat">
+
+                    <div className="admin-users-stat-icon purple">
+                        <PeopleAltRoundedIcon />
                     </div>
+
+                    <div>
+                        <span>
+                            TOTAL USERS
+                        </span>
+
+                        <strong>
+                            {users.length}
+                        </strong>
+
+                        <p>
+                            Registered accounts
+                        </p>
+                    </div>
+
+                </article>
+
+
+                <article className="admin-users-stat">
+
+                    <div className="admin-users-stat-icon green">
+                        <PersonRoundedIcon />
+                    </div>
+
+                    <div>
+                        <span>
+                            ACTIVE
+                        </span>
+
+                        <strong>
+                            {activeUsers}
+                        </strong>
+
+                        <p>
+                            Active accounts
+                        </p>
+                    </div>
+
+                </article>
+
+
+                <article className="admin-users-stat">
+
+                    <div className="admin-users-stat-icon blue">
+                        <VerifiedRoundedIcon />
+                    </div>
+
+                    <div>
+                        <span>
+                            VERIFIED
+                        </span>
+
+                        <strong>
+                            {verifiedUsers}
+                        </strong>
+
+                        <p>
+                            Verified emails
+                        </p>
+                    </div>
+
+                </article>
+
+
+                <article className="admin-users-stat">
+
+                    <div className="admin-users-stat-icon red">
+                        <BlockRoundedIcon />
+                    </div>
+
+                    <div>
+                        <span>
+                            BLOCKED
+                        </span>
+
+                        <strong>
+                            {blockedUsers}
+                        </strong>
+
+                        <p>
+                            Restricted accounts
+                        </p>
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            {/* USERS CARD */}
+
+            <section className="admin-users-card">
+
+                {/* TOOLBAR */}
+
+                <div className="admin-users-toolbar">
+
+                    <div>
+
+                        <h2>
+                            All users
+                        </h2>
+
+                        <p>
+                            {sortedUsers.length}
+                            {' '}
+                            {sortedUsers.length ===
+                            1
+                                ? 'user'
+                                : 'users'}
+                        </p>
+
+                    </div>
+
+
+                    <div className="admin-users-toolbar-actions">
+
+                        <div className="admin-users-search">
+
+                            <SearchRoundedIcon />
+
+                            <input
+                                type="text"
+                                value={
+                                    searchTerm
+                                }
+                                onChange={
+                                    event =>
+                                        setSearchTerm(
+                                            event.target.value
+                                        )
+                                }
+                                placeholder="Search name, username or email..."
+                            />
+
+                        </div>
+
+
+                        <div className="admin-users-mobile-sort">
+
+                            <SortRoundedIcon />
+
+                            <select
+                                value={`${sortField}-${sortDirection}`}
+                                onChange={
+                                    event => {
+                                        const [
+                                            field,
+                                            direction
+                                        ] =
+                                            event.target.value.split(
+                                                '-'
+                                            );
+
+
+                                        setSortField(
+                                            field as SortField
+                                        );
+
+
+                                        setSortDirection(
+                                            direction as SortDirection
+                                        );
+                                    }
+                                }
+                            >
+                                <option value="createdDate-desc">
+                                    Newest users
+                                </option>
+
+                                <option value="createdDate-asc">
+                                    Oldest users
+                                </option>
+
+                                <option value="firstName-asc">
+                                    First name A–Z
+                                </option>
+
+                                <option value="firstName-desc">
+                                    First name Z–A
+                                </option>
+
+                                <option value="userName-asc">
+                                    Username A–Z
+                                </option>
+
+                                <option value="userName-desc">
+                                    Username Z–A
+                                </option>
+
+                                <option value="status-asc">
+                                    Status A–Z
+                                </option>
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                {/* LOADING */}
+
+                {loading ? (
+
+                    <div className="admin-users-state">
+
+                        <div className="admin-users-loading-icon">
+                            <PeopleAltRoundedIcon />
+                        </div>
+
+                        <h3>
+                            Loading users
+                        </h3>
+
+                        <p>
+                            Getting registered
+                            TalkSpace members...
+                        </p>
+
+                        <div className="admin-users-loading-bar">
+                            <span />
+                        </div>
+
+                    </div>
+
+                ) : error ? (
+
+                    /* ERROR */
+
+                    <div className="admin-users-state">
+
+                        <div className="admin-users-state-icon error">
+                            <ErrorOutlineRoundedIcon />
+                        </div>
+
+                        <h3>
+                            Couldn't load users
+                        </h3>
+
+                        <p>
+                            {error}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={
+                                fetchUsers
+                            }
+                        >
+                            <RefreshRoundedIcon />
+
+                            Try again
+                        </button>
+
+                    </div>
+
+                ) : sortedUsers.length ===
+                0 ? (
+
+                    /* EMPTY */
+
+                    <div className="admin-users-state">
+
+                        <div className="admin-users-state-icon">
+                            <InboxRoundedIcon />
+                        </div>
+
+                        <h3>
+                            {searchTerm
+                                ? 'No matching users'
+                                : 'No users found'}
+                        </h3>
+
+                        <p>
+                            {searchTerm
+                                ? 'Try searching with another name, username or email.'
+                                : 'Registered TalkSpace users will appear here.'}
+                        </p>
+
+                    </div>
+
+                ) : (
+
+                    <>
+                        {/* DESKTOP TABLE */}
+
+                        <div className="admin-users-table-wrapper">
+
+                            <table className="admin-users-table">
+
+                                <thead>
+                                <tr>
+                                    <th>
+                                        {sortButton(
+                                            'firstName',
+                                            'User'
+                                        )}
+                                    </th>
+
+                                    <th>
+                                        Contact
+                                    </th>
+
+                                    <th>
+                                        Details
+                                    </th>
+
+                                    <th>
+                                        {sortButton(
+                                            'createdDate',
+                                            'Joined'
+                                        )}
+                                    </th>
+
+                                    <th>
+                                        Verified
+                                    </th>
+
+                                    <th>
+                                        {sortButton(
+                                            'status',
+                                            'Status'
+                                        )}
+                                    </th>
+
+                                    <th>
+                                        Block information
+                                    </th>
+                                </tr>
+                                </thead>
+
+
+                                <tbody>
+
+                                {sortedUsers.map(
+                                    user => {
+                                        const message =
+                                            user.blockedMessage ||
+                                            'No block message';
+
+
+                                        const isLong =
+                                            message.length >
+                                            90;
+
+
+                                        const expanded =
+                                            Boolean(
+                                                expandedMessages[
+                                                    user.userId
+                                                    ]
+                                            );
+
+
+                                        return (
+                                            <tr
+                                                key={
+                                                    user.userId
+                                                }
+                                            >
+
+                                                {/* USER */}
+
+                                                <td>
+
+                                                    <div className="admin-users-user">
+
+                                                        <div className="admin-users-avatar">
+                                                            {user.firstName
+                                                                    ?.charAt(0)
+                                                                    .toUpperCase() ||
+                                                                user.userName
+                                                                    ?.charAt(0)
+                                                                    .toUpperCase() ||
+                                                                '?'}
+                                                        </div>
+
+
+                                                        <div>
+
+                                                            <strong>
+                                                                {user.firstName}
+                                                                {' '}
+                                                                {user.lastName}
+                                                            </strong>
+
+                                                            <span>
+                                                                    @{user.userName}
+                                                                </span>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </td>
+
+
+                                                {/* CONTACT */}
+
+                                                <td>
+
+                                                    <div className="admin-users-email">
+
+                                                        <EmailRoundedIcon />
+
+                                                        <span>
+                                                                {user.email}
+                                                            </span>
+
+                                                    </div>
+
+                                                </td>
+
+
+                                                {/* DETAILS */}
+
+                                                <td>
+
+                                                    <div className="admin-users-details">
+
+                                                            <span>
+                                                                {formatValue(
+                                                                    user.gender
+                                                                )}
+                                                            </span>
+
+                                                        <i />
+
+                                                        <span>
+                                                                {formatValue(
+                                                                    user.zodiacSign
+                                                                )}
+                                                            </span>
+
+                                                        <small>
+                                                            {formatDate(
+                                                                user.birthDate
+                                                            )}
+                                                        </small>
+
+                                                    </div>
+
+                                                </td>
+
+
+                                                {/* CREATED */}
+
+                                                <td>
+
+                                                    <div className="admin-users-date">
+
+                                                        <CalendarMonthRoundedIcon />
+
+                                                        {formatDate(
+                                                            user.createdDate
+                                                        )}
+
+                                                    </div>
+
+                                                </td>
+
+
+                                                {/* VERIFIED */}
+
+                                                <td>
+
+                                                        <span
+                                                            className={
+                                                                `admin-users-verified ${
+                                                                    user.verifyMail
+                                                                        ? 'yes'
+                                                                        : 'no'
+                                                                }`
+                                                            }
+                                                        >
+
+                                                            {user.verifyMail ? (
+                                                                <VerifiedRoundedIcon />
+                                                            ) : (
+                                                                <ErrorOutlineRoundedIcon />
+                                                            )}
+
+                                                            {user.verifyMail
+                                                                ? 'Verified'
+                                                                : 'Unverified'}
+
+                                                        </span>
+
+                                                </td>
+
+
+                                                {/* STATUS */}
+
+                                                <td>
+
+                                                        <span
+                                                            className={
+                                                                `admin-users-status ${getStatusClass(
+                                                                    user.status
+                                                                )}`
+                                                            }
+                                                        >
+                                                            <i />
+
+                                                            {formatValue(
+                                                                user.status
+                                                            )}
+                                                        </span>
+
+                                                </td>
+
+
+                                                {/* BLOCK */}
+
+                                                <td>
+
+                                                    {user.status
+                                                        ?.toUpperCase() ===
+                                                    'BLOCKED' ? (
+
+                                                        <div className="admin-users-block">
+
+                                                            <p>
+                                                                {expanded ||
+                                                                !isLong
+                                                                    ? message
+                                                                    : `${message.substring(
+                                                                        0,
+                                                                        90
+                                                                    )}...`}
+                                                            </p>
+
+
+                                                            {isLong && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        toggleMessageExpansion(
+                                                                            user.userId
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {expanded
+                                                                        ? 'Show less'
+                                                                        : 'Show more'}
+                                                                </button>
+                                                            )}
+
+
+                                                            <span>
+                                                                    Until:
+                                                                {' '}
+                                                                {formatDate(
+                                                                    user.untilBlockedDate
+                                                                )}
+                                                                </span>
+
+                                                        </div>
+
+                                                    ) : (
+                                                        <span className="admin-users-not-blocked">
+                                                                —
+                                                            </span>
+                                                    )}
+
+                                                </td>
+
+                                            </tr>
+                                        );
+                                    }
+                                )}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+
+                        {/* MOBILE */}
+
+                        <div className="admin-users-mobile-list">
+
+                            {sortedUsers.map(
+                                user => {
+                                    const message =
+                                        user.blockedMessage ||
+                                        'No block message';
+
+
+                                    const expanded =
+                                        Boolean(
+                                            expandedMessages[
+                                                user.userId
+                                                ]
+                                        );
+
+
+                                    const isLong =
+                                        message.length >
+                                        120;
+
+
+                                    return (
+                                        <article
+                                            key={
+                                                user.userId
+                                            }
+                                            className="admin-users-mobile-card"
+                                        >
+
+                                            <div className="admin-users-mobile-header">
+
+                                                <div className="admin-users-user">
+
+                                                    <div className="admin-users-avatar">
+                                                        {user.firstName
+                                                                ?.charAt(0)
+                                                                .toUpperCase() ||
+                                                            '?'}
+                                                    </div>
+
+
+                                                    <div>
+
+                                                        <strong>
+                                                            {user.firstName}
+                                                            {' '}
+                                                            {user.lastName}
+                                                        </strong>
+
+                                                        <span>
+                                                            @{user.userName}
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                <span
+                                                    className={
+                                                        `admin-users-status ${getStatusClass(
+                                                            user.status
+                                                        )}`
+                                                    }
+                                                >
+                                                    <i />
+
+                                                    {formatValue(
+                                                        user.status
+                                                    )}
+                                                </span>
+
+                                            </div>
+
+
+                                            <div className="admin-users-mobile-info">
+
+                                                <div>
+                                                    <span>
+                                                        EMAIL
+                                                    </span>
+
+                                                    <strong>
+                                                        {user.email}
+                                                    </strong>
+                                                </div>
+
+
+                                                <div>
+                                                    <span>
+                                                        GENDER
+                                                    </span>
+
+                                                    <strong>
+                                                        {formatValue(
+                                                            user.gender
+                                                        )}
+                                                    </strong>
+                                                </div>
+
+
+                                                <div>
+                                                    <span>
+                                                        ZODIAC
+                                                    </span>
+
+                                                    <strong>
+                                                        {formatValue(
+                                                            user.zodiacSign
+                                                        )}
+                                                    </strong>
+                                                </div>
+
+
+                                                <div>
+                                                    <span>
+                                                        JOINED
+                                                    </span>
+
+                                                    <strong>
+                                                        {formatDate(
+                                                            user.createdDate
+                                                        )}
+                                                    </strong>
+                                                </div>
+
+                                            </div>
+
+
+                                            <div className="admin-users-mobile-verification">
+
+                                                <span
+                                                    className={
+                                                        `admin-users-verified ${
+                                                            user.verifyMail
+                                                                ? 'yes'
+                                                                : 'no'
+                                                        }`
+                                                    }
+                                                >
+                                                    {user.verifyMail ? (
+                                                        <VerifiedRoundedIcon />
+                                                    ) : (
+                                                        <ErrorOutlineRoundedIcon />
+                                                    )}
+
+                                                    {user.verifyMail
+                                                        ? 'Email verified'
+                                                        : 'Email not verified'}
+                                                </span>
+
+                                            </div>
+
+
+                                            {user.status
+                                                    ?.toUpperCase() ===
+                                                'BLOCKED' && (
+
+                                                    <div className="admin-users-mobile-block">
+
+                                                    <span>
+                                                        BLOCK REASON
+                                                    </span>
+
+                                                        <p>
+                                                            {expanded ||
+                                                            !isLong
+                                                                ? message
+                                                                : `${message.substring(
+                                                                    0,
+                                                                    120
+                                                                )}...`}
+                                                        </p>
+
+
+                                                        {isLong && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    toggleMessageExpansion(
+                                                                        user.userId
+                                                                    )
+                                                                }
+                                                            >
+                                                                {expanded
+                                                                    ? 'Show less'
+                                                                    : 'Show more'}
+                                                            </button>
+                                                        )}
+
+
+                                                        <small>
+                                                            Blocked until
+                                                            {' '}
+                                                            {formatDate(
+                                                                user.untilBlockedDate
+                                                            )}
+                                                        </small>
+
+                                                    </div>
+                                                )}
+
+                                        </article>
+                                    );
+                                }
+                            )}
+
+                        </div>
+
+                    </>
                 )}
-            </div>
+
+            </section>
+
         </div>
     );
 };

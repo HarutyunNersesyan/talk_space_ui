@@ -1,14 +1,62 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, {
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from 'react';
+
 import './Chat.css';
+
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FiSend, FiPaperclip, FiSmile, FiChevronLeft } from 'react-icons/fi';
-import { Client } from '@stomp/stompjs';
+
+import {
+    jwtDecode
+} from 'jwt-decode';
+
+import {
+    useNavigate,
+    useParams
+} from 'react-router-dom';
+
+import {
+    Client
+} from '@stomp/stompjs';
+
 import SockJS from 'sockjs-client';
-import { IoMdSend } from 'react-icons/io';
-import { BsCheck2All, BsCheck2 } from 'react-icons/bs';
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+
+import EmojiPicker, {
+    EmojiClickData
+} from 'emoji-picker-react';
+
+
+import ArrowBackRoundedIcon
+    from '@mui/icons-material/ArrowBackRounded';
+
+import SearchRoundedIcon
+    from '@mui/icons-material/SearchRounded';
+
+import SentimentSatisfiedAltRoundedIcon
+    from '@mui/icons-material/SentimentSatisfiedAltRounded';
+
+import SendRoundedIcon
+    from '@mui/icons-material/SendRounded';
+
+import DoneRoundedIcon
+    from '@mui/icons-material/DoneRounded';
+
+import DoneAllRoundedIcon
+    from '@mui/icons-material/DoneAllRounded';
+
+import ChatBubbleOutlineRoundedIcon
+    from '@mui/icons-material/ChatBubbleOutlineRounded';
+
+import CircleRoundedIcon
+    from '@mui/icons-material/CircleRounded';
+
+
+/* =========================================================
+   TYPES
+   ========================================================= */
 
 interface UserChatDto {
     partnerUsername: string;
@@ -18,6 +66,7 @@ interface UserChatDto {
     unreadCount: number;
     partnerImage: string;
 }
+
 
 interface ChatMessageDto {
     id: number;
@@ -32,11 +81,13 @@ interface ChatMessageDto {
     isRead: boolean;
 }
 
+
 interface TypingNotificationDto {
     sender: string;
     receiver: string;
     typing: boolean;
 }
+
 
 interface NotificationDto {
     type: string;
@@ -44,594 +95,2230 @@ interface NotificationDto {
     receiver: string;
 }
 
+
+/* =========================================================
+   API
+   ========================================================= */
+
+const API_URL =
+    process.env.REACT_APP_API_URL ||
+    'http://localhost:8080';
+
+
+/* =========================================================
+   COMPONENT
+   ========================================================= */
+
 const Chat: React.FC = () => {
-    const [chats, setChats] = useState<UserChatDto[]>([]);
-    const [activeChat, setActiveChat] = useState<ChatMessageDto[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [userName, setUserName] = useState<string>('');
-    const [newMessage, setNewMessage] = useState<string>('');
-    const [selectedPartner, setSelectedPartner] = useState<string | null>(null);
-    const [isTyping, setIsTyping] = useState<boolean>(false);
-    const [partnerTyping, setPartnerTyping] = useState<boolean>(false);
-    const [stompClient, setStompClient] = useState<Client | null>(null);
-    const [showMobileConversationList, setShowMobileConversationList] = useState(true);
-    const [partnerImages, setPartnerImages] = useState<Record<string, string>>({});
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLTextAreaElement>(null);
-    const emojiPickerRef = useRef<HTMLDivElement>(null);
-    const navigate = useNavigate();
-    const { partnerUsername } = useParams();
-    const token = localStorage.getItem('token');
 
-    const parseTimestamp = (timestamp: number[] | string): Date => {
-        if (!timestamp) return new Date();
+    const [
+        chats,
+        setChats
+    ] = useState<UserChatDto[]>([]);
 
-        if (Array.isArray(timestamp) && timestamp.length >= 6) {
-            return new Date(
-                timestamp[0],
-                timestamp[1] - 1,
-                timestamp[2],
-                timestamp[3],
-                timestamp[4],
-                timestamp[5]
-            );
-        }
 
-        if (typeof timestamp === 'string') {
-            try {
-                const date = new Date(timestamp);
-                if (!isNaN(date.getTime())) return date;
+    const [
+        activeChat,
+        setActiveChat
+    ] = useState<ChatMessageDto[]>([]);
 
-                if (/^\d+$/.test(timestamp)) {
-                    const epochDate = new Date(parseInt(timestamp));
-                    if (!isNaN(epochDate.getTime())) return epochDate;
-                }
-            } catch {
+
+    const [
+        loading,
+        setLoading
+    ] = useState<boolean>(true);
+
+
+    const [
+        error,
+        setError
+    ] = useState<string | null>(null);
+
+
+    const [
+        userName,
+        setUserName
+    ] = useState<string>('');
+
+
+    const [
+        newMessage,
+        setNewMessage
+    ] = useState<string>('');
+
+
+    const [
+        selectedPartner,
+        setSelectedPartner
+    ] = useState<string | null>(null);
+
+
+    const [
+        partnerTyping,
+        setPartnerTyping
+    ] = useState<boolean>(false);
+
+
+    const [
+        stompClient,
+        setStompClient
+    ] = useState<Client | null>(null);
+
+
+    const [
+        showMobileConversationList,
+        setShowMobileConversationList
+    ] = useState<boolean>(true);
+
+
+    const [
+        partnerImages,
+        setPartnerImages
+    ] = useState<Record<string, string>>({});
+
+
+    const [
+        showEmojiPicker,
+        setShowEmojiPicker
+    ] = useState<boolean>(false);
+
+
+    const [
+        conversationSearch,
+        setConversationSearch
+    ] = useState<string>('');
+
+
+    const messagesEndRef =
+        useRef<HTMLDivElement>(null);
+
+
+    const inputRef =
+        useRef<HTMLTextAreaElement>(null);
+
+
+    const emojiPickerRef =
+        useRef<HTMLDivElement>(null);
+
+
+    const navigate =
+        useNavigate();
+
+
+    /*
+     * IMPORTANT:
+     *
+     * RoutesConfig.tsx:
+     *
+     * /chat/:userName
+     *
+     * URL parameter-ը userName է,
+     * բայց Chat component-ի ներսում այն օգտագործում ենք
+     * partnerUsername անունով։
+     */
+    const {
+        userName: partnerUsername
+    } = useParams<{
+        userName: string;
+    }>();
+
+
+    const token =
+        localStorage.getItem('token');
+
+
+    /* =====================================================
+       TIMESTAMP
+       ===================================================== */
+
+    const parseTimestamp =
+        (
+            timestamp:
+                number[] |
+                string
+        ): Date => {
+
+            if (!timestamp) {
                 return new Date();
             }
-        }
 
-        return new Date();
-    };
 
-    const formatTime = (timestamp: number[] | string): string => {
-        const date = parseTimestamp(timestamp);
-        return date.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
-    };
+            if (
+                Array.isArray(timestamp) &&
+                timestamp.length >= 6
+            ) {
+                return new Date(
+                    timestamp[0],
+                    timestamp[1] - 1,
+                    timestamp[2],
+                    timestamp[3],
+                    timestamp[4],
+                    timestamp[5]
+                );
+            }
 
-    const formatDate = (timestamp: number[] | string): string => {
-        const date = parseTimestamp(timestamp);
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
 
-        if (date.toDateString() === today.toDateString()) {
-            return 'Today';
-        }
-        if (date.toDateString() === yesterday.toDateString()) {
-            return 'Yesterday';
-        }
-        return date.toLocaleDateString([], {
-            month: 'short',
-            day: 'numeric'
-        });
-    };
+            if (
+                typeof timestamp ===
+                'string'
+            ) {
+                try {
+                    const date =
+                        new Date(timestamp);
 
-    const handleIncomingMessage = (receivedMessage: ChatMessageDto) => {
-        if (selectedPartner &&
-            (receivedMessage.sender === selectedPartner ||
-                receivedMessage.receiver === selectedPartner)) {
-            setActiveChat(prev => [...prev, receivedMessage]);
-            scrollToBottom();
-        }
 
-        setChats(prev => prev.map(chat =>
-            chat.partnerUsername === receivedMessage.sender ||
-            chat.partnerUsername === receivedMessage.receiver
-                ? {
-                    ...chat,
-                    lastMessage: receivedMessage.content,
-                    lastMessageTime: Array.isArray(receivedMessage.timestamp)
-                        ? new Date(
-                            receivedMessage.timestamp[0],
-                            receivedMessage.timestamp[1] - 1,
-                            receivedMessage.timestamp[2],
-                            receivedMessage.timestamp[3],
-                            receivedMessage.timestamp[4],
-                            receivedMessage.timestamp[5]
-                        ).toISOString()
-                        : receivedMessage.timestamp,
-                    unreadCount: chat.partnerUsername !== selectedPartner
-                        ? chat.unreadCount + 1
-                        : 0
+                    if (
+                        !isNaN(
+                            date.getTime()
+                        )
+                    ) {
+                        return date;
+                    }
+
+
+                    if (
+                        /^\d+$/.test(
+                            timestamp
+                        )
+                    ) {
+                        const epochDate =
+                            new Date(
+                                parseInt(
+                                    timestamp,
+                                    10
+                                )
+                            );
+
+
+                        if (
+                            !isNaN(
+                                epochDate.getTime()
+                            )
+                        ) {
+                            return epochDate;
+                        }
+                    }
+
+                } catch {
+                    return new Date();
                 }
-                : chat
-        ));
-    };
+            }
 
-    const setupWebSocket = useCallback(() => {
-        if (!token || !userName) return;
 
-        const socketFactory = () => new SockJS('http://localhost:8080/ws');
-        const client = new Client({
-            webSocketFactory: socketFactory,
-            connectHeaders: { Authorization: `Bearer ${token}` },
-            debug: (str) => console.log('STOMP: ', str),
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
-        });
+            return new Date();
+        };
 
-        client.onConnect = () => {
-            console.log('WebSocket Connected');
-            setStompClient(client);
 
-            client.subscribe(`/user/queue/messages`, (message) => {
-                const receivedMessage: ChatMessageDto = JSON.parse(message.body);
-                handleIncomingMessage(receivedMessage);
-            });
+    const formatTime =
+        (
+            timestamp:
+                number[] |
+                string
+        ): string => {
 
-            client.subscribe(`/topic/public`, (message) => {
-                const receivedMessage: ChatMessageDto = JSON.parse(message.body);
-                if (receivedMessage.sender !== userName) {
-                    handleIncomingMessage(receivedMessage);
+            const date =
+                parseTimestamp(
+                    timestamp
+                );
+
+
+            return date.toLocaleTimeString(
+                [],
+                {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
                 }
-            });
+            );
+        };
 
-            client.subscribe(`/user/queue/typing`, (message) => {
-                const typingUpdate: TypingNotificationDto = JSON.parse(message.body);
-                if (typingUpdate.sender === selectedPartner) {
-                    setPartnerTyping(typingUpdate.typing);
-                    setTimeout(() => setPartnerTyping(false), 2000);
+
+    const formatDate =
+        (
+            timestamp:
+                number[] |
+                string
+        ): string => {
+
+            const date =
+                parseTimestamp(
+                    timestamp
+                );
+
+
+            const today =
+                new Date();
+
+
+            const yesterday =
+                new Date(today);
+
+
+            yesterday.setDate(
+                yesterday.getDate() - 1
+            );
+
+
+            if (
+                date.toDateString() ===
+                today.toDateString()
+            ) {
+                return 'Today';
+            }
+
+
+            if (
+                date.toDateString() ===
+                yesterday.toDateString()
+            ) {
+                return 'Yesterday';
+            }
+
+
+            return date.toLocaleDateString(
+                [],
+                {
+                    month: 'short',
+                    day: 'numeric'
                 }
-            });
+            );
+        };
 
-            client.subscribe(`/user/queue/notifications`, (message) => {
-                const notification: NotificationDto = JSON.parse(message.body);
-                if (notification.type === 'reload' && notification.receiver === userName) {
-                    if (!window.location.pathname.includes(`/chat/${notification.sender}`)) {
-                        navigate(`/chat/${notification.sender}`);
-                        window.location.reload();
+
+    /* =====================================================
+       SCROLL
+       ===================================================== */
+
+    const scrollToBottom =
+        useCallback(() => {
+
+            setTimeout(() => {
+
+                messagesEndRef
+                    .current
+                    ?.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+
+            }, 100);
+
+        }, []);
+
+
+    /* =====================================================
+       PARTNER IMAGE
+       ===================================================== */
+
+    const fetchPartnerImage =
+        useCallback(
+            async (
+                username: string
+            ) => {
+
+                if (
+                    !username ||
+                    !token
+                ) {
+                    return;
+                }
+
+
+                try {
+                    const response =
+                        await axios.get(
+                            `${API_URL}/api/public/user/image/${username}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                },
+
+                                responseType:
+                                    'blob'
+                            }
+                        );
+
+
+                    const imageUrl =
+                        URL.createObjectURL(
+                            response.data
+                        );
+
+
+                    setPartnerImages(
+                        previous => {
+
+                            if (
+                                previous[
+                                    username
+                                    ]
+                            ) {
+                                URL.revokeObjectURL(
+                                    imageUrl
+                                );
+
+                                return previous;
+                            }
+
+
+                            return {
+                                ...previous,
+
+                                [username]:
+                                imageUrl
+                            };
+                        }
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        'Error fetching partner image:',
+                        error
+                    );
+
+
+                    setPartnerImages(
+                        previous => ({
+                            ...previous,
+
+                            [username]:
+                                ''
+                        })
+                    );
+                }
+            },
+            [token]
+        );
+
+
+    /* =====================================================
+       MARK AS READ
+       ===================================================== */
+
+    const markMessagesAsRead =
+        useCallback(
+            async (
+                partner: string
+            ) => {
+
+                if (
+                    !userName ||
+                    !token
+                ) {
+                    return;
+                }
+
+
+                try {
+                    await axios.post(
+                        `${API_URL}/api/public/chat/read/${partner}/${userName}`,
+                        null,
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+
+                    setChats(
+                        previous =>
+                            previous.map(
+                                chat =>
+                                    chat.partnerUsername ===
+                                    partner
+
+                                        ? {
+                                            ...chat,
+
+                                            unreadCount:
+                                                0
+                                        }
+
+                                        : chat
+                            )
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        'Error marking messages as read:',
+                        error
+                    );
+                }
+            },
+            [
+                token,
+                userName
+            ]
+        );
+
+
+    /* =====================================================
+       LOAD CHAT HISTORY
+       ===================================================== */
+
+    const loadChatHistory =
+        useCallback(
+            async (
+                partner: string
+            ) => {
+
+                if (
+                    !partner ||
+                    !userName ||
+                    !token
+                ) {
+                    return;
+                }
+
+
+                try {
+                    setLoading(true);
+                    setError(null);
+
+
+                    const response =
+                        await axios.get<ChatMessageDto[]>(
+                            `${API_URL}/api/public/chat/history/${userName}/${partner}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    setActiveChat(
+                        response.data || []
+                    );
+
+
+                    await markMessagesAsRead(
+                        partner
+                    );
+
+
+                    scrollToBottom();
+
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            'chatOpened'
+                        )
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        'Error loading chat history:',
+                        error
+                    );
+
+
+                    setError(
+                        'Failed to load messages.'
+                    );
+
+                } finally {
+                    setLoading(false);
+                }
+            },
+            [
+                markMessagesAsRead,
+                scrollToBottom,
+                token,
+                userName
+            ]
+        );
+
+
+    /* =====================================================
+       INCOMING MESSAGE
+       ===================================================== */
+
+    const handleIncomingMessage =
+        useCallback(
+            (
+                receivedMessage:
+                    ChatMessageDto
+            ) => {
+
+                const belongsToActiveChat =
+                    selectedPartner &&
+                    (
+                        receivedMessage.sender ===
+                        selectedPartner ||
+
+                        receivedMessage.receiver ===
+                        selectedPartner
+                    );
+
+
+                if (
+                    belongsToActiveChat
+                ) {
+                    setActiveChat(
+                        previous => {
+
+                            const exists =
+                                previous.some(
+                                    message =>
+                                        message.id ===
+                                        receivedMessage.id
+                                );
+
+
+                            if (exists) {
+                                return previous;
+                            }
+
+
+                            return [
+                                ...previous,
+                                receivedMessage
+                            ];
+                        }
+                    );
+
+
+                    scrollToBottom();
+
+
+                    if (
+                        receivedMessage.sender ===
+                        selectedPartner
+                    ) {
+                        markMessagesAsRead(
+                            selectedPartner
+                        );
                     }
                 }
-            });
-        };
 
-        client.onStompError = (frame) => {
-            console.error('Broker reported error: ' + frame.headers['message']);
-            setError('Connection error. Please refresh the page.');
-        };
+
+                setChats(
+                    previous =>
+                        previous.map(
+                            chat => {
+
+                                const belongsToConversation =
+                                    chat.partnerUsername ===
+                                    receivedMessage.sender ||
+
+                                    chat.partnerUsername ===
+                                    receivedMessage.receiver;
+
+
+                                if (
+                                    !belongsToConversation
+                                ) {
+                                    return chat;
+                                }
+
+
+                                return {
+                                    ...chat,
+
+                                    lastMessage:
+                                    receivedMessage.content,
+
+                                    lastMessageTime:
+                                        parseTimestamp(
+                                            receivedMessage.timestamp
+                                        ).toISOString(),
+
+                                    unreadCount:
+                                        chat.partnerUsername ===
+                                        selectedPartner
+
+                                            ? 0
+
+                                            : chat.unreadCount +
+                                            (
+                                                receivedMessage.sender !==
+                                                userName
+                                                    ? 1
+                                                    : 0
+                                            )
+                                };
+                            }
+                        )
+                );
+            },
+            [
+                markMessagesAsRead,
+                scrollToBottom,
+                selectedPartner,
+                userName
+            ]
+        );
+
+
+    /* =====================================================
+       WEBSOCKET
+       ===================================================== */
+
+    useEffect(() => {
+
+        if (
+            !token ||
+            !userName
+        ) {
+            return;
+        }
+
+
+        const socketFactory =
+            () =>
+                new SockJS(
+                    `${API_URL}/ws`
+                );
+
+
+        const client =
+            new Client({
+
+                webSocketFactory:
+                socketFactory,
+
+                connectHeaders: {
+                    Authorization:
+                        `Bearer ${token}`
+                },
+
+                reconnectDelay:
+                    5000,
+
+                heartbeatIncoming:
+                    4000,
+
+                heartbeatOutgoing:
+                    4000
+            });
+
+
+        client.onConnect =
+            () => {
+
+                setStompClient(
+                    client
+                );
+
+
+                /* PRIVATE MESSAGES */
+
+                client.subscribe(
+                    '/user/queue/messages',
+                    message => {
+
+                        const receivedMessage:
+                            ChatMessageDto =
+                            JSON.parse(
+                                message.body
+                            );
+
+
+                        handleIncomingMessage(
+                            receivedMessage
+                        );
+                    }
+                );
+
+
+                /* PUBLIC MESSAGES */
+
+                client.subscribe(
+                    '/topic/public',
+                    message => {
+
+                        const receivedMessage:
+                            ChatMessageDto =
+                            JSON.parse(
+                                message.body
+                            );
+
+
+                        if (
+                            receivedMessage.sender !==
+                            userName
+                        ) {
+                            handleIncomingMessage(
+                                receivedMessage
+                            );
+                        }
+                    }
+                );
+
+
+                /* TYPING */
+
+                client.subscribe(
+                    '/user/queue/typing',
+                    message => {
+
+                        const typingUpdate:
+                            TypingNotificationDto =
+                            JSON.parse(
+                                message.body
+                            );
+
+
+                        if (
+                            typingUpdate.sender ===
+                            selectedPartner
+                        ) {
+                            setPartnerTyping(
+                                typingUpdate.typing
+                            );
+
+
+                            if (
+                                typingUpdate.typing
+                            ) {
+                                window.setTimeout(
+                                    () =>
+                                        setPartnerTyping(
+                                            false
+                                        ),
+                                    2000
+                                );
+                            }
+                        }
+                    }
+                );
+
+
+                /* NOTIFICATIONS */
+
+                client.subscribe(
+                    '/user/queue/notifications',
+                    message => {
+
+                        const notification:
+                            NotificationDto =
+                            JSON.parse(
+                                message.body
+                            );
+
+
+                        if (
+                            notification.type ===
+                            'reload' &&
+
+                            notification.receiver ===
+                            userName
+                        ) {
+                            if (
+                                !window.location.pathname.includes(
+                                    `/chat/${notification.sender}`
+                                )
+                            ) {
+                                navigate(
+                                    `/chat/${notification.sender}`
+                                );
+                            }
+                        }
+                    }
+                );
+            };
+
+
+        client.onStompError =
+            frame => {
+
+                console.error(
+                    'WebSocket error:',
+                    frame.headers[
+                        'message'
+                        ]
+                );
+
+
+                setError(
+                    'Connection error. Please refresh the page.'
+                );
+            };
+
+
+        client.onWebSocketClose =
+            () => {
+                setStompClient(
+                    null
+                );
+            };
+
 
         client.activate();
 
+
         return () => {
-            if (client.connected) {
-                client.deactivate();
-            }
+
+            setStompClient(
+                null
+            );
+
+
+            client.deactivate();
+
         };
-    }, [token, userName, navigate, selectedPartner]);
+
+    }, [
+        token,
+        userName,
+        navigate,
+        selectedPartner,
+        handleIncomingMessage
+    ]);
+
+
+    /* =====================================================
+       CURRENT USER
+       ===================================================== */
 
     useEffect(() => {
-        const cleanup = setupWebSocket();
-        return cleanup;
-    }, [setupWebSocket]);
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                if (!token) throw new Error('No token found');
-                const decodedToken = jwtDecode<{ sub: string }>(token);
-                const response = await axios.get(
-                    `http://localhost:8080/api/public/user/get/userName/${decodedToken.sub}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setUserName(response.data);
-            } catch (err) {
-                console.error('Error fetching user data:', err);
-                setError('Failed to load user information');
-                setLoading(false);
-            }
-        };
+        const fetchUserData =
+            async () => {
+
+                try {
+                    if (!token) {
+                        navigate(
+                            '/login',
+                            {
+                                replace: true
+                            }
+                        );
+
+                        return;
+                    }
+
+
+                    const decodedToken =
+                        jwtDecode<{
+                            sub: string;
+                        }>(token);
+
+
+                    const response =
+                        await axios.get<string>(
+                            `${API_URL}/api/public/user/get/userName/${decodedToken.sub}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    setUserName(
+                        response.data
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        'Error fetching user data:',
+                        error
+                    );
+
+
+                    setError(
+                        'Failed to load user information.'
+                    );
+
+
+                    setLoading(false);
+                }
+            };
+
+
         fetchUserData();
-    }, [token]);
 
-    const fetchPartnerImage = async (username: string) => {
-        try {
-            if (partnerImages[username]) return;
+    }, [
+        navigate,
+        token
+    ]);
 
-            const response = await axios.get(
-                `http://localhost:8080/api/public/user/image/${username}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    responseType: 'blob'
-                }
-            );
-            const imageUrl = URL.createObjectURL(response.data);
-            setPartnerImages(prev => ({ ...prev, [username]: imageUrl }));
-        } catch (err) {
-            console.error('Error fetching partner image:', err);
-            setPartnerImages(prev => ({ ...prev, [username]: '' }));
-        }
-    };
+
+    /* =====================================================
+       CONVERSATIONS
+       ===================================================== */
 
     useEffect(() => {
-        const fetchConversations = async () => {
-            try {
-                if (!userName) return;
-                const response = await axios.get(
-                    `http://localhost:8080/api/public/chat/conversations/${userName}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setChats(response.data);
 
-                response.data.forEach((chat: UserChatDto) => {
-                    fetchPartnerImage(chat.partnerUsername);
-                });
+        const fetchConversations =
+            async () => {
 
-                if (partnerUsername) {
-                    setSelectedPartner(partnerUsername);
-                    loadChatHistory(partnerUsername);
-                    setShowMobileConversationList(false);
+                if (
+                    !userName ||
+                    !token
+                ) {
+                    return;
                 }
-            } catch (err) {
-                console.error('Error fetching conversations:', err);
-                setError('Failed to load conversations');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchConversations();
-    }, [userName, token, partnerUsername]);
 
-    const loadChatHistory = async (partner: string) => {
-        try {
-            setLoading(true);
-            const response = await axios.get(
-                `http://localhost:8080/api/public/chat/history/${userName}/${partner}`,
-                { headers: { Authorization: `Bearer ${token}` } }
+
+                try {
+                    setError(null);
+
+
+                    const response =
+                        await axios.get<UserChatDto[]>(
+                            `${API_URL}/api/public/chat/conversations/${userName}`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        `Bearer ${token}`
+                                }
+                            }
+                        );
+
+
+                    const conversationData =
+                        response.data || [];
+
+
+                    setChats(
+                        conversationData
+                    );
+
+
+                    conversationData.forEach(
+                        chat => {
+
+                            fetchPartnerImage(
+                                chat.partnerUsername
+                            );
+                        }
+                    );
+
+
+                    /*
+                     * Եթե URL-ը օրինակ
+                     * /chat/anna է,
+                     *
+                     * partnerUsername = anna
+                     */
+                    if (
+                        partnerUsername
+                    ) {
+                        setSelectedPartner(
+                            partnerUsername
+                        );
+
+
+                        fetchPartnerImage(
+                            partnerUsername
+                        );
+
+
+                        await loadChatHistory(
+                            partnerUsername
+                        );
+
+
+                        setShowMobileConversationList(
+                            false
+                        );
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        'Error fetching conversations:',
+                        error
+                    );
+
+
+                    setError(
+                        'Failed to load conversations.'
+                    );
+
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+
+        fetchConversations();
+
+    }, [
+        fetchPartnerImage,
+        loadChatHistory,
+        partnerUsername,
+        token,
+        userName
+    ]);
+
+
+    /* =====================================================
+       SEND MESSAGE
+       ===================================================== */
+
+    const sendMessage =
+        () => {
+
+            const messageContent =
+                newMessage.trim();
+
+
+            if (
+                !messageContent ||
+                !selectedPartner ||
+                !userName ||
+                !stompClient ||
+                !stompClient.connected
+            ) {
+                return;
+            }
+
+
+            const tempId =
+                Date.now();
+
+
+            const tempMessage:
+                ChatMessageDto = {
+
+                id:
+                tempId,
+
+                sender:
+                userName,
+
+                senderDisplayName:
+                userName,
+
+                receiver:
+                selectedPartner,
+
+                receiverDisplayName:
+                selectedPartner,
+
+                content:
+                messageContent,
+
+                timestamp:
+                    new Date()
+                        .toISOString(),
+
+                isRead:
+                    false
+            };
+
+
+            setActiveChat(
+                previous => [
+                    ...previous,
+                    tempMessage
+                ]
             );
-            setActiveChat(response.data);
-            await markMessagesAsRead(partner);
+
+
+            setChats(
+                previous =>
+                    previous.map(
+                        chat =>
+                            chat.partnerUsername ===
+                            selectedPartner
+
+                                ? {
+                                    ...chat,
+
+                                    lastMessage:
+                                    messageContent,
+
+                                    lastMessageTime:
+                                        new Date()
+                                            .toISOString()
+                                }
+
+                                : chat
+                    )
+            );
+
+
+            setNewMessage('');
+            setShowEmojiPicker(false);
+
             scrollToBottom();
 
-            window.dispatchEvent(new CustomEvent('chatOpened'));
-        } catch (err) {
-            console.error('Error loading chat history:', err);
-            setError('Failed to load messages');
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const markMessagesAsRead = async (partner: string) => {
-        try {
-            await axios.post(
-                `http://localhost:8080/api/public/chat/read/${partner}/${userName}`,
-                null,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setChats(prev => prev.map(chat =>
-                chat.partnerUsername === partner
-                    ? { ...chat, unreadCount: 0 }
-                    : chat
-            ));
-        } catch (err) {
-            console.error('Error marking messages as read:', err);
-        }
-    };
+            try {
+                stompClient.publish({
+                    destination:
+                        '/app/chat.send',
 
-    const sendMessage = async () => {
-        if (!newMessage.trim() || !selectedPartner || !userName || !stompClient) return;
+                    body:
+                        JSON.stringify({
+                            sender:
+                            userName,
 
-        const tempId = Date.now();
-        const tempMessage: ChatMessageDto = {
-            id: tempId,
-            sender: userName,
-            senderDisplayName: userName,
-            receiver: selectedPartner,
-            receiverDisplayName: selectedPartner,
-            content: newMessage,
-            timestamp: new Date().toISOString(),
-            isRead: false
+                            receiver:
+                            selectedPartner,
+
+                            content:
+                            messageContent
+                        }),
+
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                });
+
+
+                stompClient.publish({
+                    destination:
+                        '/topic/public',
+
+                    body:
+                        JSON.stringify(
+                            tempMessage
+                        ),
+
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                });
+
+            } catch (error) {
+
+                console.error(
+                    'Error sending message:',
+                    error
+                );
+
+
+                setError(
+                    'Failed to send message.'
+                );
+
+
+                setActiveChat(
+                    previous =>
+                        previous.filter(
+                            message =>
+                                message.id !==
+                                tempId
+                        )
+                );
+            }
         };
 
-        setActiveChat(prev => [...prev, tempMessage]);
-        setNewMessage('');
-        scrollToBottom();
-        setShowEmojiPicker(false);
 
-        try {
-            await stompClient.publish({
-                destination: '/app/chat.send',
-                body: JSON.stringify({
-                    sender: userName,
-                    receiver: selectedPartner,
-                    content: newMessage
-                }),
-                headers: { Authorization: `Bearer ${token}` }
-            });
+    /* =====================================================
+       MESSAGE INPUT
+       ===================================================== */
 
-            await stompClient.publish({
-                destination: '/topic/public',
-                body: JSON.stringify(tempMessage),
-                headers: { Authorization: `Bearer ${token}` }
-            });
-        } catch (err) {
-            console.error('Error sending message:', err);
-            setError('Failed to send message');
-            setActiveChat(prev => prev.filter(msg => msg.id !== tempId));
-        }
-    };
+    const handleKeyDown =
+        (
+            event:
+                React.KeyboardEvent<HTMLTextAreaElement>
+        ) => {
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    };
+            if (
+                event.key ===
+                'Enter' &&
+                !event.shiftKey
+            ) {
+                event.preventDefault();
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const value = e.target.value;
-        setNewMessage(value);
-        setIsTyping(!!value);
+                sendMessage();
+            }
+        };
 
-        if (stompClient && selectedPartner) {
-            stompClient.publish({
-                destination: '/app/typing',
-                body: JSON.stringify({
-                    sender: userName,
-                    receiver: selectedPartner,
-                    typing: !!value
-                }),
-                headers: { Authorization: `Bearer ${token}` }
-            });
-        }
-    };
 
-    const scrollToBottom = () => {
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    };
+    const handleInputChange =
+        (
+            event:
+                React.ChangeEvent<HTMLTextAreaElement>
+        ) => {
 
-    const selectChat = (partner: string) => {
-        setSelectedPartner(partner);
-        loadChatHistory(partner);
-        navigate(`/chat/${partner}`);
-        setShowMobileConversationList(false);
-        setShowEmojiPicker(false);
-    };
+            const value =
+                event.target.value;
 
-    const toggleConversationList = () => {
-        setShowMobileConversationList(!showMobileConversationList);
-        setShowEmojiPicker(false);
-    };
 
-    const toggleEmojiPicker = () => {
-        setShowEmojiPicker(!showEmojiPicker);
-    };
+            setNewMessage(
+                value
+            );
 
-    const handleEmojiClick = (emojiData: EmojiClickData) => {
-        setNewMessage(prev => prev + emojiData.emoji);
-        if (inputRef.current) {
-            inputRef.current.focus();
-        }
-    };
 
-    const handleClickOutside = (event: MouseEvent) => {
-        if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-            setShowEmojiPicker(false);
-        }
-    };
+            if (
+                stompClient?.connected &&
+                selectedPartner
+            ) {
+                stompClient.publish({
+                    destination:
+                        '/app/typing',
+
+                    body:
+                        JSON.stringify({
+                            sender:
+                            userName,
+
+                            receiver:
+                            selectedPartner,
+
+                            typing:
+                                Boolean(
+                                    value.trim()
+                                )
+                        }),
+
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                });
+            }
+        };
+
+
+    /* =====================================================
+       SELECT CHAT
+       ===================================================== */
+
+    const selectChat =
+        (
+            partner: string
+        ) => {
+
+            setSelectedPartner(
+                partner
+            );
+
+
+            setActiveChat([]);
+
+
+            setPartnerTyping(
+                false
+            );
+
+
+            setShowEmojiPicker(
+                false
+            );
+
+
+            setShowMobileConversationList(
+                false
+            );
+
+
+            /*
+             * Route-ը փոխում ենք,
+             * իսկ history-ն URL փոփոխությունից հետո
+             * useEffect-ը կբեռնի։
+             */
+            navigate(
+                `/chat/${partner}`
+            );
+        };
+
+
+    /* =====================================================
+       MOBILE
+       ===================================================== */
+
+    const toggleConversationList =
+        () => {
+
+            setShowMobileConversationList(
+                previous =>
+                    !previous
+            );
+
+
+            setShowEmojiPicker(
+                false
+            );
+        };
+
+
+    /* =====================================================
+       EMOJI
+       ===================================================== */
+
+    const toggleEmojiPicker =
+        () => {
+
+            setShowEmojiPicker(
+                previous =>
+                    !previous
+            );
+        };
+
+
+    const handleEmojiClick =
+        (
+            emojiData:
+                EmojiClickData
+        ) => {
+
+            setNewMessage(
+                previous =>
+                    previous +
+                    emojiData.emoji
+            );
+
+
+            inputRef
+                .current
+                ?.focus();
+        };
+
 
     useEffect(() => {
-        document.addEventListener('mousedown', handleClickOutside);
+
+        const handleClickOutside =
+            (
+                event:
+                    MouseEvent
+            ) => {
+
+                if (
+                    emojiPickerRef.current &&
+                    !emojiPickerRef.current.contains(
+                        event.target as Node
+                    )
+                ) {
+                    setShowEmojiPicker(
+                        false
+                    );
+                }
+            };
+
+
+        document.addEventListener(
+            'mousedown',
+            handleClickOutside
+        );
+
+
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+
+            document.removeEventListener(
+                'mousedown',
+                handleClickOutside
+            );
+
         };
+
     }, []);
 
-    if (loading && !activeChat.length) {
-        return <div className="chat-loading">Loading chats...</div>;
+
+    /* =====================================================
+       IMAGE CLEANUP
+       ===================================================== */
+
+    useEffect(() => {
+
+        return () => {
+
+            Object.values(
+                partnerImages
+            ).forEach(
+                imageUrl => {
+
+                    if (
+                        imageUrl.startsWith(
+                            'blob:'
+                        )
+                    ) {
+                        URL.revokeObjectURL(
+                            imageUrl
+                        );
+                    }
+                }
+            );
+
+        };
+
+    }, [partnerImages]);
+
+
+    /* =====================================================
+       FILTER CONVERSATIONS
+       ===================================================== */
+
+    const filteredChats =
+        chats.filter(
+            chat => {
+
+                const query =
+                    conversationSearch
+                        .trim()
+                        .toLowerCase();
+
+
+                if (!query) {
+                    return true;
+                }
+
+
+                return (
+                    chat.partnerName
+                        ?.toLowerCase()
+                        .includes(query) ||
+
+                    chat.partnerUsername
+                        ?.toLowerCase()
+                        .includes(query)
+                );
+            }
+        );
+
+
+    /* =====================================================
+       SELECTED USER
+       ===================================================== */
+
+    const selectedChat =
+        chats.find(
+            chat =>
+                chat.partnerUsername ===
+                selectedPartner
+        );
+
+
+    const selectedPartnerName =
+        selectedChat?.partnerName ||
+        selectedPartner ||
+        'Conversation';
+
+
+    /* =====================================================
+       LOADING
+       ===================================================== */
+
+    if (
+        loading &&
+        chats.length === 0 &&
+        activeChat.length === 0
+    ) {
+        return (
+            <div className="chat-page-state">
+
+                <div className="chat-state-spinner"/>
+
+                <span>
+                    Loading your messages...
+                </span>
+
+            </div>
+        );
     }
 
-    if (error) {
-        return <div className="chat-error">{error}</div>;
+
+    /* =====================================================
+       ERROR
+       ===================================================== */
+
+    if (
+        error &&
+        chats.length === 0
+    ) {
+        return (
+            <div className="chat-page-state error">
+
+                <ChatBubbleOutlineRoundedIcon/>
+
+                <strong>
+                    Messages unavailable
+                </strong>
+
+                <span>
+                    {error}
+                </span>
+
+            </div>
+        );
     }
+
+
+    /* =====================================================
+       VIEW
+       ===================================================== */
 
     return (
-        <div className="chat-app">
-            <div className={`conversation-list ${showMobileConversationList ? 'mobile-show' : 'mobile-hide'}`}>
-                <div className="conversation-header">
-                    <h2>Messages</h2>
-                    <div className="connection-status-container">
-                        {stompClient?.connected ? (
-                            <span className="connection-status connected">Online</span>
+        <div className="chat-page">
+
+            <div className="chat-shell">
+
+                {/* =========================================
+                    CONVERSATION SIDEBAR
+                    ========================================= */}
+
+                <aside
+                    className={
+                        `chat-conversations ${
+                            showMobileConversationList
+                                ? 'mobile-show'
+                                : 'mobile-hide'
+                        }`
+                    }
+                >
+
+                    {/* HEADER */}
+
+                    <div className="chat-conversations-header">
+
+                        <div>
+
+                            <span className="chat-eyebrow">
+                                TALKSPACE
+                            </span>
+
+                            <h1>
+                                Messages
+                            </h1>
+
+                        </div>
+
+
+                        <div
+                            className={
+                                `chat-connection ${
+                                    stompClient?.connected
+                                        ? 'online'
+                                        : 'offline'
+                                }`
+                            }
+                        >
+
+                            <CircleRoundedIcon/>
+
+                            {stompClient?.connected
+                                ? 'Online'
+                                : 'Offline'
+                            }
+
+                        </div>
+
+                    </div>
+
+
+                    {/* SEARCH */}
+
+                    <div className="chat-search">
+
+                        <SearchRoundedIcon/>
+
+                        <input
+                            type="text"
+                            value={
+                                conversationSearch
+                            }
+                            onChange={
+                                event =>
+                                    setConversationSearch(
+                                        event.target.value
+                                    )
+                            }
+                            placeholder="Search conversations..."
+                        />
+
+                    </div>
+
+
+                    {/* LIST */}
+
+                    <div className="chat-conversation-list">
+
+                        {filteredChats.length ===
+                        0 ? (
+
+                            <div className="chat-empty-conversations">
+
+                                <ChatBubbleOutlineRoundedIcon/>
+
+                                <strong>
+                                    {conversationSearch
+                                        ? 'No conversations found'
+                                        : 'No conversations yet'
+                                    }
+                                </strong>
+
+                                <span>
+                                    {conversationSearch
+                                        ? 'Try another name or username.'
+                                        : 'Your conversations will appear here.'
+                                    }
+                                </span>
+
+                            </div>
+
                         ) : (
-                            <span className="connection-status disconnected">Offline</span>
-                        )}
-                    </div>
-                </div>
-                <div className="conversation-items">
-                    {chats.length === 0 ? (
-                        <div className="no-chats">No conversations yet</div>
-                    ) : (
-                        chats.map(chat => (
-                            <div
-                                key={chat.partnerUsername}
-                                className={`conversation-item ${selectedPartner === chat.partnerUsername ? 'active' : ''}`}
-                                onClick={() => selectChat(chat.partnerUsername)}
-                            >
-                                <div className="avatar">
-                                    {partnerImages[chat.partnerUsername] ? (
-                                        <img
-                                            src={partnerImages[chat.partnerUsername]}
-                                            alt={chat.partnerName}
-                                            onError={(e) => {
-                                                const target = e.target as HTMLImageElement;
-                                                target.style.display = 'none';
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="default-avatar">
-                                            {chat.partnerName.charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-                                    {chat.unreadCount > 0 && (
-                                        <span className="unread-count">{chat.unreadCount}</span>
-                                    )}
-                                </div>
-                                <div className="conversation-info">
-                                    <div className="conversation-header">
-                                        <h3>{chat.partnerName}</h3>
-                                        <span className="time">
-                                            {formatTime(chat.lastMessageTime)}
-                                        </span>
-                                    </div>
-                                    <p className="last-message">
-                                        {chat.lastMessage.length > 30
-                                            ? `${chat.lastMessage.substring(0, 30)}...`
-                                            : chat.lastMessage}
-                                    </p>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
 
-            <div className={`chat-area ${!showMobileConversationList ? 'mobile-show' : 'mobile-hide'}`}>
-                {selectedPartner ? (
-                    <>
-                        <div className="chat-header">
-                            <button className="mobile-back-button" onClick={toggleConversationList}>
-                                <FiChevronLeft size={24}/>
-                            </button>
-                            <div className="partner-info">
-                                <div className="avatar">
-                                    {partnerImages[selectedPartner] ? (
-                                        <img
-                                            src={partnerImages[selectedPartner]}
-                                            alt={chats.find(c => c.partnerUsername === selectedPartner)?.partnerName}
-                                            onError={(e) => {
-                                                const target = e.target as HTMLImageElement;
-                                                target.style.display = 'none';
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="default-avatar">
-                                            {chats.find(c => c.partnerUsername === selectedPartner)?.partnerName.charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="partner-details">
-                                    <h3>{chats.find(c => c.partnerUsername === selectedPartner)?.partnerName}</h3>
-                                    {partnerTyping ? (
-                                        <span className="typing-indicator">typing...</span>
-                                    ) : (
-                                        <span className="status-indicator">
-                                            {stompClient?.connected ? 'online' : 'offline'}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                            filteredChats.map(
+                                chat => (
 
-                        <div className="messages">
-                            {activeChat.length === 0 ? (
-                                <div className="empty">No messages yet</div>
-                            ) : (
-                                activeChat.map((message, index) => {
-                                    const showDate = index === 0 ||
-                                        formatDate(activeChat[index - 1]?.timestamp) !== formatDate(message.timestamp);
+                                    <button
+                                        type="button"
+                                        key={
+                                            chat.partnerUsername
+                                        }
+                                        className={
+                                            `chat-conversation-item ${
+                                                selectedPartner ===
+                                                chat.partnerUsername
+                                                    ? 'active'
+                                                    : ''
+                                            }`
+                                        }
+                                        onClick={
+                                            () =>
+                                                selectChat(
+                                                    chat.partnerUsername
+                                                )
+                                        }
+                                    >
 
-                                    return (
-                                        <React.Fragment key={message.id}>
-                                            {showDate && (
-                                                <div className="message-date">
-                                                    {formatDate(message.timestamp)}
-                                                </div>
+                                        {/* AVATAR */}
+
+                                        <div className="chat-avatar">
+
+                                            {partnerImages[
+                                                chat.partnerUsername
+                                                ] ? (
+
+                                                <img
+                                                    src={
+                                                        partnerImages[
+                                                            chat.partnerUsername
+                                                            ]
+                                                    }
+                                                    alt={
+                                                        chat.partnerName
+                                                    }
+                                                />
+
+                                            ) : (
+
+                                                <span>
+                                                    {(
+                                                        chat.partnerName ||
+                                                        chat.partnerUsername
+                                                    )
+                                                        .charAt(0)
+                                                        .toUpperCase()
+                                                    }
+                                                </span>
+
                                             )}
-                                            <div
-                                                className={`message ${message.sender === userName ? 'sent' : 'received'}`}>
-                                                <div className="message-sender">
-                                                    {message.sender === userName ? 'You' : message.sender}
-                                                </div>
-                                                <div className="message-content">
-                                                    <p>{message.content}</p>
-                                                    <span className="message-time">
-                                                        {formatTime(message.timestamp)}
-                                                        {message.sender === userName && (
-                                                            <span className="status">
-                                                                {message.isRead ? (
-                                                                    <BsCheck2All color="#4fc3f7"/>
-                                                                ) : (
-                                                                    <BsCheck2 color="#90a4ae"/>
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                </div>
+
+
+                                            {chat.unreadCount >
+                                                0 && (
+
+                                                    <span className="chat-unread-badge">
+                                                    {
+                                                        chat.unreadCount >
+                                                        99
+                                                            ? '99+'
+                                                            : chat.unreadCount
+                                                    }
+                                                </span>
+
+                                                )}
+
+                                        </div>
+
+
+                                        {/* INFO */}
+
+                                        <div className="chat-conversation-info">
+
+                                            <div className="chat-conversation-top">
+
+                                                <strong>
+                                                    {
+                                                        chat.partnerName ||
+                                                        chat.partnerUsername
+                                                    }
+                                                </strong>
+
+
+                                                {chat.lastMessageTime && (
+
+                                                    <time>
+                                                        {
+                                                            formatTime(
+                                                                chat.lastMessageTime
+                                                            )
+                                                        }
+                                                    </time>
+
+                                                )}
+
                                             </div>
-                                        </React.Fragment>
-                                    );
-                                })
+
+
+                                            <div className="chat-conversation-bottom">
+
+                                                <span>
+                                                    {
+                                                        chat.lastMessage
+                                                            ? chat.lastMessage.length >
+                                                            42
+
+                                                                ? `${chat.lastMessage.substring(
+                                                                    0,
+                                                                    42
+                                                                )}...`
+
+                                                                : chat.lastMessage
+
+                                                            : 'Start a conversation'
+                                                    }
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </button>
+
+                                )
+                            )
+
+                        )}
+
+                    </div>
+
+                </aside>
+
+
+                {/* =========================================
+                    CHAT AREA
+                    ========================================= */}
+
+                <main
+                    className={
+                        `chat-main ${
+                            !showMobileConversationList
+                                ? 'mobile-show'
+                                : 'mobile-hide'
+                        }`
+                    }
+                >
+
+                    {selectedPartner ? (
+
+                        <>
+
+                            {/* CHAT HEADER */}
+
+                            <header className="chat-main-header">
+
+                                <button
+                                    type="button"
+                                    className="chat-mobile-back"
+                                    onClick={
+                                        toggleConversationList
+                                    }
+                                    aria-label="Back to conversations"
+                                >
+                                    <ArrowBackRoundedIcon/>
+                                </button>
+
+
+                                <div className="chat-partner-avatar">
+
+                                    {partnerImages[
+                                        selectedPartner
+                                        ] ? (
+
+                                        <img
+                                            src={
+                                                partnerImages[
+                                                    selectedPartner
+                                                    ]
+                                            }
+                                            alt={
+                                                selectedPartnerName
+                                            }
+                                        />
+
+                                    ) : (
+
+                                        <span>
+                                            {
+                                                selectedPartnerName
+                                                    .charAt(0)
+                                                    .toUpperCase()
+                                            }
+                                        </span>
+
+                                    )}
+
+                                </div>
+
+
+                                <div className="chat-partner-info">
+
+                                    <strong>
+                                        {
+                                            selectedPartnerName
+                                        }
+                                    </strong>
+
+
+                                    {partnerTyping ? (
+
+                                        <span className="chat-typing">
+                                            typing...
+                                        </span>
+
+                                    ) : (
+
+                                        <span
+                                            className={
+                                                stompClient?.connected
+                                                    ? 'chat-partner-status online'
+                                                    : 'chat-partner-status'
+                                            }
+                                        >
+
+                                            <CircleRoundedIcon/>
+
+                                            {
+                                                stompClient?.connected
+                                                    ? 'Online'
+                                                    : 'Offline'
+                                            }
+
+                                        </span>
+
+                                    )}
+
+                                </div>
+
+                            </header>
+
+
+                            {/* ERROR */}
+
+                            {error && (
+
+                                <div className="chat-inline-error">
+                                    {error}
+                                </div>
+
                             )}
-                            <div ref={messagesEndRef}/>
+
+
+                            {/* MESSAGES */}
+
+                            <section className="chat-messages">
+
+                                {loading &&
+                                activeChat.length ===
+                                0 ? (
+
+                                    <div className="chat-messages-loading">
+
+                                        <div className="chat-state-spinner"/>
+
+                                        Loading messages...
+
+                                    </div>
+
+                                ) : activeChat.length ===
+                                0 ? (
+
+                                    <div className="chat-empty-messages">
+
+                                        <div className="chat-empty-icon">
+                                            <ChatBubbleOutlineRoundedIcon/>
+                                        </div>
+
+                                        <strong>
+                                            Start the conversation
+                                        </strong>
+
+                                        <span>
+                                            Send a message to{' '}
+                                            {
+                                                selectedPartnerName
+                                            }.
+                                        </span>
+
+                                    </div>
+
+                                ) : (
+
+                                    activeChat.map(
+                                        (
+                                            message,
+                                            index
+                                        ) => {
+
+                                            const previousMessage =
+                                                activeChat[
+                                                index - 1
+                                                    ];
+
+
+                                            const showDate =
+                                                index === 0 ||
+
+                                                formatDate(
+                                                    previousMessage
+                                                        ?.timestamp
+                                                ) !==
+                                                formatDate(
+                                                    message.timestamp
+                                                );
+
+
+                                            const isMine =
+                                                message.sender ===
+                                                userName;
+
+
+                                            return (
+                                                <React.Fragment
+                                                    key={
+                                                        `${message.id}-${index}`
+                                                    }
+                                                >
+
+                                                    {showDate && (
+
+                                                        <div className="chat-date-separator">
+
+                                                            <span>
+                                                                {
+                                                                    formatDate(
+                                                                        message.timestamp
+                                                                    )
+                                                                }
+                                                            </span>
+
+                                                        </div>
+
+                                                    )}
+
+
+                                                    <div
+                                                        className={
+                                                            `chat-message-row ${
+                                                                isMine
+                                                                    ? 'sent'
+                                                                    : 'received'
+                                                            }`
+                                                        }
+                                                    >
+
+                                                        <div className="chat-message-bubble">
+
+                                                            <p>
+                                                                {
+                                                                    message.content
+                                                                }
+                                                            </p>
+
+
+                                                            <div className="chat-message-meta">
+
+                                                                <time>
+                                                                    {
+                                                                        formatTime(
+                                                                            message.timestamp
+                                                                        )
+                                                                    }
+                                                                </time>
+
+
+                                                                {isMine && (
+
+                                                                    <span className="chat-message-read">
+
+                                                                        {
+                                                                            message.isRead
+                                                                                ? (
+                                                                                    <DoneAllRoundedIcon/>
+                                                                                )
+                                                                                : (
+                                                                                    <DoneRoundedIcon/>
+                                                                                )
+                                                                        }
+
+                                                                    </span>
+
+                                                                )}
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </React.Fragment>
+                                            );
+                                        }
+                                    )
+
+                                )}
+
+
+                                <div
+                                    ref={
+                                        messagesEndRef
+                                    }
+                                />
+
+                            </section>
+
+
+                            {/* MESSAGE COMPOSER */}
+
+                            <footer className="chat-composer">
+
+                                <div
+                                    className="chat-emoji-wrapper"
+                                    ref={
+                                        emojiPickerRef
+                                    }
+                                >
+
+                                    <button
+                                        type="button"
+                                        className={
+                                            `chat-tool-button ${
+                                                showEmojiPicker
+                                                    ? 'active'
+                                                    : ''
+                                            }`
+                                        }
+                                        onClick={
+                                            toggleEmojiPicker
+                                        }
+                                        aria-label="Emoji"
+                                    >
+                                        <SentimentSatisfiedAltRoundedIcon/>
+                                    </button>
+
+
+                                    {showEmojiPicker && (
+
+                                        <div className="chat-emoji-picker">
+
+                                            <EmojiPicker
+                                                onEmojiClick={
+                                                    handleEmojiClick
+                                                }
+                                                width={
+                                                    300
+                                                }
+                                                height={
+                                                    350
+                                                }
+                                                searchDisabled
+                                                skinTonesDisabled
+                                                previewConfig={{
+                                                    showPreview:
+                                                        false
+                                                }}
+                                                lazyLoadEmojis
+                                            />
+
+                                        </div>
+
+                                    )}
+
+                                </div>
+
+
+                                <textarea
+                                    ref={
+                                        inputRef
+                                    }
+                                    value={
+                                        newMessage
+                                    }
+                                    onChange={
+                                        handleInputChange
+                                    }
+                                    onKeyDown={
+                                        handleKeyDown
+                                    }
+                                    placeholder="Write a message..."
+                                    rows={1}
+                                    className="chat-message-input"
+                                />
+
+
+                                <button
+                                    type="button"
+                                    className={
+                                        `chat-send-button ${
+                                            newMessage.trim() &&
+                                            stompClient?.connected
+                                                ? 'active'
+                                                : ''
+                                        }`
+                                    }
+                                    onClick={
+                                        sendMessage
+                                    }
+                                    disabled={
+                                        !newMessage.trim() ||
+                                        !stompClient?.connected
+                                    }
+                                    aria-label="Send message"
+                                >
+                                    <SendRoundedIcon/>
+                                </button>
+
+                            </footer>
+
+                        </>
+
+                    ) : (
+
+                        /* =================================
+                           NO CHAT SELECTED
+                           ================================= */
+
+                        <div className="chat-no-selection">
+
+                            <div className="chat-no-selection-icon">
+                                <ChatBubbleOutlineRoundedIcon/>
+                            </div>
+
+
+                            <span>
+                                YOUR MESSAGES
+                            </span>
+
+
+                            <h2>
+                                Select a conversation
+                            </h2>
+
+
+                            <p>
+                                Choose someone from your
+                                conversation list to start
+                                messaging.
+                            </p>
+
                         </div>
 
-                        <div className="message-editor">
-                            <div className="editor-tools">
-                                <button className="tool-button" onClick={toggleEmojiPicker}>
-                                    <FiSmile/>
-                                </button>
-                            </div>
-                            {showEmojiPicker && (
-                                <div className="emoji-picker-container" ref={emojiPickerRef}>
-                                    <EmojiPicker
-                                        onEmojiClick={handleEmojiClick}
-                                        width={300}
-                                        height={350}
-                                        searchDisabled
-                                        skinTonesDisabled
-                                        previewConfig={{showPreview: false}}
-                                        lazyLoadEmojis
-                                    />
-                                </div>
-                            )}
-                            <textarea
-                                ref={inputRef}
-                                value={newMessage}
-                                onChange={handleInputChange}
-                                onKeyDown={handleKeyDown}
-                                placeholder="Type a message..."
-                                rows={1}
-                                className="message-input"
-                            />
-                            <button
-                                onClick={sendMessage}
-                                disabled={!newMessage.trim() || !stompClient?.connected}
-                                className={`send-button ${newMessage.trim() ? 'active' : ''}`}
-                            >
-                                <IoMdSend size={20}/>
-                            </button>
-                        </div>
-                    </>
-                ) : (
-                    <div className="no-chat-selected">
-                        <div className="placeholder">
-                            <h3>Select a conversation</h3>
-                            <p>Choose a chat from the list to start messaging</p>
-                        </div>
-                    </div>
-                )}
+                    )}
+
+                </main>
+
             </div>
+
         </div>
     );
 };

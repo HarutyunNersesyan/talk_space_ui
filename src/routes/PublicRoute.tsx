@@ -1,33 +1,107 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+
+import {
+    Navigate
+} from 'react-router-dom';
+
+import {
+    getRoleFromToken
+} from './ProtectedRoute';
+
+
+/* =========================================================
+   PROPS
+   ========================================================= */
 
 interface PublicRouteProps {
     element: React.ReactElement;
 }
 
-const PublicRoute: React.FC<PublicRouteProps> = ({ element }) => {
-    const token = localStorage.getItem('token');
-    let isAuthenticated = false;
 
-    if (token) {
-        try {
-            const [, payload] = token.split('.');
-            const decodedToken = JSON.parse(atob(payload));
-            const currentTime = Date.now() / 1000;
+/* =========================================================
+   CLEAR AUTH
+   ========================================================= */
 
-            isAuthenticated = decodedToken.exp > currentTime;
-        } catch (error) {
-            console.error('Error decoding token:', error);
-        }
-    }
+const clearAuthData = () => {
 
-    const redirectPath = localStorage.getItem("redirectPath");
+    localStorage.removeItem('token');
 
-    if (isAuthenticated) {
-        return <Navigate to={redirectPath || '/'} replace />;
-    }
+    localStorage.removeItem('userName');
 
-    return element;
+    localStorage.removeItem('userRole');
+
+    localStorage.removeItem('redirectPath');
 };
+
+
+/* =========================================================
+   PUBLIC ROUTE
+   ========================================================= */
+
+const PublicRoute: React.FC<PublicRouteProps> = ({
+                                                     element
+                                                 }) => {
+
+    const token =
+        localStorage.getItem('token');
+
+
+    /* =====================================================
+       NO TOKEN
+       ===================================================== */
+
+    if (!token) {
+
+        return element;
+    }
+
+
+    /* =====================================================
+       ROLE DIRECTLY FROM JWT
+       ===================================================== */
+
+    const role =
+        getRoleFromToken(token);
+
+
+    /* =====================================================
+       INVALID / EXPIRED TOKEN
+       ===================================================== */
+
+    if (!role) {
+
+        clearAuthData();
+
+        return element;
+    }
+
+
+    /* =====================================================
+       ADMIN
+       ===================================================== */
+
+    if (role === 'ADMIN') {
+
+        return (
+            <Navigate
+                to="/admin"
+                replace
+            />
+        );
+    }
+
+
+    /* =====================================================
+       USER
+       ===================================================== */
+
+    return (
+        <Navigate
+            to="/home"
+            replace
+        />
+    );
+};
+
 
 export default PublicRoute;

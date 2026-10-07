@@ -1,5 +1,7 @@
 import { ReactNode } from 'react';
 
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import ReviewsRoundedIcon from '@mui/icons-material/ReviewsRounded';
 
 export interface NavItem {
     to: string;
@@ -8,6 +10,16 @@ export interface NavItem {
 }
 
 const adminNavItems: NavItem[] = [
+    {
+        to: '/users',
+        icon: <PeopleAltRoundedIcon />,
+        label: 'Users'
+    },
+    {
+        to: '/feedbacks',
+        icon: <ReviewsRoundedIcon />,
+        label: 'Feedbacks'
+    }
 ];
 
 export default adminNavItems;
