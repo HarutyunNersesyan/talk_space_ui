@@ -396,70 +396,6 @@
 
 
 /* =========================================================
-   LIKE
-   ========================================================= */
-
-.speciality-like {
-    width: 43px;
-    height: 43px;
-
-    min-width: 43px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 0;
-
-    border: 1px solid
-    rgba(109, 93, 252, 0.1);
-
-    border-radius: 13px;
-
-    background:
-            rgba(109, 93, 252, 0.045);
-
-    color: var(--speciality-primary);
-
-    cursor: pointer;
-
-    transition:
-            transform 0.2s ease,
-            background 0.2s ease;
-}
-
-
-.speciality-like:hover:not(:disabled) {
-    transform: scale(1.04);
-
-    background:
-            rgba(109, 93, 252, 0.09);
-}
-
-
-.speciality-like.liked {
-    border-color:
-            rgba(236, 72, 153, 0.12);
-
-    background:
-            rgba(236, 72, 153, 0.07);
-
-    color: #ec4899;
-}
-
-
-.speciality-like:disabled {
-    cursor: default;
-}
-
-
-.speciality-like svg {
-    width: 20px;
-    height: 20px;
-}
-
-
-/* =========================================================
    META
    ========================================================= */
 
@@ -668,11 +604,7 @@
    ========================================================= */
 
 .speciality-actions {
-    display: grid;
-
-    grid-template-columns:
-        1fr
-        1fr;
+    display: flex;
 
     gap: 8px;
 
@@ -680,7 +612,6 @@
 }
 
 
-.speciality-like-large,
 .speciality-next-large {
     min-height: 42px;
 
@@ -703,23 +634,6 @@
 }
 
 
-.speciality-like-large {
-    border: 1px solid
-    rgba(236, 72, 153, 0.11);
-
-    background:
-            rgba(236, 72, 153, 0.05);
-
-    color: #db3c89;
-}
-
-
-.speciality-like-large.liked {
-    background:
-            rgba(236, 72, 153, 0.09);
-}
-
-
 .speciality-next-large {
     border: none;
 
@@ -738,13 +652,11 @@
 }
 
 
-.speciality-like-large:hover:not(:disabled),
 .speciality-next-large:hover:not(:disabled) {
     transform: translateY(-1px);
 }
 
 
-.speciality-like-large:disabled,
 .speciality-next-large:disabled {
     opacity: 0.65;
 
@@ -1103,8 +1015,7 @@
    SPINNERS
    ========================================================= */
 
-.speciality-spinner,
-.speciality-like-spinner {
+.speciality-spinner {
     width: 13px;
     height: 13px;
 
@@ -1283,7 +1194,6 @@
 
 
     .speciality-actions {
-        grid-template-columns: 1fr;
     }
 
 
@@ -1301,8 +1211,6 @@
 
 .speciality-back:focus-visible,
 .speciality-next:focus-visible,
-.speciality-like:focus-visible,
-.speciality-like-large:focus-visible,
 .speciality-next-large:focus-visible,
 .speciality-empty button:focus-visible,
 .speciality-socials a:focus-visible {

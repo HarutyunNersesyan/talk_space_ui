@@ -1,1601 +1,294 @@
-import React, {
-    useCallback,
-    useEffect,
-    useRef,
-    useState
-} from 'react';
-
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import './Chat.css';
-
-import axios from 'axios';
-
-import {
-    jwtDecode
-} from 'jwt-decode';
-
-import {
-    useNavigate,
-    useParams
-} from 'react-router-dom';
-
-import {
-    Client
-} from '@stomp/stompjs';
-
+import { useNavigate, useParams } from 'react-router-dom';
+import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-
-import EmojiPicker, {
-    EmojiClickData
-} from 'emoji-picker-react';
-
-
-import ArrowBackRoundedIcon
-    from '@mui/icons-material/ArrowBackRounded';
-
-import SearchRoundedIcon
-    from '@mui/icons-material/SearchRounded';
-
-import SentimentSatisfiedAltRoundedIcon
-    from '@mui/icons-material/SentimentSatisfiedAltRounded';
-
-import SendRoundedIcon
-    from '@mui/icons-material/SendRounded';
-
-import DoneRoundedIcon
-    from '@mui/icons-material/DoneRounded';
-
-import DoneAllRoundedIcon
-    from '@mui/icons-material/DoneAllRounded';
-
-import ChatBubbleOutlineRoundedIcon
-    from '@mui/icons-material/ChatBubbleOutlineRounded';
-
-import CircleRoundedIcon
-    from '@mui/icons-material/CircleRounded';
-
-
-/* =========================================================
-   TYPES
-   ========================================================= */
+import axios from 'axios';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
+import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
+import DoneAllRoundedIcon from '@mui/icons-material/DoneAllRounded';
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import CircleRoundedIcon from '@mui/icons-material/CircleRounded';
+import { API_URL, featureApi, featureError } from '../api/features';
+import { useNetwork } from '../features/network/NetworkContext';
+import { usePresence } from '../features/network/PresenceBadge';
+import BlockButton from '../features/network/BlockButton';
 
 interface UserChatDto {
-    partnerUsername: string;
-    partnerName: string;
-    lastMessage: string;
-    lastMessageTime: string;
-    unreadCount: number;
-    partnerImage: string;
+    partnerUsername: string; partnerName: string; lastMessage: string;
+    lastMessageTime: string | null; unreadCount: number; partnerImage?: string;
 }
-
-
 interface ChatMessageDto {
-    id: number;
-    sender: string;
-    senderDisplayName: string;
-    senderImage?: string;
-    receiver: string;
-    receiverDisplayName: string;
-    receiverImage?: string;
-    content: string;
-    timestamp: number[] | string;
-    isRead: boolean;
+    id: number; sender: string; receiver: string; content: string;
+    timestamp: number[] | string; isRead: boolean; read?: boolean;
 }
-
-
-interface TypingNotificationDto {
-    sender: string;
-    receiver: string;
-    typing: boolean;
-}
-
-
-interface NotificationDto {
-    type: string;
-    sender: string;
-    receiver: string;
-}
-
-
-/* =========================================================
-   API
-   ========================================================= */
-
-const API_URL =
-    process.env.REACT_APP_API_URL ||
-    'http://localhost:8080';
-
-
-/* =========================================================
-   COMPONENT
-   ========================================================= */
-
-const Chat: React.FC = () => {
-
-    const [
-        chats,
-        setChats
-    ] = useState<UserChatDto[]>([]);
-
-
-    const [
-        activeChat,
-        setActiveChat
-    ] = useState<ChatMessageDto[]>([]);
-
-
-    const [
-        loading,
-        setLoading
-    ] = useState<boolean>(true);
-
-
-    const [
-        error,
-        setError
-    ] = useState<string | null>(null);
-
-
-    const [
-        userName,
-        setUserName
-    ] = useState<string>('');
-
-
-    const [
-        newMessage,
-        setNewMessage
-    ] = useState<string>('');
-
-
-    const [
-        selectedPartner,
-        setSelectedPartner
-    ] = useState<string | null>(null);
-
-
-    const [
-        partnerTyping,
-        setPartnerTyping
-    ] = useState<boolean>(false);
-
-
-    const [
-        stompClient,
-        setStompClient
-    ] = useState<Client | null>(null);
-
-
-    const [
-        showMobileConversationList,
-        setShowMobileConversationList
-    ] = useState<boolean>(true);
-
-
-    const [
-        partnerImages,
-        setPartnerImages
-    ] = useState<Record<string, string>>({});
-
-
-    const [
-        showEmojiPicker,
-        setShowEmojiPicker
-    ] = useState<boolean>(false);
-
-
-    const [
-        conversationSearch,
-        setConversationSearch
-    ] = useState<string>('');
-
-
-    const messagesEndRef =
-        useRef<HTMLDivElement>(null);
-
-
-    const inputRef =
-        useRef<HTMLTextAreaElement>(null);
-
-
-    const emojiPickerRef =
-        useRef<HTMLDivElement>(null);
-
-
-    const navigate =
-        useNavigate();
-
-
-    /*
-     * IMPORTANT:
-     *
-     * RoutesConfig.tsx:
-     *
-     * /chat/:userName
-     *
-     * URL parameter-ը userName է,
-     * բայց Chat component-ի ներսում այն օգտագործում ենք
-     * partnerUsername անունով։
-     */
-    const {
-        userName: partnerUsername
-    } = useParams<{
-        userName: string;
-    }>();
-
-
-    const token =
-        localStorage.getItem('token');
-
-
-    /* =====================================================
-       TIMESTAMP
-       ===================================================== */
-
-    const parseTimestamp =
-        (
-            timestamp:
-                number[] |
-                string
-        ): Date => {
-
-            if (!timestamp) {
-                return new Date();
-            }
-
-
-            if (
-                Array.isArray(timestamp) &&
-                timestamp.length >= 6
-            ) {
-                return new Date(
-                    timestamp[0],
-                    timestamp[1] - 1,
-                    timestamp[2],
-                    timestamp[3],
-                    timestamp[4],
-                    timestamp[5]
-                );
-            }
-
-
-            if (
-                typeof timestamp ===
-                'string'
-            ) {
-                try {
-                    const date =
-                        new Date(timestamp);
-
-
-                    if (
-                        !isNaN(
-                            date.getTime()
-                        )
-                    ) {
-                        return date;
-                    }
-
-
-                    if (
-                        /^\d+$/.test(
-                            timestamp
-                        )
-                    ) {
-                        const epochDate =
-                            new Date(
-                                parseInt(
-                                    timestamp,
-                                    10
-                                )
-                            );
-
-
-                        if (
-                            !isNaN(
-                                epochDate.getTime()
-                            )
-                        ) {
-                            return epochDate;
-                        }
-                    }
-
-                } catch {
-                    return new Date();
-                }
-            }
-
-
-            return new Date();
-        };
-
-
-    const formatTime =
-        (
-            timestamp:
-                number[] |
-                string
-        ): string => {
-
-            const date =
-                parseTimestamp(
-                    timestamp
-                );
-
-
-            return date.toLocaleTimeString(
-                [],
-                {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true
-                }
-            );
-        };
-
-
-    const formatDate =
-        (
-            timestamp:
-                number[] |
-                string
-        ): string => {
-
-            const date =
-                parseTimestamp(
-                    timestamp
-                );
-
-
-            const today =
-                new Date();
-
-
-            const yesterday =
-                new Date(today);
-
-
-            yesterday.setDate(
-                yesterday.getDate() - 1
-            );
-
-
-            if (
-                date.toDateString() ===
-                today.toDateString()
-            ) {
-                return 'Today';
-            }
-
-
-            if (
-                date.toDateString() ===
-                yesterday.toDateString()
-            ) {
-                return 'Yesterday';
-            }
-
-
-            return date.toLocaleDateString(
-                [],
-                {
-                    month: 'short',
-                    day: 'numeric'
-                }
-            );
-        };
-
-
-    /* =====================================================
-       SCROLL
-       ===================================================== */
-
-    const scrollToBottom =
-        useCallback(() => {
-
-            setTimeout(() => {
-
-                messagesEndRef
-                    .current
-                    ?.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-
-            }, 100);
-
-        }, []);
-
-
-    /* =====================================================
-       PARTNER IMAGE
-       ===================================================== */
-
-    const fetchPartnerImage =
-        useCallback(
-            async (
-                username: string
-            ) => {
-
-                if (
-                    !username ||
-                    !token
-                ) {
-                    return;
-                }
-
-
-                try {
-                    const response =
-                        await axios.get(
-                            `${API_URL}/api/public/user/image/${username}`,
-                            {
-                                headers: {
-                                    Authorization:
-                                        `Bearer ${token}`
-                                },
-
-                                responseType:
-                                    'blob'
-                            }
-                        );
-
-
-                    const imageUrl =
-                        URL.createObjectURL(
-                            response.data
-                        );
-
-
-                    setPartnerImages(
-                        previous => {
-
-                            if (
-                                previous[
-                                    username
-                                    ]
-                            ) {
-                                URL.revokeObjectURL(
-                                    imageUrl
-                                );
-
-                                return previous;
-                            }
-
-
-                            return {
-                                ...previous,
-
-                                [username]:
-                                imageUrl
-                            };
-                        }
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        'Error fetching partner image:',
-                        error
-                    );
-
-
-                    setPartnerImages(
-                        previous => ({
-                            ...previous,
-
-                            [username]:
-                                ''
-                        })
-                    );
-                }
-            },
-            [token]
-        );
-
-
-    /* =====================================================
-       MARK AS READ
-       ===================================================== */
-
-    const markMessagesAsRead =
-        useCallback(
-            async (
-                partner: string
-            ) => {
-
-                if (
-                    !userName ||
-                    !token
-                ) {
-                    return;
-                }
-
-
-                try {
-                    await axios.post(
-                        `${API_URL}/api/public/chat/read/${partner}/${userName}`,
-                        null,
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
-                        }
-                    );
-
-
-                    setChats(
-                        previous =>
-                            previous.map(
-                                chat =>
-                                    chat.partnerUsername ===
-                                    partner
-
-                                        ? {
-                                            ...chat,
-
-                                            unreadCount:
-                                                0
-                                        }
-
-                                        : chat
-                            )
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        'Error marking messages as read:',
-                        error
-                    );
-                }
-            },
-            [
-                token,
-                userName
-            ]
-        );
-
-
-    /* =====================================================
-       LOAD CHAT HISTORY
-       ===================================================== */
-
-    const loadChatHistory =
-        useCallback(
-            async (
-                partner: string
-            ) => {
-
-                if (
-                    !partner ||
-                    !userName ||
-                    !token
-                ) {
-                    return;
-                }
-
-
-                try {
-                    setLoading(true);
-                    setError(null);
-
-
-                    const response =
-                        await axios.get<ChatMessageDto[]>(
-                            `${API_URL}/api/public/chat/history/${userName}/${partner}`,
-                            {
-                                headers: {
-                                    Authorization:
-                                        `Bearer ${token}`
-                                }
-                            }
-                        );
-
-
-                    setActiveChat(
-                        response.data || []
-                    );
-
-
-                    await markMessagesAsRead(
-                        partner
-                    );
-
-
-                    scrollToBottom();
-
-
-                    window.dispatchEvent(
-                        new CustomEvent(
-                            'chatOpened'
-                        )
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        'Error loading chat history:',
-                        error
-                    );
-
-
-                    setError(
-                        'Failed to load messages.'
-                    );
-
-                } finally {
-                    setLoading(false);
-                }
-            },
-            [
-                markMessagesAsRead,
-                scrollToBottom,
-                token,
-                userName
-            ]
-        );
-
-
-    /* =====================================================
-       INCOMING MESSAGE
-       ===================================================== */
-
-    const handleIncomingMessage =
-        useCallback(
-            (
-                receivedMessage:
-                    ChatMessageDto
-            ) => {
-
-                const belongsToActiveChat =
-                    selectedPartner &&
-                    (
-                        receivedMessage.sender ===
-                        selectedPartner ||
-
-                        receivedMessage.receiver ===
-                        selectedPartner
-                    );
-
-
-                if (
-                    belongsToActiveChat
-                ) {
-                    setActiveChat(
-                        previous => {
-
-                            const exists =
-                                previous.some(
-                                    message =>
-                                        message.id ===
-                                        receivedMessage.id
-                                );
-
-
-                            if (exists) {
-                                return previous;
-                            }
-
-
-                            return [
-                                ...previous,
-                                receivedMessage
-                            ];
-                        }
-                    );
-
-
-                    scrollToBottom();
-
-
-                    if (
-                        receivedMessage.sender ===
-                        selectedPartner
-                    ) {
-                        markMessagesAsRead(
-                            selectedPartner
-                        );
-                    }
-                }
-
-
-                setChats(
-                    previous =>
-                        previous.map(
-                            chat => {
-
-                                const belongsToConversation =
-                                    chat.partnerUsername ===
-                                    receivedMessage.sender ||
-
-                                    chat.partnerUsername ===
-                                    receivedMessage.receiver;
-
-
-                                if (
-                                    !belongsToConversation
-                                ) {
-                                    return chat;
-                                }
-
-
-                                return {
-                                    ...chat,
-
-                                    lastMessage:
-                                    receivedMessage.content,
-
-                                    lastMessageTime:
-                                        parseTimestamp(
-                                            receivedMessage.timestamp
-                                        ).toISOString(),
-
-                                    unreadCount:
-                                        chat.partnerUsername ===
-                                        selectedPartner
-
-                                            ? 0
-
-                                            : chat.unreadCount +
-                                            (
-                                                receivedMessage.sender !==
-                                                userName
-                                                    ? 1
-                                                    : 0
-                                            )
-                                };
-                            }
-                        )
-                );
-            },
-            [
-                markMessagesAsRead,
-                scrollToBottom,
-                selectedPartner,
-                userName
-            ]
-        );
-
-
-    /* =====================================================
-       WEBSOCKET
-       ===================================================== */
-
-    useEffect(() => {
-
-        if (
-            !token ||
-            !userName
-        ) {
-            return;
+interface TypingNotificationDto { sender: string; receiver: string; typing: boolean; }
+const normalise = (message: ChatMessageDto): ChatMessageDto => ({ ...message, isRead: message.read ?? message.isRead ?? false });
+const mergeMessages = (current: ChatMessageDto[], incoming: ChatMessageDto[]) => {
+    const messages = new Map(current.map(message => [message.id, message]));
+    let changed = false;
+    incoming.map(normalise).forEach(message => {
+        const previous = messages.get(message.id);
+        const next = { ...message, isRead: !!previous?.isRead || message.isRead };
+        if (!previous || previous.isRead !== next.isRead || previous.content !== next.content ||
+            previous.sender !== next.sender || previous.receiver !== next.receiver ||
+            JSON.stringify(previous.timestamp) !== JSON.stringify(next.timestamp)) {
+            messages.set(message.id, next); changed = true;
         }
-
-
-        const socketFactory =
-            () =>
-                new SockJS(
-                    `${API_URL}/ws`
-                );
-
-
-        const client =
-            new Client({
-
-                webSocketFactory:
-                socketFactory,
-
-                connectHeaders: {
-                    Authorization:
-                        `Bearer ${token}`
-                },
-
-                reconnectDelay:
-                    5000,
-
-                heartbeatIncoming:
-                    4000,
-
-                heartbeatOutgoing:
-                    4000
-            });
-
-
-        client.onConnect =
-            () => {
-
-                setStompClient(
-                    client
-                );
-
-
-                /* PRIVATE MESSAGES */
-
-                client.subscribe(
-                    '/user/queue/messages',
-                    message => {
-
-                        const receivedMessage:
-                            ChatMessageDto =
-                            JSON.parse(
-                                message.body
-                            );
-
-
-                        handleIncomingMessage(
-                            receivedMessage
-                        );
-                    }
-                );
-
-
-                /* PUBLIC MESSAGES */
-
-                client.subscribe(
-                    '/topic/public',
-                    message => {
-
-                        const receivedMessage:
-                            ChatMessageDto =
-                            JSON.parse(
-                                message.body
-                            );
-
-
-                        if (
-                            receivedMessage.sender !==
-                            userName
-                        ) {
-                            handleIncomingMessage(
-                                receivedMessage
-                            );
-                        }
-                    }
-                );
-
-
-                /* TYPING */
-
-                client.subscribe(
-                    '/user/queue/typing',
-                    message => {
-
-                        const typingUpdate:
-                            TypingNotificationDto =
-                            JSON.parse(
-                                message.body
-                            );
-
-
-                        if (
-                            typingUpdate.sender ===
-                            selectedPartner
-                        ) {
-                            setPartnerTyping(
-                                typingUpdate.typing
-                            );
-
-
-                            if (
-                                typingUpdate.typing
-                            ) {
-                                window.setTimeout(
-                                    () =>
-                                        setPartnerTyping(
-                                            false
-                                        ),
-                                    2000
-                                );
-                            }
-                        }
-                    }
-                );
-
-
-                /* NOTIFICATIONS */
-
-                client.subscribe(
-                    '/user/queue/notifications',
-                    message => {
-
-                        const notification:
-                            NotificationDto =
-                            JSON.parse(
-                                message.body
-                            );
-
-
-                        if (
-                            notification.type ===
-                            'reload' &&
-
-                            notification.receiver ===
-                            userName
-                        ) {
-                            if (
-                                !window.location.pathname.includes(
-                                    `/chat/${notification.sender}`
-                                )
-                            ) {
-                                navigate(
-                                    `/chat/${notification.sender}`
-                                );
-                            }
-                        }
-                    }
-                );
-            };
-
-
-        client.onStompError =
-            frame => {
-
-                console.error(
-                    'WebSocket error:',
-                    frame.headers[
-                        'message'
-                        ]
-                );
-
-
-                setError(
-                    'Connection error. Please refresh the page.'
-                );
-            };
-
-
-        client.onWebSocketClose =
-            () => {
-                setStompClient(
-                    null
-                );
-            };
-
-
-        client.activate();
-
-
-        return () => {
-
-            setStompClient(
-                null
-            );
-
-
-            client.deactivate();
-
-        };
-
-    }, [
-        token,
-        userName,
-        navigate,
-        selectedPartner,
-        handleIncomingMessage
-    ]);
-
-
-    /* =====================================================
-       CURRENT USER
-       ===================================================== */
-
-    useEffect(() => {
-
-        const fetchUserData =
-            async () => {
-
-                try {
-                    if (!token) {
-                        navigate(
-                            '/login',
-                            {
-                                replace: true
-                            }
-                        );
-
-                        return;
-                    }
-
-
-                    const decodedToken =
-                        jwtDecode<{
-                            sub: string;
-                        }>(token);
-
-
-                    const response =
-                        await axios.get<string>(
-                            `${API_URL}/api/public/user/get/userName/${decodedToken.sub}`,
-                            {
-                                headers: {
-                                    Authorization:
-                                        `Bearer ${token}`
-                                }
-                            }
-                        );
-
-
-                    setUserName(
-                        response.data
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        'Error fetching user data:',
-                        error
-                    );
-
-
-                    setError(
-                        'Failed to load user information.'
-                    );
-
-
-                    setLoading(false);
-                }
-            };
-
-
-        fetchUserData();
-
-    }, [
-        navigate,
-        token
-    ]);
-
-
-    /* =====================================================
-       CONVERSATIONS
-       ===================================================== */
-
-    useEffect(() => {
-
-        const fetchConversations =
-            async () => {
-
-                if (
-                    !userName ||
-                    !token
-                ) {
-                    return;
-                }
-
-
-                try {
-                    setError(null);
-
-
-                    const response =
-                        await axios.get<UserChatDto[]>(
-                            `${API_URL}/api/public/chat/conversations/${userName}`,
-                            {
-                                headers: {
-                                    Authorization:
-                                        `Bearer ${token}`
-                                }
-                            }
-                        );
-
-
-                    const conversationData =
-                        response.data || [];
-
-
-                    setChats(
-                        conversationData
-                    );
-
-
-                    conversationData.forEach(
-                        chat => {
-
-                            fetchPartnerImage(
-                                chat.partnerUsername
-                            );
-                        }
-                    );
-
-
-                    /*
-                     * Եթե URL-ը օրինակ
-                     * /chat/anna է,
-                     *
-                     * partnerUsername = anna
-                     */
-                    if (
-                        partnerUsername
-                    ) {
-                        setSelectedPartner(
-                            partnerUsername
-                        );
-
-
-                        fetchPartnerImage(
-                            partnerUsername
-                        );
-
-
-                        await loadChatHistory(
-                            partnerUsername
-                        );
-
-
-                        setShowMobileConversationList(
-                            false
-                        );
-                    }
-
-                } catch (error) {
-
-                    console.error(
-                        'Error fetching conversations:',
-                        error
-                    );
-
-
-                    setError(
-                        'Failed to load conversations.'
-                    );
-
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-
-        fetchConversations();
-
-    }, [
-        fetchPartnerImage,
-        loadChatHistory,
-        partnerUsername,
-        token,
-        userName
-    ]);
-
-
-    /* =====================================================
-       SEND MESSAGE
-       ===================================================== */
-
-    const sendMessage =
-        () => {
-
-            const messageContent =
-                newMessage.trim();
-
-
-            if (
-                !messageContent ||
-                !selectedPartner ||
-                !userName ||
-                !stompClient ||
-                !stompClient.connected
-            ) {
-                return;
-            }
-
-
-            const tempId =
-                Date.now();
-
-
-            const tempMessage:
-                ChatMessageDto = {
-
-                id:
-                tempId,
-
-                sender:
-                userName,
-
-                senderDisplayName:
-                userName,
-
-                receiver:
-                selectedPartner,
-
-                receiverDisplayName:
-                selectedPartner,
-
-                content:
-                messageContent,
-
-                timestamp:
-                    new Date()
-                        .toISOString(),
-
-                isRead:
-                    false
-            };
-
-
-            setActiveChat(
-                previous => [
-                    ...previous,
-                    tempMessage
-                ]
-            );
-
-
-            setChats(
-                previous =>
-                    previous.map(
-                        chat =>
-                            chat.partnerUsername ===
-                            selectedPartner
-
-                                ? {
-                                    ...chat,
-
-                                    lastMessage:
-                                    messageContent,
-
-                                    lastMessageTime:
-                                        new Date()
-                                            .toISOString()
-                                }
-
-                                : chat
-                    )
-            );
-
-
-            setNewMessage('');
-            setShowEmojiPicker(false);
-
-            scrollToBottom();
-
-
-            try {
-                stompClient.publish({
-                    destination:
-                        '/app/chat.send',
-
-                    body:
-                        JSON.stringify({
-                            sender:
-                            userName,
-
-                            receiver:
-                            selectedPartner,
-
-                            content:
-                            messageContent
-                        }),
-
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`
-                    }
-                });
-
-
-                stompClient.publish({
-                    destination:
-                        '/topic/public',
-
-                    body:
-                        JSON.stringify(
-                            tempMessage
-                        ),
-
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`
-                    }
-                });
-
-            } catch (error) {
-
-                console.error(
-                    'Error sending message:',
-                    error
-                );
-
-
-                setError(
-                    'Failed to send message.'
-                );
-
-
-                setActiveChat(
-                    previous =>
-                        previous.filter(
-                            message =>
-                                message.id !==
-                                tempId
-                        )
-                );
-            }
-        };
-
-
-    /* =====================================================
-       MESSAGE INPUT
-       ===================================================== */
-
-    const handleKeyDown =
-        (
-            event:
-                React.KeyboardEvent<HTMLTextAreaElement>
-        ) => {
-
-            if (
-                event.key ===
-                'Enter' &&
-                !event.shiftKey
-            ) {
-                event.preventDefault();
-
-                sendMessage();
-            }
-        };
-
-
-    const handleInputChange =
-        (
-            event:
-                React.ChangeEvent<HTMLTextAreaElement>
-        ) => {
-
-            const value =
-                event.target.value;
-
-
-            setNewMessage(
-                value
-            );
-
-
-            if (
-                stompClient?.connected &&
-                selectedPartner
-            ) {
-                stompClient.publish({
-                    destination:
-                        '/app/typing',
-
-                    body:
-                        JSON.stringify({
-                            sender:
-                            userName,
-
-                            receiver:
-                            selectedPartner,
-
-                            typing:
-                                Boolean(
-                                    value.trim()
-                                )
-                        }),
-
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`
-                    }
-                });
-            }
-        };
-
-
-    /* =====================================================
-       SELECT CHAT
-       ===================================================== */
-
-    const selectChat =
-        (
-            partner: string
-        ) => {
-
-            setSelectedPartner(
-                partner
-            );
-
-
-            setActiveChat([]);
-
-
-            setPartnerTyping(
-                false
-            );
-
-
-            setShowEmojiPicker(
-                false
-            );
-
-
-            setShowMobileConversationList(
-                false
-            );
-
-
-            /*
-             * Route-ը փոխում ենք,
-             * իսկ history-ն URL փոփոխությունից հետո
-             * useEffect-ը կբեռնի։
-             */
-            navigate(
-                `/chat/${partner}`
-            );
-        };
-
-
-    /* =====================================================
-       MOBILE
-       ===================================================== */
-
-    const toggleConversationList =
-        () => {
-
-            setShowMobileConversationList(
-                previous =>
-                    !previous
-            );
-
-
-            setShowEmojiPicker(
-                false
-            );
-        };
-
-
-    /* =====================================================
-       EMOJI
-       ===================================================== */
-
-    const toggleEmojiPicker =
-        () => {
-
-            setShowEmojiPicker(
-                previous =>
-                    !previous
-            );
-        };
-
-
-    const handleEmojiClick =
-        (
-            emojiData:
-                EmojiClickData
-        ) => {
-
-            setNewMessage(
-                previous =>
-                    previous +
-                    emojiData.emoji
-            );
-
-
-            inputRef
-                .current
-                ?.focus();
-        };
-
-
-    useEffect(() => {
-
-        const handleClickOutside =
-            (
-                event:
-                    MouseEvent
-            ) => {
-
-                if (
-                    emojiPickerRef.current &&
-                    !emojiPickerRef.current.contains(
-                        event.target as Node
-                    )
-                ) {
-                    setShowEmojiPicker(
-                        false
-                    );
-                }
-            };
-
-
-        document.addEventListener(
-            'mousedown',
-            handleClickOutside
-        );
-
-
-        return () => {
-
-            document.removeEventListener(
-                'mousedown',
-                handleClickOutside
-            );
-
-        };
-
+    });
+    // An unchanged poll must not trigger auto-scroll while the user reads history.
+    return changed ? Array.from(messages.values()).sort((a, b) => parseTimestamp(a.timestamp).getTime() - parseTimestamp(b.timestamp).getTime() || a.id - b.id) : current;
+};
+const createMessageId = (): string => {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+};
+const parseTimestamp = (timestamp: number[] | string | null | undefined): Date => {
+    if (Array.isArray(timestamp)) return new Date(timestamp[0], timestamp[1] - 1, timestamp[2], timestamp[3] || 0, timestamp[4] || 0, timestamp[5] || 0);
+    const parsed = timestamp ? new Date(timestamp) : new Date();
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+};
+const formatTime = (value: number[] | string | null | undefined) => parseTimestamp(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+const formatDate = (value: number[] | string | null | undefined) => {
+    const date = parseTimestamp(value);
+    const today = new Date();
+    const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+    return date.toDateString() === today.toDateString() ? 'Today' : date.toDateString() === yesterday.toDateString() ? 'Yesterday' : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+const Chat: React.FC = () => {
+    const network = useNetwork();
+    const userName = network.currentUserName;
+    const { userName: partnerUsername } = useParams<{ userName: string }>();
+    const token = localStorage.getItem('token');
+    const navigate = useNavigate();
+    const [chats, setChats] = useState<UserChatDto[]>([]);
+    const [activeChat, setActiveChat] = useState<ChatMessageDto[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [newMessage, setNewMessage] = useState('');
+    const [partnerTyping, setPartnerTyping] = useState(false);
+    const [stompClient, setStompClient] = useState<Client | null>(null);
+    const [showMobileConversationList, setShowMobileConversationList] = useState(!partnerUsername);
+    const [partnerImages, setPartnerImages] = useState<Record<string, string>>({});
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [conversationSearch, setConversationSearch] = useState('');
+    const [sending, setSending] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const emojiPickerRef = useRef<HTMLDivElement>(null);
+    const imageCache = useRef<Record<string, string>>({});
+    const imageRequests = useRef(new Set<string>());
+    const imageController = useRef<AbortController | null>(null);
+    const historyRequest = useRef(0);
+    const chatRequest = useRef(0);
+    const typingTimer = useRef<ReturnType<typeof setTimeout>>();
+    const sendingRef = useRef(false);
+    const pendingSend = useRef<{ id: string; partner: string; content: string } | null>(null);
+    const mounted = useRef(true);
+    const permitted = useCallback((name: string) => !network.blocks.some(b => b.blocked === name) && network.connections.some(c => c.status === 'ACCEPTED' && (c.sender === name || c.receiver === name)), [network.blocks, network.connections]);
+    const visibleChats = chats.filter(c => permitted(c.partnerUsername));
+    const selectedPartner = partnerUsername && partnerUsername !== userName && permitted(partnerUsername) && visibleChats.some(c => c.partnerUsername === partnerUsername) ? partnerUsername : null;
+    const selectedRef = useRef(selectedPartner); selectedRef.current = selectedPartner;
+    const partnerOnline = usePresence(selectedPartner);
+    const scrollToBottom = useCallback((): void => {
+        // A browser/polyfill may return a value; it must never become an effect cleanup.
+        messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
     }, []);
 
-
-    /* =====================================================
-       IMAGE CLEANUP
-       ===================================================== */
-
-    useEffect(() => {
-
-        return () => {
-
-            Object.values(
-                partnerImages
-            ).forEach(
-                imageUrl => {
-
-                    if (
-                        imageUrl.startsWith(
-                            'blob:'
-                        )
-                    ) {
-                        URL.revokeObjectURL(
-                            imageUrl
-                        );
-                    }
-                }
-            );
-
-        };
-
-    }, [partnerImages]);
-
-
-    /* =====================================================
-       FILTER CONVERSATIONS
-       ===================================================== */
-
-    const filteredChats =
-        chats.filter(
-            chat => {
-
-                const query =
-                    conversationSearch
-                        .trim()
-                        .toLowerCase();
-
-
-                if (!query) {
-                    return true;
-                }
-
-
-                return (
-                    chat.partnerName
-                        ?.toLowerCase()
-                        .includes(query) ||
-
-                    chat.partnerUsername
-                        ?.toLowerCase()
-                        .includes(query)
-                );
+    const refreshChats = useCallback(async () => {
+        if (!userName || !token) return;
+        const request = ++chatRequest.current;
+        try {
+            const result = await featureApi.get<UserChatDto[]>(`/chat/conversations/${encodeURIComponent(userName)}`);
+            if (mounted.current && request === chatRequest.current) { setChats(result.data || []); setError(null); }
+        } catch (e) {
+            if (mounted.current && request === chatRequest.current) setError(featureError(e, 'Unable to load conversations.'));
+        } finally { if (mounted.current && request === chatRequest.current) setLoading(false); }
+    }, [userName, token]);
+    const markRead = useCallback(async (partner: string) => {
+        if (!userName) return;
+        try {
+            await featureApi.post(`/chat/read/${encodeURIComponent(partner)}/${encodeURIComponent(userName)}`);
+            if (mounted.current) setChats(old => old.map(c => c.partnerUsername === partner ? { ...c, unreadCount: 0 } : c));
+        } catch (e) { if (mounted.current) setError(featureError(e, 'Unable to update read status.')); }
+    }, [userName]);
+    const loadHistory = useCallback(async (partner: string) => {
+        const request = ++historyRequest.current;
+        setLoading(true);
+        try {
+            const result = await featureApi.get<ChatMessageDto[]>(`/chat/history/${encodeURIComponent(userName)}/${encodeURIComponent(partner)}`);
+            if (mounted.current && request === historyRequest.current && selectedRef.current === partner) {
+                setActiveChat(old => mergeMessages(old, result.data || []));
+                setError(null); void markRead(partner);
             }
-        );
-
-
-    /* =====================================================
-       SELECTED USER
-       ===================================================== */
-
-    const selectedChat =
-        chats.find(
-            chat =>
-                chat.partnerUsername ===
-                selectedPartner
-        );
-
-
-    const selectedPartnerName =
-        selectedChat?.partnerName ||
-        selectedPartner ||
-        'Conversation';
-
-
-    /* =====================================================
-       LOADING
-       ===================================================== */
+        } catch (e) {
+            if (mounted.current && request === historyRequest.current) {
+                setActiveChat([]); setError(featureError(e, 'Accept a connection before chatting.')); void refreshChats();
+            }
+        } finally { if (mounted.current && request === historyRequest.current) setLoading(false); }
+    }, [userName, markRead, refreshChats]);
+    useEffect(() => {
+        mounted.current = true;
+        imageController.current = new AbortController();
+        const requests = imageRequests.current;
+        return () => {
+            mounted.current = false; historyRequest.current += 1; chatRequest.current += 1;
+            imageController.current?.abort();
+            Object.values(imageCache.current).forEach(url => { if (url) URL.revokeObjectURL(url); });
+            imageCache.current = {}; requests.clear();
+            if (typingTimer.current) clearTimeout(typingTimer.current);
+        };
+    }, []);
+    useEffect(() => { void refreshChats(); }, [refreshChats, network.revision]);
+    useEffect(() => {
+        if (network.error && !userName) { setError(network.error); setLoading(false); }
+    }, [network.error, userName]);
+    useLayoutEffect(() => {
+        setActiveChat([]); setPartnerTyping(false); setShowEmojiPicker(false); setNewMessage('');
+        if (selectedPartner) { setShowMobileConversationList(false); void loadHistory(selectedPartner); }
+        else { historyRequest.current += 1; setShowMobileConversationList(true); }
+    }, [selectedPartner, loadHistory]);
+    useEffect(() => {
+        for (const chat of chats) {
+            const name = chat.partnerUsername;
+            if (!permitted(name) || name in imageCache.current || imageRequests.current.has(name)) continue;
+            imageRequests.current.add(name);
+            featureApi.get(`/user/image/${encodeURIComponent(name)}`, { responseType: 'blob', signal: imageController.current?.signal }).then(result => {
+                if (mounted.current) {
+                    const url = result.data.size ? URL.createObjectURL(result.data) : '';
+                    imageCache.current[name] = url;
+                    setPartnerImages(old => ({ ...old, [name]: url }));
+                }
+            }).catch(() => { if (mounted.current) imageCache.current[name] = ''; }).finally(() => imageRequests.current.delete(name));
+        }
+    }, [chats, permitted]);
+    useEffect(() => {
+        scrollToBottom();
+    }, [activeChat, scrollToBottom]);
+    const callbacks = useRef({
+        message: (_message: ChatMessageDto) => {}, typing: (_message: TypingNotificationDto) => {},
+        receipt: (_reader: string) => {}, error: (_message: string) => {}, refresh: () => {}
+    });
+    callbacks.current = {
+        message: data => {
+            const message = normalise(data);
+            const other = message.sender === userName ? message.receiver : message.sender;
+            if (!permitted(other)) return;
+            if (other === selectedRef.current) {
+                setActiveChat(old => mergeMessages(old, [message]));
+                if (message.sender !== userName) void markRead(other);
+            }
+            void refreshChats();
+        },
+        typing: message => {
+            if (message.sender !== selectedRef.current || !permitted(message.sender)) return;
+            setPartnerTyping(message.typing);
+            if (typingTimer.current) clearTimeout(typingTimer.current);
+            typingTimer.current = setTimeout(() => setPartnerTyping(false), 2000);
+        },
+        receipt: reader => { if (reader === selectedRef.current) setActiveChat(old => old.map(m => m.sender === userName ? { ...m, isRead: true } : m)); },
+        error: message => { setError(message); void refreshChats(); },
+        refresh: () => { void refreshChats(); if (selectedRef.current) void loadHistory(selectedRef.current); }
+    };
+    useEffect(() => {
+        if (!token || !userName) return;
+        let active = true;
+        const client = new Client({ webSocketFactory: () => new SockJS(`${API_URL}/ws-secure`), connectHeaders: { Authorization: `Bearer ${token}` }, reconnectDelay: 5000, heartbeatIncoming: 0, heartbeatOutgoing: 10000 });
+        client.onConnect = () => {
+            if (!active) return;
+            setStompClient(client);
+            client.subscribe('/user/queue/messages', event => callbacks.current.message(JSON.parse(event.body)));
+            client.subscribe('/user/queue/typing', event => callbacks.current.typing(JSON.parse(event.body)));
+            client.subscribe('/user/queue/receipts', event => callbacks.current.receipt(JSON.parse(event.body).reader));
+            client.subscribe('/user/queue/errors', event => callbacks.current.error(JSON.parse(event.body).message || 'Message was not delivered.'));
+            client.subscribe('/user/queue/connection-notifications', () => { void refreshChats(); });
+            callbacks.current.refresh();
+        };
+        client.onWebSocketClose = () => { if (active) setStompClient(null); };
+        client.onStompError = () => { if (active) setError('Connection unavailable. Reconnecting…'); };
+        client.activate();
+        return () => { active = false; void client.deactivate(); };
+    }, [token, userName, refreshChats]);
+    // REST confirms the database save even if a WebSocket echo is lost. Reuse the
+    // same id after an uncertain failure so a retry cannot create a duplicate.
+    const sendMessage = async () => {
+        const content = newMessage.trim();
+        if (!content || content.length > 4000 || !selectedPartner || !permitted(selectedPartner) || sendingRef.current) return;
+        const partner = selectedPartner;
+        try {
+            const previous = pendingSend.current;
+            const attempt = previous && previous.partner === partner && previous.content === content
+                ? previous : { id: createMessageId(), partner, content };
+            pendingSend.current = attempt;
+            sendingRef.current = true; setSending(true); setError(null);
+            const response = await featureApi.post<ChatMessageDto>('/chat/messages', {
+                receiver: partner, content, clientMessageId: attempt.id
+            });
+            if (pendingSend.current === attempt) pendingSend.current = null;
+            if (mounted.current) {
+                if (selectedRef.current === partner) {
+                    setActiveChat(old => mergeMessages(old, [response.data]));
+                    setNewMessage(old => old.trim() === content ? '' : old);
+                    setShowEmojiPicker(false);
+                }
+                void refreshChats();
+            }
+        } catch (e) {
+            if (mounted.current && selectedRef.current === partner)
+                setError(featureError(e, 'Message status is uncertain. Retry the same message to check safely.'));
+        } finally {
+            sendingRef.current = false;
+            if (mounted.current) setSending(false);
+        }
+    };
+    // Push is preferred; polling recovers messages if a socket notification is missed.
+    useEffect(() => {
+        if (!userName || !selectedPartner || !token) return;
+        const partner = selectedPartner;
+        let active = true, inFlight = false;
+        const sync = async () => {
+            if (inFlight || document.visibilityState !== 'visible') return;
+            inFlight = true;
+            try {
+                const result = await featureApi.get<ChatMessageDto[]>(`/chat/history/${encodeURIComponent(userName)}/${encodeURIComponent(partner)}`);
+                if (!active || selectedRef.current !== partner) return;
+                const messages = (result.data || []).map(normalise);
+                setActiveChat(old => mergeMessages(old, messages));
+                if (messages.some(message => message.sender === partner && !message.isRead)) void markRead(partner);
+            } catch (e) {
+                // A revoked connection or a block must immediately close the conversation.
+                if (active && axios.isAxiosError(e) && (e.response?.status === 403 || e.response?.status === 404)) {
+                    setActiveChat([]); setError(featureError(e)); void refreshChats();
+                }
+            } finally { inFlight = false; }
+        };
+        const timer = setInterval(() => void sync(), 3000);
+        return () => { active = false; clearInterval(timer); };
+    }, [userName, selectedPartner, token, markRead, refreshChats]);
+    const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setNewMessage(event.target.value);
+        if (selectedPartner && permitted(selectedPartner) && stompClient?.connected) stompClient.publish({ destination: '/app/typing', body: JSON.stringify({ receiver: selectedPartner, typing: Boolean(event.target.value.trim()) }) });
+    };
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } };
+    const selectChat = (name: string) => { if (permitted(name)) { setShowMobileConversationList(false); navigate(`/chat/${encodeURIComponent(name)}`); } };
+    const toggleConversationList = () => { setShowMobileConversationList(v => !v); setShowEmojiPicker(false); };
+    const toggleEmojiPicker = () => setShowEmojiPicker(v => !v);
+    const handleEmojiClick = (data: EmojiClickData) => { setNewMessage(v => (v + data.emoji).slice(0, 4000)); inputRef.current?.focus(); };
+    useEffect(() => {
+        const outside = (event: MouseEvent) => { if (!emojiPickerRef.current?.contains(event.target as Node)) setShowEmojiPicker(false); };
+        document.addEventListener('mousedown', outside); return () => document.removeEventListener('mousedown', outside);
+    }, []);
+    const filteredChats = visibleChats.filter(c => `${c.partnerName} ${c.partnerUsername}`.toLowerCase().includes(conversationSearch.trim().toLowerCase()));
+    const selectedChat = visibleChats.find(c => c.partnerUsername === selectedPartner);
+    const selectedPartnerName = selectedChat?.partnerName || selectedPartner || 'Conversation';
 
     if (
         loading &&
@@ -1748,7 +441,7 @@ const Chat: React.FC = () => {
                                 <span>
                                     {conversationSearch
                                         ? 'Try another name or username.'
-                                        : 'Your conversations will appear here.'
+                                        : 'Accept a connection request to start chatting.'
                                     }
                                 </span>
 
@@ -1980,7 +673,7 @@ const Chat: React.FC = () => {
 
                                         <span
                                             className={
-                                                stompClient?.connected
+                                                partnerOnline === true
                                                     ? 'chat-partner-status online'
                                                     : 'chat-partner-status'
                                             }
@@ -1989,9 +682,9 @@ const Chat: React.FC = () => {
                                             <CircleRoundedIcon/>
 
                                             {
-                                                stompClient?.connected
+                                                partnerOnline === true
                                                     ? 'Online'
-                                                    : 'Offline'
+                                                    : partnerOnline === false ? 'Offline' : 'Status unavailable'
                                             }
 
                                         </span>
@@ -1999,6 +692,7 @@ const Chat: React.FC = () => {
                                     )}
 
                                 </div>
+                                <BlockButton userName={selectedPartner} />
 
                             </header>
 
@@ -2251,6 +945,8 @@ const Chat: React.FC = () => {
                                         handleKeyDown
                                     }
                                     placeholder="Write a message..."
+                                    maxLength={4000}
+                                    disabled={!selectedPartner}
                                     rows={1}
                                     className="chat-message-input"
                                 />
@@ -2261,7 +957,7 @@ const Chat: React.FC = () => {
                                     className={
                                         `chat-send-button ${
                                             newMessage.trim() &&
-                                            stompClient?.connected
+                                            !sending
                                                 ? 'active'
                                                 : ''
                                         }`
@@ -2271,7 +967,7 @@ const Chat: React.FC = () => {
                                     }
                                     disabled={
                                         !newMessage.trim() ||
-                                        !stompClient?.connected
+                                        sending || !selectedPartner || !permitted(selectedPartner)
                                     }
                                     aria-label="Send message"
                                 >
@@ -2306,9 +1002,7 @@ const Chat: React.FC = () => {
 
 
                             <p>
-                                Choose someone from your
-                                conversation list to start
-                                messaging.
+                                Chat becomes available after a connection request is accepted. Choose a connected person from your list.
                             </p>
 
                         </div>

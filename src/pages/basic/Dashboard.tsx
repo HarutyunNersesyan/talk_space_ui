@@ -16,7 +16,6 @@ import {
 import ExploreRoundedIcon from '@mui/icons-material/ExploreRounded';
 import ChatBubbleRoundedIcon from '@mui/icons-material/ChatBubbleRounded';
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
-import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
@@ -370,7 +369,7 @@ const Dashboard: React.FC = () => {
                             onClick={() => {
                                 if (userName) {
                                     navigate(
-                                        `/chat/${userName}`
+                                        '/chat'
                                     );
                                 }
                             }}
@@ -427,7 +426,7 @@ const Dashboard: React.FC = () => {
 
 
                     <div className="hero-connection-line">
-                        <FavoriteRoundedIcon />
+                        <PeopleAltRoundedIcon />
                     </div>
 
 
@@ -510,7 +509,7 @@ const Dashboard: React.FC = () => {
                     >
 
                         <div className="action-icon blue">
-                            <FavoriteRoundedIcon />
+                            <PeopleAltRoundedIcon />
                         </div>
 
                         <div className="action-content">

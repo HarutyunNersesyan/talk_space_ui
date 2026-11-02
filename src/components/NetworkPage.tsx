@@ -1,3 +1,5 @@
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import { featureError } from '../api/features';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -194,7 +196,9 @@ const NetworkPage: React.FC = () => {
 
                 if (axios.isAxiosError(error)) {
 
-                    if (
+                    if (error.response?.status === 429) {
+                        setHobbiesError(featureError(error));
+                    } else if (
                         error.response?.status === 404
                     ) {
 
@@ -303,7 +307,9 @@ const NetworkPage: React.FC = () => {
 
                 if (axios.isAxiosError(error)) {
 
-                    if (
+                    if (error.response?.status === 429) {
+                        setSpecialtiesError(featureError(error));
+                    } else if (
                         error.response?.status === 404
                     ) {
 
@@ -526,6 +532,12 @@ const NetworkPage: React.FC = () => {
 
                 </section>
 
+
+                <section className="network-bottom-note nf-discover-shortcut" style={{ marginTop: 24 }}>
+                    <SearchRoundedIcon />
+                    <p>Looking for someone specific? Search by name, hobby or specialty.</p>
+                    <button className="nf-button secondary" onClick={() => navigate('/people')}>Search people</button>
+                </section>
 
                 {/* BOTTOM INFO */}
 

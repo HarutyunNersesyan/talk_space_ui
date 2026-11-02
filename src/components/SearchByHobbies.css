@@ -399,70 +399,6 @@
 
 
 /* =========================================================
-   LIKE ICON
-   ========================================================= */
-
-.hobby-match-like {
-    width: 43px;
-    height: 43px;
-
-    min-width: 43px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 0;
-
-    border: 1px solid
-    rgba(109, 93, 252, 0.1);
-
-    border-radius: 13px;
-
-    background:
-            rgba(109, 93, 252, 0.045);
-
-    color: var(--hobby-primary);
-
-    cursor: pointer;
-
-    transition:
-            transform 0.2s ease,
-            background 0.2s ease;
-}
-
-
-.hobby-match-like:hover:not(:disabled) {
-    transform: scale(1.04);
-
-    background:
-            rgba(109, 93, 252, 0.09);
-}
-
-
-.hobby-match-like.liked {
-    border-color:
-            rgba(236, 72, 153, 0.12);
-
-    background:
-            rgba(236, 72, 153, 0.07);
-
-    color: #ec4899;
-}
-
-
-.hobby-match-like:disabled {
-    cursor: default;
-}
-
-
-.hobby-match-like svg {
-    width: 20px;
-    height: 20px;
-}
-
-
-/* =========================================================
    META
    ========================================================= */
 
@@ -671,11 +607,7 @@
    ========================================================= */
 
 .hobby-match-actions {
-    display: grid;
-
-    grid-template-columns:
-        1fr
-        1fr;
+    display: flex;
 
     gap: 8px;
 
@@ -683,7 +615,6 @@
 }
 
 
-.hobby-match-like-large,
 .hobby-match-next-large {
     min-height: 42px;
 
@@ -706,23 +637,6 @@
 }
 
 
-.hobby-match-like-large {
-    border: 1px solid
-    rgba(236, 72, 153, 0.11);
-
-    background:
-            rgba(236, 72, 153, 0.05);
-
-    color: #db3c89;
-}
-
-
-.hobby-match-like-large.liked {
-    background:
-            rgba(236, 72, 153, 0.09);
-}
-
-
 .hobby-match-next-large {
     border: none;
 
@@ -741,13 +655,11 @@
 }
 
 
-.hobby-match-like-large:hover:not(:disabled),
 .hobby-match-next-large:hover:not(:disabled) {
     transform: translateY(-1px);
 }
 
 
-.hobby-match-like-large:disabled,
 .hobby-match-next-large:disabled {
     opacity: 0.65;
 
@@ -1112,8 +1024,7 @@
    SPINNERS
    ========================================================= */
 
-.hobby-discover-spinner,
-.hobby-like-spinner {
+.hobby-discover-spinner {
     width: 13px;
     height: 13px;
 
@@ -1292,7 +1203,6 @@
 
 
     .hobby-match-actions {
-        grid-template-columns: 1fr;
     }
 
 
@@ -1310,8 +1220,6 @@
 
 .hobby-discover-back:focus-visible,
 .hobby-discover-next:focus-visible,
-.hobby-match-like:focus-visible,
-.hobby-match-like-large:focus-visible,
 .hobby-match-next-large:focus-visible,
 .hobby-discover-empty button:focus-visible,
 .hobby-match-socials a:focus-visible {

@@ -45,6 +45,10 @@ import SearchByHobbies from '../components/SearchByHobbies';
 import SearchBySpecialities from '../components/SearchBySpecialities';
 
 import Chat from '../components/Chat';
+import BlockedPage from '../features/network/BlockedPage';
+import ConnectionsPage from '../features/network/ConnectionsPage';
+import NotificationsPage from '../features/network/NotificationsPage';
+import PeopleSearchPage from '../features/network/PeopleSearchPage';
 
 
 /* =========================================================
@@ -138,6 +142,11 @@ const RoutesConfig: React.FC = () => {
     return (
 
         <Routes>
+            <Route path="/blocked" element={<ProtectedRoute allowedRoles={['USER']} element={<BlockedPage />} />} />
+            <Route path="/connections" element={<ProtectedRoute allowedRoles={['USER']} element={<ConnectionsPage />} />} />
+            <Route path="/notifications" element={<ProtectedRoute allowedRoles={['USER']} element={<NotificationsPage />} />} />
+            <Route path="/people" element={<ProtectedRoute allowedRoles={['USER']} element={<PeopleSearchPage />} />} />
+            <Route path="/chat" element={<ProtectedRoute allowedRoles={['USER']} element={<Chat />} />} />
 
             {/* =================================================
                 ROOT

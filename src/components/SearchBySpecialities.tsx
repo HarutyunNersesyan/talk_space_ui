@@ -1,7 +1,15 @@
+import MatchInsight from '../features/network/MatchInsight';
+import { MatchEvaluation, networkApi } from '../api/features';
+import BlockButton from '../features/network/BlockButton';
+import { useProfileVisibility } from '../features/network/useProfileVisibility';
+import ConnectionButton from '../features/network/ConnectionButton';
+import PresenceBadge from '../features/network/PresenceBadge';
+import { featureError } from '../api/features';
 import React, {
     useCallback,
     useEffect,
-    useState
+    useState,
+    useRef
 } from 'react';
 
 import {
@@ -13,8 +21,6 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
-import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import WorkRoundedIcon from '@mui/icons-material/WorkRounded';
 import InterestsRoundedIcon from '@mui/icons-material/InterestsRounded';
@@ -42,6 +48,7 @@ const API_BASE_URL =
 
 
 interface SearchUser {
+    matching?: MatchEvaluation | null;
     firstName: string;
     lastName: string;
     userName: string;
@@ -61,6 +68,9 @@ interface LocationState {
 
 
 const SearchBySpecialities: React.FC = () => {
+    const initialized = useRef(false);
+    const searching = useRef(false);
+    const shownProfile = useRef<string | null>(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -86,16 +96,8 @@ const SearchBySpecialities: React.FC = () => {
     ] = useState<string | null>(null);
 
 
-    const [
-        hasLiked,
-        setHasLiked
-    ] = useState<boolean>(false);
 
 
-    const [
-        isLiking,
-        setIsLiking
-    ] = useState<boolean>(false);
 
 
     const [
@@ -109,6 +111,11 @@ const SearchBySpecialities: React.FC = () => {
         setError
     ] = useState<string | null>(null);
 
+
+    useProfileVisibility(userProfile?.userName, () => {
+        setUserProfile(null);
+        setError('This profile is unavailable. Find another person to connect with.');
+    });
 
     /* =====================================================
        NORMALIZE PROFILE
@@ -150,16 +157,22 @@ const SearchBySpecialities: React.FC = () => {
                     currentUserName;
 
 
-                if (!name) {
+                if (!name || searching.current) {
                     return;
                 }
 
 
+                searching.current = true;
                 setIsSearching(true);
                 setError(null);
 
 
                 try {
+                    // Only an explicit "Find another" is a skip; loading a page is not.
+                    if (!username && shownProfile.current) {
+                        await networkApi.skipMatch(shownProfile.current, 'SPECIALITIES');
+                        shownProfile.current = null;
+                    }
                     const response =
                         await axios.get(
                             `${API_BASE_URL}/public/user/searchBySpecialities/${name}`,
@@ -173,19 +186,20 @@ const SearchBySpecialities: React.FC = () => {
 
 
                     if (response.data) {
+                        shownProfile.current = response.data.userName;
                         setUserProfile(
                             normalizeProfile(
                                 response.data
                             )
                         );
 
-                        setHasLiked(false);
+
 
                     } else {
                         setUserProfile(null);
 
                         setError(
-                            'No matching profiles found. Try again later.'
+                            'No available matches right now. Skipped profiles and recent requests have a temporary cooldown. Try again later or update your interests.'
                         );
                     }
 
@@ -203,12 +217,14 @@ const SearchBySpecialities: React.FC = () => {
                     if (
                         axios.isAxiosError(err)
                     ) {
-                        if (
+                        if (err.response?.status === 429) {
+                            setError(featureError(err));
+                        } else if (
                             err.response?.status ===
                             404
                         ) {
                             setError(
-                                'No matching profiles found. Try again later.'
+                                'No available matches right now. Skipped profiles and recent requests have a temporary cooldown. Try again later or update your interests.'
                             );
                         } else {
                             setError(
@@ -227,6 +243,7 @@ const SearchBySpecialities: React.FC = () => {
                     }
 
                 } finally {
+                    searching.current = false;
                     setIsSearching(false);
                 }
             },
@@ -242,6 +259,9 @@ const SearchBySpecialities: React.FC = () => {
        ===================================================== */
 
     useEffect(() => {
+        // A match GET records an impression, so StrictMode must not request it twice.
+        if (initialized.current) return;
+        initialized.current = true;
         const initialize =
             async () => {
                 if (!token) {
@@ -295,6 +315,7 @@ const SearchBySpecialities: React.FC = () => {
                     if (
                         state?.initialProfile
                     ) {
+                        shownProfile.current = state.initialProfile.userName;
                         setUserProfile(
                             normalizeProfile(
                                 state.initialProfile
@@ -302,6 +323,8 @@ const SearchBySpecialities: React.FC = () => {
                         );
 
                         setIsSearching(false);
+                        // Consume the handoff so reloading cannot resurrect a skipped card.
+                        navigate(location.pathname, { replace: true, state: null });
 
                     } else {
                         await handleSearchBySpecialities(
@@ -413,141 +436,6 @@ const SearchBySpecialities: React.FC = () => {
         userProfile,
         token
     ]);
-
-
-    /* =====================================================
-       CHECK LIKE
-       ===================================================== */
-
-    useEffect(() => {
-        const checkIfLiked =
-            async () => {
-                if (
-                    !userProfile ||
-                    !currentUserName ||
-                    !token
-                ) {
-                    return;
-                }
-
-
-                try {
-                    const response =
-                        await axios.get(
-                            `${API_BASE_URL}/public/user/like/get`,
-                            {
-                                params: {
-                                    liker:
-                                    currentUserName,
-
-                                    liked:
-                                    userProfile.userName
-                                },
-
-                                headers: {
-                                    Authorization:
-                                        `Bearer ${token}`
-                                }
-                            }
-                        );
-
-
-                    setHasLiked(
-                        Boolean(
-                            response.data
-                        )
-                    );
-
-                } catch (err) {
-
-                    console.error(
-                        'Error checking like status:',
-                        err
-                    );
-
-
-                    setHasLiked(false);
-                }
-            };
-
-
-        checkIfLiked();
-
-    }, [
-        userProfile,
-        currentUserName,
-        token
-    ]);
-
-
-    /* =====================================================
-       LIKE
-       ===================================================== */
-
-    const handleLike =
-        async () => {
-            if (
-                !currentUserName ||
-                !userProfile ||
-                isLiking ||
-                hasLiked
-            ) {
-                return;
-            }
-
-
-            setIsLiking(true);
-            setError(null);
-
-
-            try {
-                await axios.post(
-                    `${API_BASE_URL}/public/user/like`,
-                    null,
-                    {
-                        params: {
-                            liker:
-                            currentUserName,
-
-                            liked:
-                            userProfile.userName
-                        },
-
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
-                        }
-                    }
-                );
-
-
-                setHasLiked(true);
-
-            } catch (err: any) {
-
-                console.error(
-                    'Like error:',
-                    err
-                );
-
-
-                if (
-                    axios.isAxiosError(err) &&
-                    err.response?.status ===
-                    409
-                ) {
-                    setHasLiked(true);
-
-                } else {
-                    setError(
-                        'Failed to send like.'
-                    );
-                }
-
-            } finally {
-                setIsLiking(false);
-            }
-        };
 
 
     /* =====================================================
@@ -869,35 +757,13 @@ const SearchBySpecialities: React.FC = () => {
                                 </div>
 
 
-                                <button
-                                    type="button"
-                                    className={
-                                        `speciality-like ${
-                                            hasLiked
-                                                ? 'liked'
-                                                : ''
-                                        }`
-                                    }
-                                    onClick={
-                                        handleLike
-                                    }
-                                    disabled={
-                                        isLiking ||
-                                        hasLiked
-                                    }
-                                >
-
-                                    {isLiking ? (
-                                        <span className="speciality-like-spinner" />
-                                    ) : hasLiked ? (
-                                        <FavoriteRoundedIcon />
-                                    ) : (
-                                        <FavoriteBorderRoundedIcon />
-                                    )}
-
-                                </button>
+                                
 
                             </div>
+
+
+                            <PresenceBadge key={userProfile.userName} userName={userProfile.userName} />
+                            <MatchInsight matching={userProfile.matching} />
 
 
                             {/* META */}
@@ -1085,39 +951,10 @@ const SearchBySpecialities: React.FC = () => {
                             {/* ACTIONS */}
 
                             <div className="speciality-actions">
+                                <ConnectionButton key={userProfile.userName} userName={userProfile.userName} />
+                                <BlockButton userName={userProfile.userName} />
 
-                                <button
-                                    type="button"
-                                    className={
-                                        `speciality-like-large ${
-                                            hasLiked
-                                                ? 'liked'
-                                                : ''
-                                        }`
-                                    }
-                                    onClick={
-                                        handleLike
-                                    }
-                                    disabled={
-                                        isLiking ||
-                                        hasLiked
-                                    }
-                                >
-
-                                    {isLiking ? (
-                                        <span className="speciality-like-spinner" />
-                                    ) : hasLiked ? (
-                                        <FavoriteRoundedIcon />
-                                    ) : (
-                                        <FavoriteBorderRoundedIcon />
-                                    )}
-
-
-                                    {hasLiked
-                                        ? 'Liked'
-                                        : 'Like profile'}
-
-                                </button>
+                                
 
 
                                 <button

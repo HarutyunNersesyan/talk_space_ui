@@ -47,6 +47,10 @@ import {
 } from '../../routes/ProtectedRoute';
 
 import './Navbar.css';
+import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
+import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import { useNetwork } from '../../features/network/NetworkContext';
 
 
 /* =========================================================
@@ -72,6 +76,7 @@ interface DecodedToken {
    ========================================================= */
 
 const Navbar: React.FC = () => {
+    const { pending, unread } = useNetwork();
 
     const navigate =
         useNavigate();
@@ -278,16 +283,7 @@ const Navbar: React.FC = () => {
        CHAT
        ===================================================== */
 
-    const getChatPath = () => {
-
-        if (!userName) {
-            return '/home';
-        }
-
-
-        return `/chat/${encodeURIComponent(userName)}`;
-    };
-
+    const getChatPath = () => '/chat';
 
     /* =====================================================
        LOADING
@@ -412,6 +408,20 @@ const Navbar: React.FC = () => {
                     </NavLink>
 
 
+                    <NavLink to="/people" className={navClassName} onClick={closeMobileMenu}>
+                        <span className="navbar-link-icon"><SearchRoundedIcon /></span><span>Search people</span>
+                    </NavLink>
+                    <NavLink to="/connections" className={navClassName} onClick={closeMobileMenu}>
+                        <span className="navbar-link-icon"><PeopleAltRoundedIcon /></span><span>Connections</span>
+                        {pending > 0 && <span className="navbar-feature-count" aria-label={`${pending} incoming requests`}>{pending > 99 ? '99+' : pending}</span>}
+                    </NavLink>
+                    <NavLink to="/notifications" className={navClassName} onClick={closeMobileMenu}>
+                        <span className="navbar-link-icon"><NotificationsNoneRoundedIcon /></span><span>Notifications</span>
+                        {unread > 0 && <span className="navbar-feature-count" aria-label={`${unread} unread notifications`}>{unread > 99 ? '99+' : unread}</span>}
+                    </NavLink>
+                    <NavLink to="/blocked" className={navClassName} onClick={closeMobileMenu}>
+                        <span className="navbar-link-icon"><BlockRoundedIcon /></span><span>Blocked people</span>
+                    </NavLink>
                     <NavLink
                         to={getChatPath()}
                         className={navClassName}

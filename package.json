@@ -57,5 +57,16 @@
     "@types/jwt-decode": "^3.1.0",
     "@types/sockjs-client": "^1.5.4",
     "typescript": "^5.5.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!axios/)"
+    ]
   }
 }
