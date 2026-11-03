@@ -1,3 +1,4 @@
+import { prepareProfilePhoto } from '../features/profile/prepareProfilePhoto';
 import React, {
     ChangeEvent,
     DragEvent,
@@ -36,8 +37,6 @@ interface NotificationState {
 }
 
 
-const MAX_FILE_SIZE =
-    5 * 1024 * 1024;
 
 
 const Image: React.FC = () => {
@@ -296,50 +295,15 @@ const Image: React.FC = () => {
        FILE VALIDATION
        ===================================================== */
 
-    const selectFile = (
-        file: File
-    ) => {
-        if (
-            !file.type.startsWith(
-                'image/'
-            )
-        ) {
-            showNotification(
-                'Please select a valid image file.',
-                'error'
-            );
-
-            return;
+    const selectFile = async (file: File) => {
+        try {
+            const prepared = await prepareProfilePhoto(file);
+            if (preview) URL.revokeObjectURL(preview);
+            setSelectedFile(prepared);
+            setPreview(URL.createObjectURL(prepared));
+        } catch (error) {
+            showNotification(error instanceof Error ? error.message : 'Unable to prepare the image.', 'error');
         }
-
-
-        if (
-            file.size > MAX_FILE_SIZE
-        ) {
-            showNotification(
-                'Image size must be less than 5 MB.',
-                'error'
-            );
-
-            return;
-        }
-
-
-        if (preview) {
-            URL.revokeObjectURL(
-                preview
-            );
-        }
-
-
-        const previewUrl =
-            URL.createObjectURL(
-                file
-            );
-
-
-        setSelectedFile(file);
-        setPreview(previewUrl);
     };
 
 
@@ -491,8 +455,8 @@ const Image: React.FC = () => {
             }
 
 
-            if (preview) {
-                setImage(preview);
+            if (preview && selectedFile) {
+                setImage(URL.createObjectURL(selectedFile));
                 setPreview(null);
             }
 
@@ -866,8 +830,7 @@ const Image: React.FC = () => {
 
 
                             <p>
-                                JPG, PNG, WEBP or another
-                                image format up to 5 MB.
+                                JPG or PNG up to 5 MB. The centre is cropped to 4:3; review the preview before saving. Minimum crop: 400 × 300 pixels.
                             </p>
 
                         </div>
@@ -878,7 +841,7 @@ const Image: React.FC = () => {
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png"
                         onChange={
                             handleFileChange
                         }

@@ -322,7 +322,6 @@ button {
   font-size: 11px !important;
 }
 
-.chat-message-bubble p,
 .talkspace-message-bubble p {
   font-size: 14px !important;
   line-height: 1.55 !important;
@@ -333,7 +332,6 @@ button {
   font-size: 11px !important;
 }
 
-.chat-message-input,
 .talkspace-message-input {
   font-size: 14px !important;
 }

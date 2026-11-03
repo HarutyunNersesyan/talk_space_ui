@@ -49,7 +49,6 @@ import {
 import './Navbar.css';
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { useNetwork } from '../../features/network/NetworkContext';
 
 
@@ -408,9 +407,6 @@ const Navbar: React.FC = () => {
                     </NavLink>
 
 
-                    <NavLink to="/people" className={navClassName} onClick={closeMobileMenu}>
-                        <span className="navbar-link-icon"><SearchRoundedIcon /></span><span>Search people</span>
-                    </NavLink>
                     <NavLink to="/connections" className={navClassName} onClick={closeMobileMenu}>
                         <span className="navbar-link-icon"><PeopleAltRoundedIcon /></span><span>Connections</span>
                         {pending > 0 && <span className="navbar-feature-count" aria-label={`${pending} incoming requests`}>{pending > 99 ? '99+' : pending}</span>}

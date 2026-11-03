@@ -17,7 +17,7 @@ export interface Page<T> { content: T[]; number: number; totalPages: number; tot
 export interface Connection {
     id: number; sender: string; receiver: string;
     status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'REMOVED';
-    createdAt: string; updatedAt: string; profile?: SearchProfile | null;
+    createdAt: string | number; updatedAt: string | number; profile?: SearchProfile | null;
 }
 export interface Notification {
     id: number; recipient: string; actor: string; type: string;

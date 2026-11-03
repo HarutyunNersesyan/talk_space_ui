@@ -3,12 +3,9 @@ import './Chat.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import axios from 'axios';
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+import { EmojiClickData } from 'emoji-picker-react';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
-import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
 import DoneAllRoundedIcon from '@mui/icons-material/DoneAllRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
@@ -18,51 +15,10 @@ import { useNetwork } from '../features/network/NetworkContext';
 import { usePresence } from '../features/network/PresenceBadge';
 import BlockButton from '../features/network/BlockButton';
 
-interface UserChatDto {
-    partnerUsername: string; partnerName: string; lastMessage: string;
-    lastMessageTime: string | null; unreadCount: number; partnerImage?: string;
-}
-interface ChatMessageDto {
-    id: number; sender: string; receiver: string; content: string;
-    timestamp: number[] | string; isRead: boolean; read?: boolean;
-}
-interface TypingNotificationDto { sender: string; receiver: string; typing: boolean; }
-const normalise = (message: ChatMessageDto): ChatMessageDto => ({ ...message, isRead: message.read ?? message.isRead ?? false });
-const mergeMessages = (current: ChatMessageDto[], incoming: ChatMessageDto[]) => {
-    const messages = new Map(current.map(message => [message.id, message]));
-    let changed = false;
-    incoming.map(normalise).forEach(message => {
-        const previous = messages.get(message.id);
-        const next = { ...message, isRead: !!previous?.isRead || message.isRead };
-        if (!previous || previous.isRead !== next.isRead || previous.content !== next.content ||
-            previous.sender !== next.sender || previous.receiver !== next.receiver ||
-            JSON.stringify(previous.timestamp) !== JSON.stringify(next.timestamp)) {
-            messages.set(message.id, next); changed = true;
-        }
-    });
-    // An unchanged poll must not trigger auto-scroll while the user reads history.
-    return changed ? Array.from(messages.values()).sort((a, b) => parseTimestamp(a.timestamp).getTime() - parseTimestamp(b.timestamp).getTime() || a.id - b.id) : current;
-};
-const createMessageId = (): string => {
-    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-    const bytes = new Uint8Array(16);
-    globalThis.crypto.getRandomValues(bytes);
-    bytes[6] = (bytes[6] & 0x0f) | 0x40; bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
-    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
-};
-const parseTimestamp = (timestamp: number[] | string | null | undefined): Date => {
-    if (Array.isArray(timestamp)) return new Date(timestamp[0], timestamp[1] - 1, timestamp[2], timestamp[3] || 0, timestamp[4] || 0, timestamp[5] || 0);
-    const parsed = timestamp ? new Date(timestamp) : new Date();
-    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-};
-const formatTime = (value: number[] | string | null | undefined) => parseTimestamp(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-const formatDate = (value: number[] | string | null | undefined) => {
-    const date = parseTimestamp(value);
-    const today = new Date();
-    const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
-    return date.toDateString() === today.toDateString() ? 'Today' : date.toDateString() === yesterday.toDateString() ? 'Yesterday' : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-};
+import { UserChatDto, ChatMessageDto, TypingNotificationDto, normalise, mergeMessages, createMessageId, formatTime, formatDate } from '../features/chat/chatModel';
+import { chatApi } from '../features/chat/chatApi';
+import MessageComposer from '../features/chat/MessageComposer';
+
 const Chat: React.FC = () => {
     const network = useNetwork();
     const userName = network.currentUserName;
@@ -81,6 +37,16 @@ const Chat: React.FC = () => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [conversationSearch, setConversationSearch] = useState('');
     const [sending, setSending] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editText, setEditText] = useState('');
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [actionBusy, setActionBusy] = useState(false);
+    const historyVersion = useRef(0);
+    const [menuId, setMenuId] = useState<number | null>(null);
+    const pressTimer = useRef<ReturnType<typeof setTimeout>>();
+    const nearBottom = useRef(true);
+    const lastScroll = useRef<{ partner: string | null; id?: number }>({ partner: null });
+    const cancelPress = () => { if (pressTimer.current) clearTimeout(pressTimer.current); };
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -107,7 +73,7 @@ const Chat: React.FC = () => {
         if (!userName || !token) return;
         const request = ++chatRequest.current;
         try {
-            const result = await featureApi.get<UserChatDto[]>(`/chat/conversations/${encodeURIComponent(userName)}`);
+            const result = await chatApi.conversations(userName);
             if (mounted.current && request === chatRequest.current) { setChats(result.data || []); setError(null); }
         } catch (e) {
             if (mounted.current && request === chatRequest.current) setError(featureError(e, 'Unable to load conversations.'));
@@ -116,18 +82,19 @@ const Chat: React.FC = () => {
     const markRead = useCallback(async (partner: string) => {
         if (!userName) return;
         try {
-            await featureApi.post(`/chat/read/${encodeURIComponent(partner)}/${encodeURIComponent(userName)}`);
+            await chatApi.markRead(partner, userName);
             if (mounted.current) setChats(old => old.map(c => c.partnerUsername === partner ? { ...c, unreadCount: 0 } : c));
         } catch (e) { if (mounted.current) setError(featureError(e, 'Unable to update read status.')); }
     }, [userName]);
-    const loadHistory = useCallback(async (partner: string) => {
+    const loadHistory = useCallback(async (partner: string, updateRead = true) => {
         const request = ++historyRequest.current;
+        const version = historyVersion.current;
         setLoading(true);
         try {
-            const result = await featureApi.get<ChatMessageDto[]>(`/chat/history/${encodeURIComponent(userName)}/${encodeURIComponent(partner)}`);
-            if (mounted.current && request === historyRequest.current && selectedRef.current === partner) {
-                setActiveChat(old => mergeMessages(old, result.data || []));
-                setError(null); void markRead(partner);
+            const result = await chatApi.history(userName, partner);
+            if (mounted.current && request === historyRequest.current && version === historyVersion.current && selectedRef.current === partner) {
+                setActiveChat((result.data || []).map(normalise));
+                setError(null); if (updateRead && document.visibilityState === 'visible' && result.data.some(m => m.sender === partner && !normalise(m).isRead)) void markRead(partner);
             }
         } catch (e) {
             if (mounted.current && request === historyRequest.current) {
@@ -152,7 +119,7 @@ const Chat: React.FC = () => {
         if (network.error && !userName) { setError(network.error); setLoading(false); }
     }, [network.error, userName]);
     useLayoutEffect(() => {
-        setActiveChat([]); setPartnerTyping(false); setShowEmojiPicker(false); setNewMessage('');
+        lastScroll.current = { partner: selectedPartner }; nearBottom.current = true; setMenuId(null); historyVersion.current++; setActiveChat([]); setPartnerTyping(false); setShowEmojiPicker(false); setNewMessage(''); setEditingId(null); setDeletingId(null);
         if (selectedPartner) { setShowMobileConversationList(false); void loadHistory(selectedPartner); }
         else { historyRequest.current += 1; setShowMobileConversationList(true); }
     }, [selectedPartner, loadHistory]);
@@ -171,20 +138,27 @@ const Chat: React.FC = () => {
         }
     }, [chats, permitted]);
     useEffect(() => {
-        scrollToBottom();
-    }, [activeChat, scrollToBottom]);
+        const latest = activeChat[activeChat.length - 1];
+        if (!latest) return;
+        const previous = lastScroll.current;
+        const initial = previous.partner !== selectedPartner || previous.id === undefined;
+        const appended = latest.id > (previous.id ?? 0);
+        if (initial || (appended && (nearBottom.current || latest.sender === userName))) scrollToBottom();
+        lastScroll.current = { partner: selectedPartner, id: latest.id };
+    }, [activeChat, selectedPartner, userName, scrollToBottom]);
     const callbacks = useRef({
         message: (_message: ChatMessageDto) => {}, typing: (_message: TypingNotificationDto) => {},
         receipt: (_reader: string) => {}, error: (_message: string) => {}, refresh: () => {}
     });
     callbacks.current = {
         message: data => {
+            historyVersion.current++;
             const message = normalise(data);
             const other = message.sender === userName ? message.receiver : message.sender;
             if (!permitted(other)) return;
             if (other === selectedRef.current) {
                 setActiveChat(old => mergeMessages(old, [message]));
-                if (message.sender !== userName) void markRead(other);
+                if (message.sender !== userName && document.visibilityState === 'visible') void markRead(other);
             }
             void refreshChats();
         },
@@ -194,7 +168,7 @@ const Chat: React.FC = () => {
             if (typingTimer.current) clearTimeout(typingTimer.current);
             typingTimer.current = setTimeout(() => setPartnerTyping(false), 2000);
         },
-        receipt: reader => { if (reader === selectedRef.current) setActiveChat(old => old.map(m => m.sender === userName ? { ...m, isRead: true } : m)); },
+        receipt: reader => { if (reader === selectedRef.current) void loadHistory(reader, false); },
         error: message => { setError(message); void refreshChats(); },
         refresh: () => { void refreshChats(); if (selectedRef.current) void loadHistory(selectedRef.current); }
     };
@@ -208,6 +182,7 @@ const Chat: React.FC = () => {
             client.subscribe('/user/queue/messages', event => callbacks.current.message(JSON.parse(event.body)));
             client.subscribe('/user/queue/typing', event => callbacks.current.typing(JSON.parse(event.body)));
             client.subscribe('/user/queue/receipts', event => callbacks.current.receipt(JSON.parse(event.body).reader));
+            client.subscribe('/user/queue/chat-changes', () => { historyVersion.current++; callbacks.current.refresh(); });
             client.subscribe('/user/queue/errors', event => callbacks.current.error(JSON.parse(event.body).message || 'Message was not delivered.'));
             client.subscribe('/user/queue/connection-notifications', () => { void refreshChats(); });
             callbacks.current.refresh();
@@ -229,9 +204,8 @@ const Chat: React.FC = () => {
                 ? previous : { id: createMessageId(), partner, content };
             pendingSend.current = attempt;
             sendingRef.current = true; setSending(true); setError(null);
-            const response = await featureApi.post<ChatMessageDto>('/chat/messages', {
-                receiver: partner, content, clientMessageId: attempt.id
-            });
+            const response = await chatApi.send(partner, content, attempt.id);
+            historyVersion.current++;
             if (pendingSend.current === attempt) pendingSend.current = null;
             if (mounted.current) {
                 if (selectedRef.current === partner) {
@@ -249,30 +223,45 @@ const Chat: React.FC = () => {
             if (mounted.current) setSending(false);
         }
     };
-    // Push is preferred; polling recovers messages if a socket notification is missed.
+    // Reconcile once when returning to the tab; socket events handle live updates.
     useEffect(() => {
-        if (!userName || !selectedPartner || !token) return;
-        const partner = selectedPartner;
-        let active = true, inFlight = false;
-        const sync = async () => {
-            if (inFlight || document.visibilityState !== 'visible') return;
-            inFlight = true;
-            try {
-                const result = await featureApi.get<ChatMessageDto[]>(`/chat/history/${encodeURIComponent(userName)}/${encodeURIComponent(partner)}`);
-                if (!active || selectedRef.current !== partner) return;
-                const messages = (result.data || []).map(normalise);
-                setActiveChat(old => mergeMessages(old, messages));
-                if (messages.some(message => message.sender === partner && !message.isRead)) void markRead(partner);
-            } catch (e) {
-                // A revoked connection or a block must immediately close the conversation.
-                if (active && axios.isAxiosError(e) && (e.response?.status === 403 || e.response?.status === 404)) {
-                    setActiveChat([]); setError(featureError(e)); void refreshChats();
-                }
-            } finally { inFlight = false; }
+        const resume = () => {
+            if (document.visibilityState === 'visible') callbacks.current.refresh();
         };
-        const timer = setInterval(() => void sync(), 3000);
-        return () => { active = false; clearInterval(timer); };
-    }, [userName, selectedPartner, token, markRead, refreshChats]);
+        document.addEventListener('visibilitychange', resume);
+        return () => document.removeEventListener('visibilitychange', resume);
+    }, []);
+    useEffect(() => {
+        const close = () => setMenuId(null);
+        const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') close(); };
+        document.addEventListener('click', close);
+        document.addEventListener('keydown', escape);
+        return () => { document.removeEventListener('click', close); document.removeEventListener('keydown', escape); cancelPress(); };
+    }, []);
+    const saveEdit = async (id: number) => {
+        if (!editText.trim() || actionBusy) return;
+        const partner = selectedPartner;
+        setActionBusy(true);
+        try {
+            const result = await chatApi.edit(id, editText.trim());
+            historyVersion.current++;
+            if (selectedRef.current === partner) { setActiveChat(old => mergeMessages(old, [result.data])); setEditingId(null); }
+            setError(null); void refreshChats();
+        } catch (e) { setError(featureError(e, 'Unable to edit message.')); }
+        finally { setActionBusy(false); }
+    };
+    const deleteMessage = async (id: number, everyone: boolean) => {
+        if (actionBusy) return;
+        const partner = selectedPartner;
+        setActionBusy(true);
+        try {
+            await chatApi.delete(id, everyone);
+            historyVersion.current++;
+            if (selectedRef.current === partner) { setActiveChat(old => old.filter(m => m.id !== id)); setDeletingId(null); if (editingId === id) setEditingId(null); }
+            setError(null); void refreshChats();
+        } catch (e) { setError(featureError(e, 'Unable to delete message.')); }
+        finally { setActionBusy(false); }
+    };
     const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setNewMessage(event.target.value);
         if (selectedPartner && permitted(selectedPartner) && stompClient?.connected) stompClient.publish({ destination: '/app/typing', body: JSON.stringify({ receiver: selectedPartner, typing: Boolean(event.target.value.trim()) }) });
@@ -710,7 +699,10 @@ const Chat: React.FC = () => {
 
                             {/* MESSAGES */}
 
-                            <section className="chat-messages">
+                            <section className="chat-messages" onScroll={event => {
+                                const el = event.currentTarget;
+                                nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+                            }}>
 
                                 {loading &&
                                 activeChat.length ===
@@ -780,7 +772,7 @@ const Chat: React.FC = () => {
                                             return (
                                                 <React.Fragment
                                                     key={
-                                                        `${message.id}-${index}`
+                                                        message.id
                                                     }
                                                 >
 
@@ -811,17 +803,35 @@ const Chat: React.FC = () => {
                                                         }
                                                     >
 
-                                                        <div className="chat-message-bubble">
+                                                        <div className={`chat-message-bubble ${menuId === message.id ? 'menu-open' : ''} ${editingId === message.id ? 'is-editing' : ''}`}
+                                                            onClick={event => { if (menuId === message.id) event.stopPropagation(); }}
+                                                            onContextMenu={event => { event.preventDefault(); setMenuId(message.id); }}
+                                                            onPointerDown={event => { if (event.pointerType === 'touch') { cancelPress(); pressTimer.current = setTimeout(() => setMenuId(message.id), 500); } }}
+                                                            onPointerUp={cancelPress} onPointerMove={cancelPress} onPointerCancel={cancelPress}>
+                                                            <button type="button" className="chat-more" aria-label="Message options" aria-expanded={menuId === message.id}
+                                                                onClick={event => { event.stopPropagation(); setMenuId(menuId === message.id ? null : message.id); }}>•••</button>
 
-                                                            <p>
-                                                                {
-                                                                    message.content
-                                                                }
-                                                            </p>
+                                                            {editingId === message.id ? (
+                                                                <div className="chat-edit-form">
+                                                                    <span className="chat-edit-heading">Edit message</span>
+                                                                    <textarea autoFocus spellCheck={false} aria-label="Edit message" value={editText} maxLength={4000} onChange={e => setEditText(e.target.value)} />
+                                                                    <div><button type="button" disabled={actionBusy || !editText.trim()} onClick={() => void saveEdit(message.id)}>Save</button> <button type="button" disabled={actionBusy} onClick={() => setEditingId(null)}>Cancel</button></div>
+                                                                </div>
+                                                            ) : <p>{message.content}</p>}
+                                                            <div className="chat-message-actions" role="menu" hidden={menuId !== message.id} onClick={event => event.stopPropagation()}>
+                                                                {isMine && <button type="button" onClick={() => { setMenuId(null); setEditingId(message.id); setEditText(message.content); setDeletingId(null); }}>Edit</button>}
+                                                                <button type="button" onClick={() => { setMenuId(null); setDeletingId(deletingId === message.id ? null : message.id); }}>Delete</button>
+                                                            </div>
+                                                            {deletingId === message.id && <div className="chat-delete-options" role="group" aria-label="Delete message options">
+                                                                <button type="button" disabled={actionBusy} onClick={() => void deleteMessage(message.id, false)}>Delete for me</button>
+                                                                {isMine && <button type="button" disabled={actionBusy} onClick={() => void deleteMessage(message.id, true)}>Delete for everyone</button>}
+                                                                <button type="button" disabled={actionBusy} onClick={() => setDeletingId(null)}>Cancel</button>
+                                                            </div>}
 
 
                                                             <div className="chat-message-meta">
 
+                                                                {message.edited && <span className="chat-edited">edited</span>}
                                                                 <time>
                                                                     {
                                                                         formatTime(
@@ -833,7 +843,7 @@ const Chat: React.FC = () => {
 
                                                                 {isMine && (
 
-                                                                    <span className="chat-message-read">
+                                                                    <span className="chat-message-read" title={message.isRead ? "Read" : "Sent, not read"} aria-label={message.isRead ? "Read" : "Sent, not read"}>
 
                                                                         {
                                                                             message.isRead
@@ -874,107 +884,14 @@ const Chat: React.FC = () => {
 
                             {/* MESSAGE COMPOSER */}
 
-                            <footer className="chat-composer">
-
-                                <div
-                                    className="chat-emoji-wrapper"
-                                    ref={
-                                        emojiPickerRef
-                                    }
-                                >
-
-                                    <button
-                                        type="button"
-                                        className={
-                                            `chat-tool-button ${
-                                                showEmojiPicker
-                                                    ? 'active'
-                                                    : ''
-                                            }`
-                                        }
-                                        onClick={
-                                            toggleEmojiPicker
-                                        }
-                                        aria-label="Emoji"
-                                    >
-                                        <SentimentSatisfiedAltRoundedIcon/>
-                                    </button>
-
-
-                                    {showEmojiPicker && (
-
-                                        <div className="chat-emoji-picker">
-
-                                            <EmojiPicker
-                                                onEmojiClick={
-                                                    handleEmojiClick
-                                                }
-                                                width={
-                                                    300
-                                                }
-                                                height={
-                                                    350
-                                                }
-                                                searchDisabled
-                                                skinTonesDisabled
-                                                previewConfig={{
-                                                    showPreview:
-                                                        false
-                                                }}
-                                                lazyLoadEmojis
-                                            />
-
-                                        </div>
-
-                                    )}
-
-                                </div>
-
-
-                                <textarea
-                                    ref={
-                                        inputRef
-                                    }
-                                    value={
-                                        newMessage
-                                    }
-                                    onChange={
-                                        handleInputChange
-                                    }
-                                    onKeyDown={
-                                        handleKeyDown
-                                    }
-                                    placeholder="Write a message..."
-                                    maxLength={4000}
-                                    disabled={!selectedPartner}
-                                    rows={1}
-                                    className="chat-message-input"
-                                />
-
-
-                                <button
-                                    type="button"
-                                    className={
-                                        `chat-send-button ${
-                                            newMessage.trim() &&
-                                            !sending
-                                                ? 'active'
-                                                : ''
-                                        }`
-                                    }
-                                    onClick={
-                                        sendMessage
-                                    }
-                                    disabled={
-                                        !newMessage.trim() ||
-                                        sending || !selectedPartner || !permitted(selectedPartner)
-                                    }
-                                    aria-label="Send message"
-                                >
-                                    <SendRoundedIcon/>
-                                </button>
-
-                            </footer>
+                            <MessageComposer
+                                emojiPickerRef={emojiPickerRef} inputRef={inputRef}
+                                showEmojiPicker={showEmojiPicker} toggleEmojiPicker={toggleEmojiPicker}
+                                handleEmojiClick={handleEmojiClick} newMessage={newMessage}
+                                handleInputChange={handleInputChange} handleKeyDown={handleKeyDown}
+                                sendMessage={sendMessage} sending={sending} selectedPartner={selectedPartner}
+                                canSend={!!selectedPartner && permitted(selectedPartner)}
+                            />
 
                         </>
 

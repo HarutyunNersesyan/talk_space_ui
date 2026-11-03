@@ -25,6 +25,19 @@ beforeEach(() => {
 });
 test.each([
     ['HOBBIES', SearchByHobbies], ['SPECIALITIES', SearchBySpecialities]
+] as const)('%s displays the default picture when a profile has no image', async (_mode, Component) => {
+    jest.mocked(axios.get).mockImplementation(async url => {
+        if (String(url).includes('/get/userName/')) return { data: 'alice' };
+        if (String(url).includes('/image/')) return { status: 204, data: '' };
+        return { data: profile('Bob') };
+    });
+    render(<MemoryRouter initialEntries={[{ pathname: '/', state: { initialProfile: profile('Bob') } }]}><Component /></MemoryRouter>);
+    const picture = await screen.findByRole('img', { name: 'Bob Smith' });
+    await waitFor(() => expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/image/Bob'), expect.anything()));
+    expect(picture.getAttribute('src')).toContain('default-profile-image');
+});
+test.each([
+    ['HOBBIES', SearchByHobbies], ['SPECIALITIES', SearchBySpecialities]
 ] as const)('%s records an explicit skip before requesting another match and permits the next click', async (mode, Component) => {
     const events: string[] = [];
     jest.spyOn(networkApi, 'skipMatch').mockImplementation(async name => { events.push(`skip:${name}`); return {} as any; });

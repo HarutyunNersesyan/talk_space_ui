@@ -360,82 +360,30 @@ const SearchBySpecialities: React.FC = () => {
        ===================================================== */
 
     useEffect(() => {
-        let imageUrl:
-            string | null = null;
-
-
-        const fetchImage =
-            async () => {
-                if (
-                    !userProfile ||
-                    !token
-                ) {
-                    return;
+        let active = true;
+        let imageUrl: string | null = null;
+        const controller = new AbortController();
+        setProfileImage(null);
+        if (userProfile && token) {
+            axios.get(`${API_BASE_URL}/public/user/image/${encodeURIComponent(userProfile.userName)}`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob',
+                signal: controller.signal
+            }).then(response => {
+                if (active && response.data?.size > 0) {
+                    imageUrl = URL.createObjectURL(response.data);
+                    setProfileImage(imageUrl);
                 }
-
-
-                try {
-                    const response =
-                        await axios.get(
-                            `${API_BASE_URL}/public/user/image/${userProfile.userName}`,
-                            {
-                                headers: {
-                                    Authorization:
-                                        `Bearer ${token}`
-                                },
-
-                                responseType:
-                                    'blob'
-                            }
-                        );
-
-
-                    if (
-                        response.data?.size >
-                        0
-                    ) {
-                        imageUrl =
-                            URL.createObjectURL(
-                                response.data
-                            );
-
-
-                        setProfileImage(
-                            imageUrl
-                        );
-
-                    } else {
-                        setProfileImage(null);
-                    }
-
-                } catch (err) {
-
-                    console.log(
-                        'No profile image:',
-                        err
-                    );
-
-
-                    setProfileImage(null);
-                }
-            };
-
-
-        fetchImage();
-
-
+            }).catch(() => {
+                if (active) setProfileImage(null);
+            });
+        }
         return () => {
-            if (imageUrl) {
-                URL.revokeObjectURL(
-                    imageUrl
-                );
-            }
+            active = false;
+            controller.abort();
+            if (imageUrl) URL.revokeObjectURL(imageUrl);
         };
-
-    }, [
-        userProfile,
-        token
-    ]);
+    }, [userProfile, token]);
 
 
     /* =====================================================

@@ -1,3 +1,5 @@
+import { prepareProfilePhoto } from '../features/profile/prepareProfilePhoto';
+import ProfileAbout from '../features/profile/ProfileAbout';
 import React, {
     useEffect,
     useRef,
@@ -333,6 +335,11 @@ const Profile: React.FC = () => {
                         );
 
 
+                    if (!response.data?.size) {
+                        setPicture(null);
+                        return;
+                    }
+
                     objectUrl =
                         URL.createObjectURL(
                             response.data
@@ -419,32 +426,19 @@ const Profile: React.FC = () => {
     };
 
 
-    const handleFileChange = (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-
-        const file =
-            event.target.files?.[0];
-
-
-        if (!file) {
-            return;
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+        try {
+            setError('');
+            const prepared = await prepareProfilePhoto(file);
+            setSelectedFile(prepared);
+            setPicture(URL.createObjectURL(prepared));
+            setIsImageModalOpen(true);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Unable to prepare the image.');
         }
-
-
-        setSelectedFile(file);
-
-
-        const previewUrl =
-            URL.createObjectURL(file);
-
-
-        setPicture(
-            previewUrl
-        );
-
-
-        setIsImageModalOpen(true);
     };
 
 
@@ -800,7 +794,7 @@ const Profile: React.FC = () => {
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept="image/*"
+                                accept="image/jpeg,image/png"
                                 onChange={
                                     handleFileChange
                                 }
@@ -898,48 +892,7 @@ const Profile: React.FC = () => {
 
                         {/* ABOUT */}
 
-                        <section className="profile-card">
-
-                            <div className="profile-card-heading">
-
-                                <div>
-
-                                    <span>
-                                        ABOUT
-                                    </span>
-
-                                    <h2>
-                                        About me
-                                    </h2>
-
-                                </div>
-
-
-                                <button
-                                    type="button"
-                                    className="profile-small-edit"
-                                    onClick={() =>
-                                        navigate('/edit')
-                                    }
-                                >
-
-                                    <EditRoundedIcon />
-
-                                    Edit
-
-                                </button>
-
-                            </div>
-
-
-                            <p className="profile-about-text">
-
-                                {userInfo?.about ||
-                                    'Tell people a little about yourself.'}
-
-                            </p>
-
-                        </section>
+                        <ProfileAbout about={userInfo?.about} onEdit={() => navigate('/edit')} />
 
 
                         {/* DETAILS */}
@@ -1623,6 +1576,7 @@ const Profile: React.FC = () => {
                         />
 
 
+                        {selectedFile && <p>4:3 centre crop preview. JPG/PNG, up to 5 MB; minimum crop 400 × 300 pixels.</p>}
                         <div className="profile-modal-actions">
 
                             {selectedFile && (

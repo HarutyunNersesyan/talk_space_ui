@@ -273,7 +273,7 @@ test('retries an uncertain message with the same id and does not require a conne
     expect(posts).toHaveLength(2); expect(posts[1].clientMessageId).toBe(posts[0].clientMessageId);
 });
 
-test('recovers an incoming message when the socket notification is missed', async () => {
+test('recovers a missed message when returning to the tab', async () => {
     jest.mocked(networkApi.connections).mockResolvedValue(pageOf([connection(24, me, 'anna', 'ACCEPTED')]));
     let historyCalls = 0;
     jest.mocked(featureApi.get).mockImplementation(async (path: any) => {
@@ -285,6 +285,7 @@ test('recovers an incoming message when the socket notification is missed', asyn
     jest.spyOn(featureApi, 'post').mockResolvedValue({} as any);
     mount(<Routes><Route path="/chat/:userName" element={<Chat />} /></Routes>, '/chat/anna');
     await screen.findByPlaceholderText('Write a message...');
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
     await screen.findByText('Recovered message', { exact: true }, { timeout: 5000 });
     expect(screen.getAllByText('Recovered message', { exact: true })).toHaveLength(1);
 });
@@ -313,4 +314,43 @@ test.each(['promise', 'object'])('chat effect never treats a scrolling %s as cle
         if (previous) Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', previous);
         else delete (HTMLElement.prototype as any).scrollIntoView;
     }
+});
+
+test('edits through the contextual menu and deletes without scrolling the conversation', async () => {
+    const scroll = jest.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scroll });
+    jest.mocked(networkApi.connections).mockResolvedValue(pageOf([connection(30, me, 'anna', 'ACCEPTED')]));
+    let message = { id: 300, sender: me, receiver: 'anna', content: 'Original text', timestamp: '2026-11-03T10:00:00', read: false, edited: false };
+    jest.mocked(featureApi.get).mockImplementation(async (path: any) => ({ data:
+        String(path).includes('/conversations/') ? [{ partnerUsername: 'anna', partnerName: 'Anna', lastMessage: '', lastMessageTime: null, unreadCount: 0 }]
+        : String(path).includes('/history/') ? [message] : String(path).includes('/image/') ? new Blob([]) : me }));
+    const patch = jest.spyOn(featureApi, 'patch').mockImplementation(async (_url, data: any) => {
+        message = { ...message, content: data.content, edited: true }; return { data: message };
+    });
+    const remove = jest.spyOn(featureApi, 'delete').mockResolvedValue({} as any);
+    mount(<Routes><Route path="/chat/:userName" element={<Chat />} /></Routes>, '/chat/anna');
+    await screen.findByText('Original text');
+    const count = scroll.mock.calls.length;
+    expect(screen.queryByRole('button', { name: 'Edit', exact: true })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Message options' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit', exact: true }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit message' }), { target: { value: 'Changed text' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save', exact: true }));
+    await screen.findByText('Changed text');
+    expect(patch).toHaveBeenCalledWith('/chat/messages/300', { content: 'Changed text' });
+    expect(await screen.findByText('edited')).toBeInTheDocument();
+    expect(scroll).toHaveBeenCalledTimes(count);
+    const client = mockSockets.find(c => !c.config.onConnect);
+    await act(async () => { client.onConnect(); });
+    message = { ...message, read: true };
+    const receipt = client.subscribe.mock.calls.find(([path]: any[]) => path === '/user/queue/receipts')[1];
+    await act(async () => { receipt({ body: JSON.stringify({ reader: 'anna' }) }); });
+    expect(await screen.findByLabelText('Read')).toBeInTheDocument();
+    expect(scroll).toHaveBeenCalledTimes(count);
+    fireEvent.click(screen.getByRole('button', { name: 'Message options' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete for everyone' }));
+    await waitFor(() => expect(screen.queryByText('Changed text')).not.toBeInTheDocument());
+    expect(remove).toHaveBeenCalledWith('/chat/messages/300', { params: { everyone: true } });
+    expect(scroll).toHaveBeenCalledTimes(count);
 });

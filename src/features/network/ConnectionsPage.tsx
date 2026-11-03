@@ -7,6 +7,7 @@ import { useNetwork } from './NetworkContext';
 import PresenceBadge from './PresenceBadge';
 import PublicProfileCard from './PublicProfileCard';
 import BlockButton from './BlockButton';
+import { formatConnectionDate } from './dateUtils';
 
 type Tab = 'incoming' | 'sent' | 'accepted';
 const ConnectionsPage: React.FC = () => {
@@ -53,8 +54,9 @@ const ConnectionsPage: React.FC = () => {
         : !visible.length && !network.error ? <div className="nf-empty"><PeopleAltRoundedIcon /><h2>{tab === 'incoming' ? 'No incoming requests' : tab === 'sent' ? 'No sent requests' : 'Start building your network'}</h2><p>{tab === 'accepted' ? 'Discover people and send your first connection request.' : 'Your requests will appear here.'}</p><Link className="nf-button" to="/choose">Discover people</Link></div>
         : <div className="nf-grid">{visible.map(c => {
             const other = c.sender === me ? c.receiver : c.sender;
+            const connectionDate = formatConnectionDate(c.updatedAt);
             const actions = <>
-                <p className="nf-muted">{c.status === 'ACCEPTED' ? 'Connected' : c.sender === me ? 'Request sent' : 'Wants to connect with you'} · {new Date(c.updatedAt).toLocaleDateString()}</p>
+                <p className="nf-muted">{c.status === 'ACCEPTED' ? 'Connected' : c.sender === me ? 'Request sent' : 'Wants to connect with you'}{connectionDate && <> · {connectionDate}</>}</p>
                 <div className="nf-actions">
                     {c.status === 'ACCEPTED' ? <><Link className="nf-button" to={`/chat/${encodeURIComponent(other)}`}>Message</Link><button className="nf-button secondary" disabled={busy !== null} onClick={() => void run(c.id, 'remove')}>Remove</button></>
                     : c.receiver === me ? <><button className="nf-button" disabled={busy !== null || c.profile === null} onClick={() => void run(c.id, 'accept')}>{busy === c.id ? 'Updating…' : 'Accept'}</button><button className="nf-button secondary" disabled={busy !== null} onClick={() => void run(c.id, 'reject')}>Decline</button></>
